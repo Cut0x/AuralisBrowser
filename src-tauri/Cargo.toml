@@ -1,0 +1,39 @@
+[package]
+name = "auralis"
+version = "0.1.0"
+description = "A beautiful, lightweight and fully customizable browser."
+authors = ["Auralis Contributors"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77.2"
+
+[[bin]]
+name = "auralis"
+path = "src/main.rs"
+
+[lib]
+name = "auralis_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri             = { version = "2", features = ["tray-icon", "unstable"] }
+tauri-plugin-opener = { version = "2" }
+tauri-plugin-shell  = { version = "2" }
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest    = { version = "0.12", default-features = false, features = ["native-tls", "gzip", "charset"] }
+tokio      = { version = "1", features = ["rt", "rt-multi-thread"] }
+
+[features]
+default         = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+opt-level     = "s"
+lto           = true
+codegen-units = 1
+panic         = "abort"
+strip         = true
