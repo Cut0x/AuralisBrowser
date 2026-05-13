@@ -27,8 +27,13 @@ export class BrowserEngine {
   // True while the new-tab page is active — stale content-navigated events are ignored.
   private isShowingNewtab = true;
 
+  // Dedup: prevents spurious WebView2 re-fires when window regains focus.
+  private _navigationPending = false;
+  private _lastHandledUrl    = '';
+
   private onNavigate:   NavCallback;
   private onNewTab?:    NewTabCallback;
+  private onPwDetected?: (username: string, password: string) => void;
 
   constructor(onNavigate: NavCallback) {
     this.newtabPage = document.getElementById('newtab-page')!;
@@ -51,12 +56,18 @@ export class BrowserEngine {
     this.onNewTab = fn;
   }
 
+  setPwDetectedCallback(fn: (username: string, password: string) => void): void {
+    this.onPwDetected = fn;
+  }
+
   loadUrl(url: string): void {
     if (!url || url === 'about:newtab') { this.showNewtab(); return; }
 
     this.isShowingNewtab = false;
     this.newtabPage.classList.remove('active');
     setNavLoading(true);
+    this._navigationPending = true;
+    this._lastHandledUrl    = '';
 
     if (this.navIdx < this.navHistory.length - 1) {
       this.navHistory = this.navHistory.slice(0, this.navIdx + 1);
@@ -88,6 +99,8 @@ export class BrowserEngine {
     const url = this.currentUrl();
     if (!url || url === 'about:newtab') return;
     setNavLoading(true);
+    this._navigationPending = true;
+    this._lastHandledUrl    = '';
     invoke<void>('content_eval', { js: 'location.reload()' }).catch(console.error);
   }
 
@@ -132,6 +145,11 @@ export class BrowserEngine {
       if (!url || url === 'about:blank') return;
       if (this.isShowingNewtab) return;
 
+      // Skip spurious WebView2 re-fires (window focus events) when we didn't initiate nav
+      if (!this._navigationPending && url === this._lastHandledUrl) return;
+      this._navigationPending = false;
+      this._lastHandledUrl    = url;
+
       setNavLoading(false);
       const canBack    = this.navIdx > 0;
       const canForward = this.navIdx < this.navHistory.length - 1;
@@ -144,8 +162,9 @@ export class BrowserEngine {
         canBack, canForward,
       });
 
-      // Inject new-tab interceptor after each real page load
+      // Inject interceptors after each real page load
       void this.injectNewTabScript();
+      void this.injectFormListener();
     });
 
     await listen<{ url: string; title: string }>('content-title', e => {
@@ -164,6 +183,15 @@ export class BrowserEngine {
       if (url && this.onNewTab) this.onNewTab(url);
     });
 
+    // Rust fires this when a password form is submitted via sentinel URL
+    await listen<string>('content-pw-detected', e => {
+      try {
+        const decoded = decodeURIComponent(e.payload);
+        const { u, p } = JSON.parse(atob(decoded)) as { u: string; p: string };
+        if (p && this.onPwDetected) this.onPwDetected(u || '', p);
+      } catch { /* ignore malformed payload */ }
+    });
+
     await this.updateBounds(false);
   }
 
@@ -171,9 +199,39 @@ export class BrowserEngine {
     this.isShowingNewtab = false;
     this.newtabPage.classList.remove('active');
     setNavLoading(true);
+    this._navigationPending = true;
+    this._lastHandledUrl    = '';
     this.urlbar.value = url;
     void this.updateBounds(true);
     invoke<void>('content_navigate', { url }).catch(console.error);
+  }
+
+  /** Inject a form submit interceptor to auto-detect password logins.
+   *  On form submit with a password field: encodes credentials, navigates to sentinel URL.
+   *  Rust intercepts, decodes, emits content-pw-detected, cancels navigation.
+   *  The form then re-submits normally via setTimeout. */
+  private async injectFormListener(): Promise<void> {
+    const js = `(function(){
+if(window.__a_pwpatch)return;
+window.__a_pwpatch=true;
+document.addEventListener('submit',function(e){
+  var form=e.target;
+  if(!form||form.tagName!=='FORM')return;
+  var pw=form.querySelector('input[type="password"]');
+  if(!pw||!pw.value)return;
+  if(form.__auralis_sub)return;
+  var uf=form.querySelector('input[type="email"],input[type="text"],[name*="user"],[name*="email"],[name*="login"],[id*="user"],[id*="email"],[id*="login"]');
+  var u=uf?uf.value:'';
+  form.__auralis_sub=true;
+  e.preventDefault();
+  try{
+    var d=btoa(unescape(encodeURIComponent(JSON.stringify({u:u,p:pw.value}))));
+    window.location.href='http://auralis-pw.invalid/save?d='+encodeURIComponent(d);
+  }catch(err){}
+  setTimeout(function(){form.__auralis_sub=false;form.submit();},200);
+},true);
+})();`;
+    await invoke<void>('content_eval', { js }).catch(() => {});
   }
 
   /** Inject a tiny script that intercepts window.open() and target="_blank" clicks,

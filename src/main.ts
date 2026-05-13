@@ -2,6 +2,7 @@
 
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke }           from '@tauri-apps/api/core';
+import { listen }           from '@tauri-apps/api/event';
 import { TabManager }       from './tabs.js';
 import { BrowserEngine }    from './browser.js';
 import { setLang, applyAll, t } from './i18n.js';
@@ -31,6 +32,11 @@ let settings: BrowserSettings = loadSettings();
 applyTheme(settings.theme);
 setLang(settings.language);
 applyAll();
+
+// ─── Settings window mode ────────────────────────────────────────────────────
+// When opened via open_settings_window(), the Tauri window label is "settings".
+// Detect this synchronously; the initial page is fetched async via command.
+const _isSettingsWin = appWindow.label === 'settings';
 
 // ─── DOM refs ────────────────────────────────────────────────────────────────
 
@@ -297,6 +303,13 @@ browser.setNewTabCallback(url => {
   browser.loadUrl(url);
 });
 
+browser.setPwDetectedCallback((username, password) => {
+  pwUsername.value = username;
+  pwPassword.value = password;
+  pwSavePrompt.classList.remove('hidden');
+  pwUsername.focus();
+});
+
 // ─── Initial render ───────────────────────────────────────────────────────────
 
 setFavoritesBarVisible(settings.showFavoritesBar);
@@ -308,6 +321,12 @@ renderNewtabFavs();
 
 function navigate(input: string): void {
   const url = resolveInput(input, settings.searchEngine);
+  if (url.startsWith('auralis::settings')) {
+    // Settings always opens in a dedicated native window
+    const page = url.replace(/^auralis::settings\/?/, '') || 'apparence';
+    invoke<void>('open_settings_window', { page }).catch(console.error);
+    return;
+  }
   if (url.startsWith('auralis::')) {
     showAuralisPage(url);
     return;
@@ -365,7 +384,75 @@ function renderTabStrip(allTabs: ReturnType<TabManager['getAll']>, activeId: str
   }
 }
 
-// ─── Favorites bar (with folder support) ─────────────────────────────────────
+// ─── Favorites bar (with folder support + pointer-based drag-to-reorder) ──────
+
+let favDragId: string | null = null;
+let favDragGhost: HTMLElement | null = null;
+
+function attachFavbarDrag(btn: HTMLButtonElement, itemId: string): void {
+  let startX = 0, dragging = false;
+
+  btn.addEventListener('pointerdown', (e: PointerEvent) => {
+    if (e.button !== 0) return;
+    startX = e.clientX;
+    dragging = false;
+    btn.setPointerCapture(e.pointerId);
+
+    const onMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      if (!dragging && Math.abs(dx) > 5) {
+        dragging = true;
+        favDragId = itemId;
+
+        // Ghost element
+        const ghost = btn.cloneNode(true) as HTMLElement;
+        const rect  = btn.getBoundingClientRect();
+        ghost.style.cssText = `position:fixed;pointer-events:none;opacity:.72;z-index:9999;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;transition:none`;
+        document.body.appendChild(ghost);
+        favDragGhost = ghost;
+        btn.style.opacity = '0.3';
+      }
+      if (dragging && favDragGhost) {
+        const rect = btn.getBoundingClientRect();
+        favDragGhost.style.left = `${ev.clientX - rect.width / 2}px`;
+        favDragGhost.style.top  = `${rect.top}px`;
+        // Highlight target
+        document.querySelectorAll<HTMLElement>('.favbar-item,.favbar-folder').forEach(el => {
+          el.classList.remove('favbar-drag-over');
+        });
+        const under = document.elementsFromPoint(ev.clientX, ev.clientY)
+          .find(x => x !== btn && (x.classList.contains('favbar-item') || x.classList.contains('favbar-folder')));
+        if (under) (under as HTMLElement).classList.add('favbar-drag-over');
+      }
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      btn.removeEventListener('pointermove', onMove);
+      btn.removeEventListener('pointerup',   onUp);
+
+      if (dragging) {
+        favDragGhost?.remove(); favDragGhost = null;
+        btn.style.opacity = '';
+        document.querySelectorAll<HTMLElement>('.favbar-item,.favbar-folder').forEach(el => {
+          el.classList.remove('favbar-drag-over');
+        });
+        const srcId = favDragId; favDragId = null;
+        const target = document.elementsFromPoint(ev.clientX, ev.clientY)
+          .find(x => x !== btn && (x.classList.contains('favbar-item') || x.classList.contains('favbar-folder')));
+        if (target && srcId) {
+          const targetId = (target as HTMLElement).dataset.bmId;
+          if (targetId && targetId !== srcId) {
+            settings = moveBookmark(settings, srcId, targetId, 'before');
+            saveSettings(settings); renderFavBar(); renderNewtabFavs();
+          }
+        }
+      }
+    };
+
+    btn.addEventListener('pointermove', onMove);
+    btn.addEventListener('pointerup',   onUp);
+  });
+}
 
 function renderFavBar(): void {
   const importBtn = document.getElementById('btn-favbar-import')!;
@@ -375,6 +462,7 @@ function renderFavBar(): void {
     if (item.type === 'folder') {
       const btn = document.createElement('button');
       btn.className = 'favbar-folder';
+      btn.dataset.bmId = item.id;
       btn.title = item.name;
       btn.innerHTML = `
         <svg class="favbar-favicon" width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -386,16 +474,19 @@ function renderFavBar(): void {
         </svg>`;
       btn.addEventListener('click', e => { e.stopPropagation(); showFolderPopover(item, btn); });
       btn.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
+      attachFavbarDrag(btn, item.id);
       favBar.insertBefore(btn, importBtn);
     } else {
       const btn = document.createElement('button');
       btn.className = 'favbar-item';
+      btn.dataset.bmId = item.id;
       btn.title = item.title;
       btn.innerHTML = `
         <img class="favbar-favicon" src="${faviconFor(item.url)}" width="14" height="14" alt="" loading="lazy" onerror="this.style.display='none'">
         <span class="favbar-label">${truncate(item.title, 16)}</span>`;
       btn.addEventListener('click', () => navigate(item.url));
       btn.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
+      attachFavbarDrag(btn, item.id);
       favBar.insertBefore(btn, importBtn);
     }
   }
@@ -1005,22 +1096,67 @@ function renderPageCache(el: HTMLElement): void {
       </div>
     </div>
     <div class="ap-group" style="max-width:560px;margin-top:16px">
-      <div class="ap-group-title">Historique de navigation</div>
-      <div class="ap-row ap-row--toggle">
-        <div class="ap-label">
-          <strong>${t('settings.clear_history')}</strong>
-          <small>${t('settings.clear_confirm')}</small>
-        </div>
-        <button class="btn-outline" id="ap-clear-hist2" style="flex-shrink:0;color:var(--accent-rose)">${t('settings.clear_history')}</button>
+      <div class="ap-group-title">Effacer les données</div>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Sélectionnez les catégories à supprimer définitivement.</p>
+      <div class="clear-cat-list">
+        <label class="clear-cat-item">
+          <input type="checkbox" id="chk-hist" checked>
+          <span class="clear-cat-label">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="#f0c060" stroke-width="1.1"/><path d="M7 4v3l2 2" stroke="#f0c060" stroke-width="1.1" stroke-linecap="round"/></svg>
+            Historique de navigation
+          </span>
+          <span class="clear-cat-count">${settings.history.length} entrées</span>
+        </label>
+        <label class="clear-cat-item">
+          <input type="checkbox" id="chk-bookmarks">
+          <span class="clear-cat-label">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 3a1 1 0 0 1 1-1h3l1.5 2H12a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3z" fill="var(--accent-violet)" opacity=".7"/></svg>
+            Favoris &amp; dossiers
+          </span>
+          <span class="clear-cat-count">${countBookmarkLinks(settings.bookmarks)} liens</span>
+        </label>
+        <label class="clear-cat-item">
+          <input type="checkbox" id="chk-passwords">
+          <span class="clear-cat-label">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="3" y="6" width="8" height="6" rx="1" stroke="var(--accent-rose)" stroke-width="1.1"/><path d="M5 6V4a2 2 0 0 1 4 0v2" stroke="var(--accent-rose)" stroke-width="1.1" stroke-linecap="round"/></svg>
+            Mots de passe enregistrés
+          </span>
+          <span class="clear-cat-count">${settings.passwords.length} enregistrés</span>
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn-outline" id="ap-clear-selected" style="color:var(--accent-rose)">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 3h10M4 3V2h5v1M2.5 3l.75 8h5.5l.75-8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+          Effacer la sélection
+        </button>
+        <button class="btn-outline" id="ap-clear-all" style="color:var(--accent-rose);opacity:.7;font-size:12px">Tout effacer</button>
       </div>
     </div>`;
-  el.querySelector('#ap-clear-hist2')!.addEventListener('click', () => {
-    if (!confirm(t('settings.clear_confirm'))) return;
-    settings = { ...settings, history: [] };
+
+  const chkHist = el.querySelector<HTMLInputElement>('#chk-hist')!;
+  const chkBm   = el.querySelector<HTMLInputElement>('#chk-bookmarks')!;
+  const chkPw   = el.querySelector<HTMLInputElement>('#chk-passwords')!;
+
+  const doClear = (hist: boolean, bm: boolean, pw: boolean) => {
+    const parts: string[] = [];
+    if (hist) parts.push('historique');
+    if (bm)   parts.push('favoris');
+    if (pw)   parts.push('mots de passe');
+    if (!parts.length) return;
+    if (!confirm(`Effacer ${parts.join(', ')} ?`)) return;
+    if (hist) settings = { ...settings, history: [] };
+    if (bm)   settings = { ...settings, bookmarks: [] };
+    if (pw)   settings = { ...settings, passwords: [] };
     saveSettings(settings);
-    toast(t('toast.history_cleared'));
+    if (bm) { renderFavBar(); renderNewtabFavs(); }
+    toast('Données effacées');
     renderPageCache(el);
-  });
+  };
+
+  el.querySelector('#ap-clear-selected')!.addEventListener('click', () =>
+    doClear(chkHist.checked, chkBm.checked, chkPw.checked));
+  el.querySelector('#ap-clear-all')!.addEventListener('click', () =>
+    doClear(true, true, true));
 }
 
 // ─── À propos ─────────────────────────────────────────────────────────────────
@@ -1170,7 +1306,9 @@ document.getElementById('btn-show-pw-prompt')?.addEventListener('click', () => {
 });
 
 // ─── Settings button ──────────────────────────────────────────────────────────
-document.getElementById('btn-settings')?.addEventListener('click', () => navigate('auralis::settings'));
+document.getElementById('btn-settings')?.addEventListener('click', () => {
+  invoke<void>('open_settings_window', { page: 'apparence' }).catch(console.error);
+});
 
 // ─── Favorites bar import ─────────────────────────────────────────────────────
 document.getElementById('btn-favbar-import')?.addEventListener('click', async () => {
@@ -1208,3 +1346,66 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight') { e.preventDefault(); document.getElementById('btn-forward')?.click(); return; }
   }
 });
+
+// ─── Settings window mode bootstrap ──────────────────────────────────────────
+if (_isSettingsWin) {
+  void (async () => {
+    const page = await invoke<string>('get_settings_init').catch(() => 'apparence') || 'apparence';
+    document.body.classList.add('settings-window');
+    document.getElementById('browser-chrome')?.style.setProperty('display', 'none');
+    document.getElementById('newtab-page')?.classList.remove('active');
+    const ap = document.getElementById('auralis-page')!;
+    ap.classList.remove('hidden');
+    updateApNavItems(page);
+    renderAuralisContent(page);
+
+    // Listen for cross-window navigate requests (when this window is already open)
+    await listen<string>('settings-navigate', e => {
+      const p = e.payload || 'apparence';
+      updateApNavItems(p);
+      renderAuralisContent(p);
+    });
+
+    // Hide the overlay close button — native window has its own title bar
+    document.querySelector<HTMLElement>('.ap-close-btn')?.style.setProperty('display', 'none');
+  })();
+}
+
+// ─── Update check (GitHub releases) ──────────────────────────────────────────
+async function checkForUpdates(): Promise<void> {
+  try {
+    const res = await fetch('https://api.github.com/repos/Cut0x/AuralisBrowser/releases/latest');
+    if (!res.ok) return;
+    const data = await res.json() as { tag_name?: string };
+    const latest = (data.tag_name ?? '').replace(/^v/, '');
+    const current = await invoke<string>('get_version');
+    if (latest && latest !== current && latest > current) {
+      showUpdateBanner(latest);
+    }
+  } catch { /* no network or no releases yet */ }
+}
+
+function showUpdateBanner(version: string): void {
+  const existing = document.getElementById('update-banner');
+  if (existing) return;
+  const banner = document.createElement('div');
+  banner.id = 'update-banner';
+  banner.className = 'update-banner';
+  banner.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="var(--accent-violet)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="var(--accent-violet)" stroke-width="1.3" stroke-linecap="round"/></svg>
+    <span>Auralis <strong>v${esc(version)}</strong> est disponible —</span>
+    <a href="#" class="update-banner-link" id="update-go-github">Voir sur GitHub</a>
+    <button class="update-banner-close" id="update-dismiss" title="Ignorer">×</button>`;
+  document.getElementById('browser-chrome')?.appendChild(banner);
+  document.getElementById('update-go-github')?.addEventListener('click', e => {
+    e.preventDefault();
+    import('@tauri-apps/plugin-opener').then(({ openUrl }) => {
+      openUrl('https://github.com/Cut0x/AuralisBrowser/releases').catch(console.error);
+    });
+  });
+  document.getElementById('update-dismiss')?.addEventListener('click', () => banner.remove());
+}
+
+if (!_isSettingsWin) {
+  setTimeout(() => void checkForUpdates(), 4000);
+}
