@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <link rel="icon" type="image/svg+xml" href="/auralis.svg"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Auralis</title>
+  <script type="module" crossorigin src="/assets/index-CR8p53kH.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Bjcc0MW_.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════════
+       CHROME : topbar + navbar + barre des favoris
+  ═══════════════════════════════════════════════ -->
+  <div id="browser-chrome" class="browser-chrome">
+
+    <!-- TOPBAR : onglets + bouton + contrôles fenêtre à DROITE -->
+    <div id="topbar" class="topbar" data-tauri-drag-region>
+
+      <!-- Zone d'onglets — le bouton + est le DERNIER enfant -->
+      <div id="tab-strip" class="tab-strip" data-tauri-drag-region="false">
+        <!-- Onglets injectés ici par main.ts, AVANT ce bouton -->
+        <button class="btn-new-tab" id="btn-new-tab"
+                data-i18n-title="tab.new_title" title="Nouvel onglet (Ctrl+T)"
+                aria-label="Nouvel onglet">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Espace flexible pour pousser les contrôles à droite -->
+      <div class="topbar-spacer" data-tauri-drag-region></div>
+
+      <!-- Contrôles fenêtre (DROITE) -->
+      <div class="window-controls" data-tauri-drag-region="false">
+        <button class="win-btn win-minimize" id="btn-minimize" title="Réduire" aria-label="Réduire">
+          <svg width="10" height="2" viewBox="0 0 10 2" fill="none" aria-hidden="true">
+            <path d="M1 1h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="win-btn win-maximize" id="btn-maximize" title="Agrandir" aria-label="Agrandir">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+        </button>
+        <button class="win-btn win-close" id="btn-close" title="Fermer" aria-label="Fermer">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+    </div><!-- /topbar -->
+
+    <!-- NAVBAR : précédent / suivant / recharger + URL + favoris + mots de passe + paramètres -->
+    <div id="navbar" class="navbar">
+
+      <div class="nav-controls">
+        <button class="nav-btn" id="btn-back" title="Précédent (Alt+←)" disabled aria-label="Précédent">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M10.5 12.5L6 8l4.5-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="nav-btn" id="btn-forward" title="Suivant (Alt+→)" disabled aria-label="Suivant">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M5.5 3.5L10 8l-4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="nav-btn" id="btn-reload" title="Recharger (Ctrl+R)" aria-label="Recharger">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M13 8A5 5 0 1 1 8 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M7.5 1.5l2 1.5-2 1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="urlbar-wrapper">
+        <div class="urlbar-security-icon" id="urlbar-icon" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.1"/>
+            <path d="M6.5 2C6.5 2 5 4 5 6.5S6.5 11 6.5 11M6.5 2C6.5 2 8 4 8 6.5S6.5 11 6.5 11M2 6.5h9" stroke="currentColor" stroke-width="1.1"/>
+          </svg>
+        </div>
+        <input type="text" id="urlbar" class="urlbar"
+               data-i18n-ph="nav.urlbar"
+               placeholder="Rechercher ou entrer une adresse…"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+               aria-label="Barre d'adresse"/>
+        <button class="urlbar-action-btn" id="btn-show-pw-prompt"
+                data-i18n-title="nav.passwords" title="Mots de passe" aria-label="Enregistrer le mot de passe">
+          <span id="pw-indicator">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="3" y="5.5" width="7" height="6" rx="1" stroke="currentColor" stroke-width="1.1"/>
+              <path d="M4.5 5.5V4a2 2 0 1 1 4 0v1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+              <circle cx="6.5" cy="8.5" r=".7" fill="currentColor"/>
+            </svg>
+          </span>
+        </button>
+        <button class="urlbar-action-btn" id="btn-bookmark"
+                data-i18n-title="nav.bookmark_add" title="Ajouter aux favoris" aria-label="Favori">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M2.5 1.5h8a.5.5 0 0 1 .5.5v9.5l-4.5-3-4.5 3V2a.5.5 0 0 1 .5-.5z" stroke="currentColor" stroke-width="1.1" class="bm-stroke" fill="none"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="navbar-right">
+        <button class="nav-btn" id="btn-passwords"
+                data-i18n-title="nav.passwords" title="Mots de passe" aria-label="Mots de passe">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <circle cx="8" cy="11" r="1" fill="currentColor"/>
+          </svg>
+        </button>
+        <button class="nav-btn" id="btn-settings"
+                data-i18n-title="settings.title" title="Paramètres" aria-label="Paramètres">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"
+                  stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+    </div><!-- /navbar -->
+
+    <!-- BARRE DES FAVORIS -->
+    <div id="favorites-bar" class="favorites-bar" role="navigation" aria-label="Favoris">
+      <!-- Items injectés par main.ts AVANT ce bouton -->
+      <button class="favbar-import-btn" id="btn-favbar-import"
+              data-i18n-title="favbar.import_title" title="Importer les favoris">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+          <path d="M6.5 1v7M3.5 5l3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1.5 10.5h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <span data-i18n="favbar.import">Importer</span>
+      </button>
+    </div>
+
+  </div><!-- /browser-chrome -->
+
+  <!-- ═══════════════════════════════════════════════
+       ZONE DE CONTENU
+  ═══════════════════════════════════════════════ -->
+  <div id="content-area" class="content-area">
+
+    <!-- PAGE NOUVEL ONGLET -->
+    <div id="newtab-page" class="newtab-page active">
+      <div class="newtab-bg" aria-hidden="true">
+        <div class="newtab-glow newtab-glow-1"></div>
+        <div class="newtab-glow newtab-glow-2"></div>
+        <div class="newtab-glow newtab-glow-3"></div>
+      </div>
+      <div class="newtab-content">
+        <div class="newtab-logo">
+          <div class="logo-emblem" aria-hidden="true">
+            <svg width="54" height="54" viewBox="0 0 56 56" fill="none">
+              <defs>
+                <linearGradient id="lg" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="var(--accent-rose)"/>
+                  <stop offset="100%" stop-color="var(--accent-violet)"/>
+                </linearGradient>
+              </defs>
+              <path d="M28 8L44 46H12L28 8z" stroke="url(#lg)" stroke-width="2" stroke-linejoin="round" fill="none"/>
+              <path d="M18 34h20" stroke="url(#lg)" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="28" cy="28" r="26" stroke="url(#lg)" stroke-width="0.5" opacity="0.3"/>
+            </svg>
+          </div>
+          <h1 class="logo-wordmark">Auralis</h1>
+          <p class="logo-tagline" data-i18n="newtab.tagline">Un navigateur beau, léger et entièrement personnalisable.</p>
+        </div>
+        <div class="newtab-search-wrap">
+          <div class="newtab-search-inner">
+            <svg class="newtab-search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M11.5 11.5L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <input type="text" id="newtab-searchbar" class="newtab-searchbar"
+                   data-i18n-ph="newtab.search" placeholder="Rechercher sur le web…"
+                   autocomplete="off" spellcheck="false" aria-label="Recherche"/>
+          </div>
+        </div>
+        <div id="newtab-favorites" class="newtab-favorites" aria-label="Favoris"></div>
+        <p class="newtab-hint" id="newtab-hint" data-i18n="newtab.no_bookmarks">
+          Pas encore de favoris — naviguez vers une page et cliquez sur ☆.
+        </p>
+      </div>
+    </div>
+
+    <!-- Le contenu web est rendu dans un child webview natif Tauri (géré par lib.rs).
+         Pas d'iframe ici — aucune restriction X-Frame-Options. -->
+    <button id="btn-open-external" class="btn-open-external hidden"
+            title="Ouvrir dans le navigateur système" aria-label="Ouvrir externalement">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M6 2H2.5A1.5 1.5 0 0 0 1 3.5v8A1.5 1.5 0 0 0 2.5 13h8A1.5 1.5 0 0 0 12 11.5V8M8 1h5m0 0v5m0-5L6.5 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <!-- ══════════════════════════════════════
+         PANNEAU PARAMÈTRES
+    ══════════════════════════════════════ -->
+    <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="true" aria-label="Paramètres">
+      <div class="settings-backdrop" id="settings-backdrop"></div>
+      <div class="settings-inner glass-panel">
+
+        <div class="settings-header">
+          <h2 data-i18n="settings.title">Paramètres</h2>
+          <button class="icon-btn" id="btn-close-settings" aria-label="Fermer">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="settings-body">
+
+          <section class="settings-section">
+            <h3 class="settings-section-title" data-i18n="settings.appearance">Apparence</h3>
+            <div class="setting-row">
+              <label class="setting-label" for="setting-theme" data-i18n="settings.theme">Thème</label>
+              <select id="setting-theme" class="setting-select">
+                <option value="dark"     data-i18n="settings.theme_dark">Sombre — Aurora</option>
+                <option value="light"    data-i18n="settings.theme_light">Clair — Brume</option>
+                <option value="midnight" data-i18n="settings.theme_midnight">Minuit</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label class="setting-label" for="setting-lang" data-i18n="settings.language">Langue</label>
+              <select id="setting-lang" class="setting-select">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div class="setting-row setting-row--toggle">
+              <label class="setting-label" for="setting-favbar" data-i18n="settings.favbar">Afficher la barre des favoris</label>
+              <label class="toggle">
+                <input type="checkbox" id="setting-favbar" checked/>
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <h3 class="settings-section-title" data-i18n="settings.search">Moteur de recherche</h3>
+            <div class="setting-row">
+              <label class="setting-label" for="setting-engine" data-i18n="settings.engine">Moteur par défaut</label>
+              <select id="setting-engine" class="setting-select">
+                <option value="duckduckgo">DuckDuckGo</option>
+                <option value="google">Google</option>
+                <option value="brave">Brave Search</option>
+                <option value="startpage">Startpage</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <h3 class="settings-section-title" data-i18n="settings.homepage">Page d'accueil</h3>
+            <div class="setting-row setting-row--col">
+              <label class="setting-label" for="setting-homepage" data-i18n="settings.homepage_url">URL de démarrage</label>
+              <input type="text" id="setting-homepage" class="setting-input" placeholder="about:newtab"/>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <h3 class="settings-section-title" data-i18n="settings.bookmarks">Favoris</h3>
+            <div class="setting-row setting-row--btns">
+              <button class="btn-outline" id="btn-import-bookmarks" data-i18n="settings.import_btn">
+                Importer (HTML Chrome/Firefox)
+              </button>
+              <button class="btn-outline" id="btn-export-bookmarks" data-i18n="settings.export_btn">
+                Exporter
+              </button>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <h3 class="settings-section-title" data-i18n="settings.shortcuts">Raccourcis clavier</h3>
+            <div class="shortcuts-list">
+              <div class="shortcut-row"><kbd>Ctrl+L</kbd><span>Barre d'adresse</span></div>
+              <div class="shortcut-row"><kbd>Ctrl+T</kbd><span>Nouvel onglet</span></div>
+              <div class="shortcut-row"><kbd>Ctrl+W</kbd><span>Fermer l'onglet</span></div>
+              <div class="shortcut-row"><kbd>Ctrl+R</kbd><span>Recharger</span></div>
+              <div class="shortcut-row"><kbd>Alt+←</kbd><span>Précédent</span></div>
+              <div class="shortcut-row"><kbd>Alt+→</kbd><span>Suivant</span></div>
+            </div>
+          </section>
+
+          <section class="settings-section">
+            <h3 class="settings-section-title" data-i18n="settings.about">À propos</h3>
+            <div class="about-card glass-card-sm">
+              <p class="about-name">Auralis <span class="about-version">v0.1.0</span></p>
+              <p class="about-desc" data-i18n="about.desc">Un navigateur beau, léger et personnalisable.</p>
+              <p class="about-stack" data-i18n="about.stack">Tauri · Rust · TypeScript</p>
+              <p class="about-license" data-i18n="about.license">Licence MIT</p>
+            </div>
+          </section>
+
+        </div><!-- /settings-body -->
+
+        <div class="settings-footer">
+          <button class="btn-secondary" id="btn-cancel-settings" data-i18n="settings.cancel">Annuler</button>
+          <button class="btn-primary"   id="btn-save-settings"   data-i18n="settings.save">Enregistrer</button>
+        </div>
+
+      </div><!-- /settings-inner -->
+    </div><!-- /settings-panel -->
+
+    <!-- ══════════════════════════════════════
+         PANNEAU MOTS DE PASSE
+    ══════════════════════════════════════ -->
+    <div id="pw-panel" class="pw-panel hidden" role="dialog" aria-modal="true" aria-label="Mots de passe">
+      <div class="pw-backdrop" id="pw-backdrop"></div>
+      <div class="pw-inner glass-panel">
+
+        <div class="settings-header">
+          <h2 data-i18n="settings.passwords">Mots de passe</h2>
+          <button class="icon-btn" id="btn-close-pw" aria-label="Fermer">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="settings-body">
+          <p class="pw-hint" data-i18n="settings.passwords_hint">Les mots de passe sont chiffrés localement.</p>
+          <div id="pw-list" class="pw-list"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         PROMPT ENREGISTREMENT MDP
+    ══════════════════════════════════════ -->
+    <div id="pw-save-prompt" class="pw-save-prompt hidden glass-card" role="dialog" aria-label="Enregistrer le mot de passe">
+      <p class="pw-save-title" data-i18n="pw.save_prompt">Enregistrer le mot de passe pour ce site ?</p>
+      <div class="pw-save-fields">
+        <input type="text"     id="pw-username-input" class="setting-input"
+               data-i18n-ph="pw.username" placeholder="Identifiant" autocomplete="username"/>
+        <input type="password" id="pw-password-input" class="setting-input"
+               data-i18n-ph="pw.password" placeholder="Mot de passe" autocomplete="current-password"/>
+      </div>
+      <div class="pw-save-actions">
+        <button class="btn-secondary" id="btn-pw-save-cancel" data-i18n="settings.cancel">Annuler</button>
+        <button class="btn-primary"   id="btn-pw-save-confirm" data-i18n="pw.save">Enregistrer</button>
+      </div>
+    </div>
+
+  </div><!-- /content-area -->
+</div><!-- /app -->
+
+</body>
+</html>

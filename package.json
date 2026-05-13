@@ -1,0 +1,27 @@
+{
+  "name": "auralis",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A beautiful, lightweight and fully customizable browser.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "npm run tauri -- dev",
+    "tauri:build": "npm run tauri -- build"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.1.1",
+    "@tauri-apps/plugin-opener": "^2.2.3",
+    "@tauri-apps/plugin-shell": "^2.2.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0",
+    "@types/node": "^25.7.0",
+    "typescript": "^5.6.2",
+    "vite": "^8.0.12"
+  }
+}

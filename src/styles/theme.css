@@ -1,0 +1,202 @@
+/* ═══════════════════════════════════════════════════════════════
+   Theme variables — defines all design tokens for every theme.
+   The [data-theme] attribute on <html> switches the active set.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Dark (Aurora) ─────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --bg-base:    #07050f;
+  --bg-1:       #0c0a1a;
+  --bg-2:       #110e22;
+  --bg-3:       #16122c;
+
+  /* Glass surfaces */
+  --glass-bg:       rgba(255, 255, 255, 0.055);
+  --glass-bg-hover: rgba(255, 255, 255, 0.09);
+  --glass-bg-active:rgba(255, 255, 255, 0.12);
+  --glass-border:   rgba(255, 255, 255, 0.1);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+  --glass-blur:     14px;
+  --glass-blur-lg:  24px;
+
+  /* Accent colours */
+  --accent-rose:        #e8587a;
+  --accent-rose-glow:   rgba(232, 88, 122, 0.35);
+  --accent-violet:      #9b6fe0;
+  --accent-violet-glow: rgba(155, 111, 224, 0.3);
+  --accent-gold:        #f0c060;
+  --accent-gold-glow:   rgba(240, 192, 96, 0.25);
+
+  /* Text */
+  --text-primary:   rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted:     rgba(255, 255, 255, 0.28);
+  --text-accent:    var(--accent-rose);
+
+  /* Interactive */
+  --btn-bg:       rgba(255, 255, 255, 0.07);
+  --btn-bg-hover: rgba(255, 255, 255, 0.13);
+  --btn-bg-press: rgba(255, 255, 255, 0.18);
+  --btn-color:    var(--text-secondary);
+  --btn-color-hover: var(--text-primary);
+
+  /* Input */
+  --input-bg:        rgba(255, 255, 255, 0.06);
+  --input-bg-focus:  rgba(255, 255, 255, 0.1);
+  --input-border:    rgba(255, 255, 255, 0.1);
+  --input-border-focus: var(--accent-rose);
+
+  /* Shadows */
+  --shadow-sm:  0 1px 4px rgba(0,0,0,.4);
+  --shadow-md:  0 4px 20px rgba(0,0,0,.5);
+  --shadow-lg:  0 12px 48px rgba(0,0,0,.7);
+  --glow-rose:  0 0 24px var(--accent-rose-glow);
+  --glow-violet:0 0 24px var(--accent-violet-glow);
+
+  /* Topbar gradient overlay */
+  --chrome-bg: rgba(8, 6, 18, 0.92);
+  --chrome-border: rgba(255,255,255,0.07);
+
+  /* Tab */
+  --tab-bg:        transparent;
+  --tab-bg-hover:  rgba(255,255,255,0.06);
+  --tab-bg-active: rgba(255,255,255,0.11);
+  --tab-border-active: var(--accent-rose);
+
+  /* Scrollbar */
+  --scrollbar-track: rgba(255,255,255,0.03);
+  --scrollbar-thumb: rgba(255,255,255,0.14);
+
+  /* Transitions */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast:   120ms;
+  --t-normal: 220ms;
+  --t-slow:   380ms;
+
+  /* Radius */
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  16px;
+  --r-xl:  22px;
+  --r-full:9999px;
+}
+
+/* ─── Light (Mist) ──────────────────────────────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-base:    #f2eef9;
+  --bg-1:       #ece7f6;
+  --bg-2:       #e4ddf2;
+  --bg-3:       #dbd3ed;
+
+  --glass-bg:        rgba(255, 255, 255, 0.65);
+  --glass-bg-hover:  rgba(255, 255, 255, 0.8);
+  --glass-bg-active: rgba(255, 255, 255, 0.9);
+  --glass-border:    rgba(160, 120, 200, 0.2);
+  --glass-border-strong: rgba(160, 120, 200, 0.36);
+  --glass-blur:      12px;
+  --glass-blur-lg:   20px;
+
+  --accent-rose:        #c9345a;
+  --accent-rose-glow:   rgba(201, 52, 90, 0.2);
+  --accent-violet:      #7c4fd4;
+  --accent-violet-glow: rgba(124, 79, 212, 0.2);
+  --accent-gold:        #b07400;
+  --accent-gold-glow:   rgba(176, 116, 0, 0.15);
+
+  --text-primary:   rgba(20, 8, 40, 0.88);
+  --text-secondary: rgba(20, 8, 40, 0.5);
+  --text-muted:     rgba(20, 8, 40, 0.28);
+  --text-accent:    var(--accent-violet);
+
+  --btn-bg:       rgba(120, 80, 180, 0.08);
+  --btn-bg-hover: rgba(120, 80, 180, 0.14);
+  --btn-bg-press: rgba(120, 80, 180, 0.2);
+  --btn-color:    var(--text-secondary);
+  --btn-color-hover: var(--text-primary);
+
+  --input-bg:        rgba(255, 255, 255, 0.7);
+  --input-bg-focus:  rgba(255, 255, 255, 0.95);
+  --input-border:    rgba(160, 120, 200, 0.25);
+  --input-border-focus: var(--accent-violet);
+
+  --shadow-sm:  0 1px 4px rgba(60,20,100,.1);
+  --shadow-md:  0 4px 20px rgba(60,20,100,.14);
+  --shadow-lg:  0 12px 48px rgba(60,20,100,.2);
+  --glow-rose:  0 0 20px var(--accent-rose-glow);
+  --glow-violet:0 0 20px var(--accent-violet-glow);
+
+  --chrome-bg:     rgba(240, 235, 252, 0.92);
+  --chrome-border: rgba(160, 120, 200, 0.18);
+
+  --tab-bg:        transparent;
+  --tab-bg-hover:  rgba(120, 80, 180, 0.08);
+  --tab-bg-active: rgba(255, 255, 255, 0.75);
+  --tab-border-active: var(--accent-violet);
+
+  --scrollbar-track: rgba(120,80,180,0.06);
+  --scrollbar-thumb: rgba(120,80,180,0.2);
+}
+
+/* ─── Midnight ───────────────────────────────────────────────── */
+[data-theme="midnight"] {
+  color-scheme: dark;
+
+  --bg-base:    #030208;
+  --bg-1:       #06040f;
+  --bg-2:       #090714;
+  --bg-3:       #0c0a1a;
+
+  --glass-bg:        rgba(255, 255, 255, 0.03);
+  --glass-bg-hover:  rgba(255, 255, 255, 0.06);
+  --glass-bg-active: rgba(255, 255, 255, 0.09);
+  --glass-border:    rgba(255, 255, 255, 0.07);
+  --glass-border-strong: rgba(255, 255, 255, 0.13);
+  --glass-blur:      10px;
+  --glass-blur-lg:   18px;
+
+  --accent-rose:        #d44060;
+  --accent-rose-glow:   rgba(212, 64, 96, 0.25);
+  --accent-violet:      #7855c0;
+  --accent-violet-glow: rgba(120, 85, 192, 0.22);
+  --accent-gold:        #c89830;
+  --accent-gold-glow:   rgba(200, 152, 48, 0.18);
+
+  --text-primary:   rgba(255, 255, 255, 0.85);
+  --text-secondary: rgba(255, 255, 255, 0.42);
+  --text-muted:     rgba(255, 255, 255, 0.2);
+  --text-accent:    var(--accent-rose);
+
+  --btn-bg:       rgba(255, 255, 255, 0.04);
+  --btn-bg-hover: rgba(255, 255, 255, 0.09);
+  --btn-bg-press: rgba(255, 255, 255, 0.13);
+  --btn-color:    var(--text-secondary);
+  --btn-color-hover: var(--text-primary);
+
+  --input-bg:        rgba(255, 255, 255, 0.04);
+  --input-bg-focus:  rgba(255, 255, 255, 0.08);
+  --input-border:    rgba(255, 255, 255, 0.07);
+  --input-border-focus: var(--accent-rose);
+
+  --shadow-sm:  0 1px 4px rgba(0,0,0,.6);
+  --shadow-md:  0 4px 20px rgba(0,0,0,.7);
+  --shadow-lg:  0 12px 48px rgba(0,0,0,.9);
+  --glow-rose:  0 0 18px var(--accent-rose-glow);
+  --glow-violet:0 0 18px var(--accent-violet-glow);
+
+  --chrome-bg:     rgba(3, 2, 8, 0.96);
+  --chrome-border: rgba(255,255,255,0.05);
+
+  --tab-bg:        transparent;
+  --tab-bg-hover:  rgba(255,255,255,0.04);
+  --tab-bg-active: rgba(255,255,255,0.08);
+  --tab-border-active: var(--accent-rose);
+
+  --scrollbar-track: rgba(255,255,255,0.02);
+  --scrollbar-thumb: rgba(255,255,255,0.1);
+}

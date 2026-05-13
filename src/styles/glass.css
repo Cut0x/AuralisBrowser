@@ -1,0 +1,100 @@
+/* ═══════════════════════════════════════════════════════════════
+   Glassmorphism utility classes.
+   Apply .glass-card, .glass-panel, etc. to get the frosted effect.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Base glass surface ────────────────────────────────────── */
+.glass {
+  background:    var(--glass-bg);
+  border:        1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+}
+
+/* Elevated card with shadow */
+.glass-card {
+  background:    var(--glass-bg);
+  border:        1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  box-shadow:    var(--shadow-md);
+}
+
+.glass-card-sm {
+  background:    var(--glass-bg);
+  border:        1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  box-shadow:    var(--shadow-sm);
+}
+
+/* Large frosted panel (settings, drawers) */
+.glass-panel {
+  background:    rgba(var(--bg-2-raw, 17, 14, 34), 0.82);
+  border:        1px solid var(--glass-border);
+  border-radius: var(--r-xl);
+  backdrop-filter: blur(var(--glass-blur-lg)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(1.8);
+  box-shadow:    var(--shadow-lg);
+}
+
+/* ─── Interactive glass surfaces ────────────────────────────── */
+.glass-btn {
+  background:  var(--btn-bg);
+  border:      1px solid var(--glass-border);
+  color:       var(--btn-color);
+  border-radius: var(--r-sm);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease),
+    color      var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease);
+}
+
+.glass-btn:hover {
+  background:    var(--btn-bg-hover);
+  color:         var(--btn-color-hover);
+  border-color:  var(--glass-border-strong);
+}
+
+.glass-btn:active {
+  background: var(--btn-bg-press);
+}
+
+/* ─── Glowing border accent ─────────────────────────────────── */
+.glass-glow-rose {
+  box-shadow: var(--glow-rose), var(--shadow-md);
+}
+
+.glass-glow-violet {
+  box-shadow: var(--glow-violet), var(--shadow-md);
+}
+
+/* ─── Scrollbar theming ─────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+::-webkit-scrollbar {
+  width:  6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: var(--r-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background:    var(--scrollbar-thumb);
+  border-radius: var(--r-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-border-strong);
+}

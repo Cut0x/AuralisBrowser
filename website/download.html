@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Télécharger Auralis</title>
+  <meta name="description" content="Téléchargez Auralis — navigateur web léger pour Windows."/>
+  <link rel="icon" type="image/svg+xml" href="../public/auralis.svg"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<div class="site-bg" aria-hidden="true">
+  <div class="site-bg-glow site-bg-glow-1"></div>
+  <div class="site-bg-glow site-bg-glow-2"></div>
+  <div class="site-bg-glow site-bg-glow-3"></div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="navbar-brand">
+    <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+      <defs><linearGradient id="ng2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e8587a"/><stop offset="100%" stop-color="#9b6fe0"/></linearGradient></defs>
+      <rect width="32" height="32" rx="8" fill="rgba(255,255,255,.04)"/>
+      <path d="M16 5L24 27H8L16 5z" stroke="url(#ng2)" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
+      <path d="M10.5 20h11" stroke="url(#ng2)" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    Auralis
+  </a>
+  <div class="navbar-links">
+    <a href="index.html#features" class="navbar-link"><i class="bi bi-stars"></i> Fonctionnalités</a>
+    <a href="index.html#demo"     class="navbar-link"><i class="bi bi-play-circle"></i> Démo</a>
+    <a href="download.html"       class="navbar-link active"><i class="bi bi-download"></i> Télécharger</a>
+    <a href="https://github.com"  class="navbar-link" target="_blank"><i class="bi bi-github"></i> GitHub</a>
+  </div>
+  <div class="navbar-right">
+    <div class="lang-toggle" id="lang-toggle">
+      <button class="lang-btn active" data-lang="fr">FR</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO DOWNLOAD -->
+<section class="download-hero">
+  <div class="container">
+    <span class="section-tag"><i class="bi bi-download"></i> <span data-fr="Téléchargement" data-en="Download">Téléchargement</span></span>
+    <h1 class="section-title gradient-text" data-fr="Installer Auralis" data-en="Install Auralis">Installer Auralis</h1>
+    <p class="section-sub" data-fr="Gratuit, open source, propre à désinstaller." data-en="Free, open source, clean to uninstall.">Gratuit, open source, propre à désinstaller.</p>
+
+    <!-- Platform card -->
+    <div class="platform-card">
+      <div class="platform-os" data-fr="Système détecté" data-en="Detected system">Système détecté</div>
+      <div class="platform-name"><i class="bi bi-windows" style="color:#9b6fe0"></i> Windows 10 / 11</div>
+      <div class="platform-ver">Auralis v0.1.0 · 64-bit</div>
+
+      <!-- Le lien pointera sur le .exe généré par tauri build -->
+      <a href="../src-tauri/target/release/bundle/nsis/Auralis_0.1.0_x64-setup.exe"
+         class="btn-cta" style="width:100%;justify-content:center;"
+         download>
+        <i class="bi bi-download"></i>
+        <span data-fr="Télécharger le setup (.exe)" data-en="Download setup (.exe)">Télécharger le setup (.exe)</span>
+      </a>
+
+      <p class="platform-reqs" data-fr="Nécessite Windows 10 64-bit · WebView2 Runtime (inclus dans Windows 11)" data-en="Requires Windows 10 64-bit · WebView2 Runtime (included in Windows 11)">
+        Nécessite Windows 10 64-bit · WebView2 Runtime (inclus dans Windows 11)
+      </p>
+
+      <div class="download-alts">
+        <a href="../src-tauri/target/release/bundle/msi/Auralis_0.1.0_x64_en-US.msi" class="alt-link" download>
+          <i class="bi bi-box"></i> MSI (entreprise)
+        </a>
+        <a href="https://github.com" class="alt-link" target="_blank">
+          <i class="bi bi-github"></i> Code source
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONFIGURATION REQUISE -->
+<section class="section" style="padding-top:0">
+  <div class="container" style="max-width:640px">
+    <h2 class="section-title" style="font-size:24px;margin-bottom:24px" data-fr="Configuration requise" data-en="System requirements">Configuration requise</h2>
+    <table class="req-table">
+      <tr>
+        <th data-fr="Composant" data-en="Component">Composant</th>
+        <th data-fr="Minimum" data-en="Minimum">Minimum</th>
+        <th data-fr="Recommandé" data-en="Recommended">Recommandé</th>
+      </tr>
+      <tr>
+        <td>OS</td><td>Windows 10 (1903+)</td><td>Windows 11</td>
+      </tr>
+      <tr>
+        <td>Architecture</td><td>x86-64</td><td>x86-64</td>
+      </tr>
+      <tr>
+        <td>RAM</td><td>2 GB</td><td>4 GB</td>
+      </tr>
+      <tr>
+        <td>Stockage</td><td>50 MB</td><td>100 MB</td>
+      </tr>
+      <tr>
+        <td>WebView2</td>
+        <td data-fr="Runtime requis" data-en="Runtime required">Runtime requis</td>
+        <td data-fr="Intégré à Windows 11" data-en="Built into Windows 11">Intégré à Windows 11</td>
+      </tr>
+    </table>
+
+    <div style="margin-top:32px;padding:16px 20px;border-radius:12px;background:rgba(155,111,224,.1);border:1px solid rgba(155,111,224,.2)">
+      <p style="font-size:13px;color:rgba(255,255,255,.7)">
+        <i class="bi bi-info-circle" style="color:#9b6fe0"></i>
+        <span data-fr="WebView2 est pré-installé sur Windows 11. Pour Windows 10, il sera installé automatiquement si absent." data-en="WebView2 is pre-installed on Windows 11. For Windows 10, it will be installed automatically if missing.">
+          WebView2 est pré-installé sur Windows 11. Pour Windows 10, il sera installé automatiquement si absent.
+        </span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALLATION STEPS -->
+<section class="section" style="padding-top:0;padding-bottom:100px">
+  <div class="container" style="max-width:640px">
+    <h2 class="section-title" style="font-size:24px;margin-bottom:28px" data-fr="Installation en 3 étapes" data-en="3-step installation">Installation en 3 étapes</h2>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e8587a,#9b6fe0);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">1</div>
+        <div>
+          <p style="font-weight:600;margin-bottom:4px" data-fr="Télécharger le fichier" data-en="Download the file">Télécharger le fichier</p>
+          <p style="font-size:13px;color:rgba(255,255,255,.55)" data-fr="Cliquez sur le bouton de téléchargement ci-dessus pour obtenir Auralis_0.1.0_x64-setup.exe" data-en="Click the download button above to get Auralis_0.1.0_x64-setup.exe">
+            Cliquez sur le bouton ci-dessus pour obtenir <code>Auralis_0.1.0_x64-setup.exe</code>
+          </p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e8587a,#9b6fe0);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">2</div>
+        <div>
+          <p style="font-weight:600;margin-bottom:4px" data-fr="Lancer l'installateur" data-en="Run the installer">Lancer l'installateur</p>
+          <p style="font-size:13px;color:rgba(255,255,255,.55)" data-fr="Double-cliquez sur le fichier .exe. Windows peut demander une confirmation UAC — c'est normal." data-en="Double-click the .exe file. Windows may ask for UAC confirmation — this is normal.">
+            Double-cliquez sur le .exe. Confirmez l'UAC si demandé.
+          </p>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e8587a,#9b6fe0);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">3</div>
+        <div>
+          <p style="font-weight:600;margin-bottom:4px" data-fr="Choisir votre langue" data-en="Choose your language">Choisir votre langue</p>
+          <p style="font-size:13px;color:rgba(255,255,255,.55)" data-fr="L'installateur vous propose Français ou English. Auralis se lance automatiquement à la fin." data-en="The installer offers French or English. Auralis launches automatically at the end.">
+            L'installateur vous propose FR ou EN. Auralis se lance à la fin.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-brand">Auralis</div>
+  <div class="footer-links">
+    <a href="index.html">Accueil</a>
+    <a href="open/index.html" data-fr="Démo" data-en="Demo">Démo</a>
+    <a href="https://github.com" target="_blank">GitHub</a>
+  </div>
+  <div>MIT License © 2024 Auralis Contributors</div>
+</footer>
+
+<script>
+function setLang(lang) {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-' + lang + ']').forEach(el => {
+    el.innerHTML = el.getAttribute('data-' + lang);
+  });
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  localStorage.setItem('auralis_site_lang', lang);
+}
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+setLang(localStorage.getItem('auralis_site_lang') || 'fr');
+</script>
+</body>
+</html>
