@@ -733,6 +733,102 @@ kbd {
 /* folder tile on new tab */
 .fav-tile-folder .fav-icon { background: var(--accent-violet-glow); }
 
+/* ─── Context menu ────────────────────────────────────────────────── */
+.bm-ctx-menu {
+  position: fixed; z-index: 9999;
+  background: var(--bg-1); border: 1px solid var(--glass-border);
+  border-radius: var(--r-md); box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  min-width: 172px; padding: 4px 0;
+  animation: ctxIn 100ms var(--ease);
+}
+@keyframes ctxIn {
+  from { opacity: 0; transform: scale(.96) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0); }
+}
+.bm-ctx-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 7px 14px;
+  color: var(--text-secondary); font-size: 12.5px; text-align: left;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.bm-ctx-item:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+.bm-ctx-danger { color: var(--accent-rose) !important; }
+.bm-ctx-danger:hover { background: rgba(232,88,122,.12) !important; }
+.bm-ctx-sep { height: 1px; background: var(--glass-border); margin: 3px 8px; }
+
+/* ─── Drag-and-drop indicators ───────────────────────────────────── */
+.bm-dragging { opacity: .4; }
+.bm-drop-before { box-shadow: inset 0 2px 0 var(--accent-violet) !important; }
+.bm-drop-after  { box-shadow: inset 0 -2px 0 var(--accent-violet) !important; }
+.bm-drop-inside { background: var(--accent-violet-glow) !important; border-radius: var(--r-sm); }
+
+/* ─── Move picker modal ──────────────────────────────────────────── */
+.bm-move-backdrop {
+  position: fixed; inset: 0; z-index: 9990;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.bm-move-modal {
+  position: fixed; z-index: 9995;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: var(--bg-1); border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-lg);
+  min-width: 280px; max-width: 360px; max-height: 420px;
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: ctxIn 140ms var(--ease);
+}
+.bm-move-title {
+  padding: 14px 16px 10px; font-size: 13px; font-weight: 600;
+  color: var(--text-primary); border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+.bm-move-item {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 9px 16px;
+  color: var(--text-secondary); font-size: 12.5px; text-align: left;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  overflow: hidden;
+}
+.bm-move-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bm-move-item:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+.bm-move-cancel {
+  margin: 8px 12px; padding: 7px 12px;
+  background: var(--btn-bg); border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm); color: var(--text-secondary); font-size: 12px;
+  transition: background var(--t-fast) var(--ease);
+  flex-shrink: 0;
+}
+.bm-move-cancel:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+
+/* ─── Storage bar ────────────────────────────────────────────────── */
+.storage-bar-wrap { padding: 12px 0 4px; }
+.storage-bar-labels {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;
+}
+.storage-bar-track {
+  height: 6px; background: var(--glass-border);
+  border-radius: var(--r-full); overflow: hidden; margin-bottom: 12px;
+}
+.storage-bar-fill {
+  height: 100%; border-radius: var(--r-full);
+  transition: width .6s var(--ease);
+}
+.storage-bar-breakdown { display: flex; flex-direction: column; gap: 5px; }
+.storage-breakdown-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-secondary);
+}
+.sbi-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ─── Bookmark item count badge ──────────────────────────────────── */
+.bm-item-count {
+  font-size: 10px; color: var(--text-muted);
+  background: var(--btn-bg); border-radius: var(--r-full);
+  padding: 1px 5px; margin-left: 4px; flex-shrink: 0;
+}
+
 /* ─── Focus visible ──────────────────────────────────────────────── */
 :focus-visible { outline: 2px solid var(--accent-violet); outline-offset: 2px; }
 

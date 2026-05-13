@@ -9,7 +9,6 @@ export function parseNetscapeBookmarks(html: string): BookmarkItem[] {
   const doc = parser.parseFromString(html, 'text/html');
   const rootDL = doc.querySelector('dl');
   if (!rootDL) {
-    // Fallback: flat parse of all <a> tags
     const items: BookmarkItem[] = [];
     doc.querySelectorAll('a[href]').forEach(a => {
       const href = a.getAttribute('href') ?? '';
@@ -30,8 +29,12 @@ function parseDL(dl: Element): BookmarkItem[] {
     const node = children[i];
     if (node.tagName !== 'DT') continue;
 
-    const a = node.querySelector('a');
-    const h3 = node.querySelector('h3');
+    // IMPORTANT: Use ':scope > x' to match only DIRECT children of the DT.
+    // The HTML5 parser inserts the folder's <DL> INSIDE the <DT> as a child
+    // (not as a sibling). Without ':scope >', querySelector('a') would recurse
+    // into nested folders and misidentify them as links.
+    const a  = node.querySelector(':scope > a');
+    const h3 = node.querySelector(':scope > h3');
 
     if (a) {
       const href = a.getAttribute('href') ?? '';
@@ -46,18 +49,24 @@ function parseDL(dl: Element): BookmarkItem[] {
         } satisfies BookmarkLink);
       }
     } else if (h3) {
-      // Find the next DL sibling (folder contents)
-      let nextDL: Element | null = null;
-      for (let j = i + 1; j < children.length; j++) {
-        if (children[j].tagName === 'DL') { nextDL = children[j]; break; }
-        if (children[j].tagName === 'DT') break;
-      }
+      // The folder's <DL> is typically a DIRECT CHILD of the <DT> (HTML5 parser
+      // behaviour). Fallback to sibling search for non-standard parsers.
+      const childDL: Element | null =
+        node.querySelector(':scope > dl') ??
+        (() => {
+          for (let j = i + 1; j < children.length; j++) {
+            if (children[j].tagName === 'DL') return children[j];
+            if (children[j].tagName === 'DT') break;
+          }
+          return null;
+        })();
+
       const addDate = h3.getAttribute('add_date');
       items.push({
         id: crypto.randomUUID(),
         type: 'folder',
         name: h3.textContent?.trim() || 'Dossier',
-        children: nextDL ? parseDL(nextDL) : [],
+        children: childDL ? parseDL(childDL) : [],
         createdAt: addDate ? parseInt(addDate) * 1000 : Date.now(),
       } satisfies BookmarkFolder);
     }

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Télécharger Auralis</title>
-  <meta name="description" content="Téléchargez Auralis — navigateur web léger pour Windows."/>
+  <title>Télécharger Auralis — Navigateur Web</title>
+  <meta name="description" content="Téléchargez Auralis v0.2.0 pour Windows. Navigateur léger propulsé par Tauri & Rust."/>
   <link rel="icon" type="image/svg+xml" href="../public/auralis.svg"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
   <link rel="stylesheet" href="css/style.css"/>
@@ -17,22 +17,21 @@
   <div class="site-bg-glow site-bg-glow-3"></div>
 </div>
 
-<!-- NAVBAR -->
-<nav class="navbar">
+<!-- ─── NAVBAR ─────────────────────────────────────────────────────── -->
+<nav class="navbar scrolled" id="navbar">
   <a href="index.html" class="navbar-brand">
-    <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
       <defs><linearGradient id="ng2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e8587a"/><stop offset="100%" stop-color="#9b6fe0"/></linearGradient></defs>
-      <rect width="32" height="32" rx="8" fill="rgba(255,255,255,.04)"/>
-      <path d="M16 5L24 27H8L16 5z" stroke="url(#ng2)" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
-      <path d="M10.5 20h11" stroke="url(#ng2)" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M16 4L26 28H6L16 4z" stroke="url(#ng2)" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+      <path d="M10 21h12" stroke="url(#ng2)" stroke-width="1.8" stroke-linecap="round"/>
     </svg>
     Auralis
   </a>
   <div class="navbar-links">
-    <a href="index.html#features" class="navbar-link"><i class="bi bi-stars"></i> Fonctionnalités</a>
-    <a href="index.html#demo"     class="navbar-link"><i class="bi bi-play-circle"></i> Démo</a>
-    <a href="download.html"       class="navbar-link active"><i class="bi bi-download"></i> Télécharger</a>
-    <a href="https://github.com"  class="navbar-link" target="_blank"><i class="bi bi-github"></i> GitHub</a>
+    <a href="index.html#features" class="navbar-link" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
+    <a href="index.html#screens"  class="navbar-link" data-fr="Aperçu" data-en="Preview">Aperçu</a>
+    <a href="download.html"       class="navbar-link active" data-fr="Télécharger" data-en="Download">Télécharger</a>
+    <a href="https://github.com/Cut0x/AuralisBrowser" class="navbar-link" target="_blank" rel="noopener">GitHub</a>
   </div>
   <div class="navbar-right">
     <div class="lang-toggle" id="lang-toggle">
@@ -42,127 +41,212 @@
   </div>
 </nav>
 
-<!-- HERO DOWNLOAD -->
+<!-- ─── HERO ────────────────────────────────────────────────────────── -->
 <section class="download-hero">
   <div class="container">
-    <span class="section-tag"><i class="bi bi-download"></i> <span data-fr="Téléchargement" data-en="Download">Téléchargement</span></span>
-    <h1 class="section-title gradient-text" data-fr="Installer Auralis" data-en="Install Auralis">Installer Auralis</h1>
-    <p class="section-sub" data-fr="Gratuit, open source, propre à désinstaller." data-en="Free, open source, clean to uninstall.">Gratuit, open source, propre à désinstaller.</p>
+    <div class="reveal">
+      <div class="section-eyebrow" style="margin:0 auto 20px">
+        <span class="section-eyebrow-dot"></span>
+        <span data-fr="Téléchargement" data-en="Download">Téléchargement</span>
+      </div>
+      <h1 class="section-title gradient-text" style="max-width:none" data-fr="Installer Auralis" data-en="Install Auralis">Installer Auralis</h1>
+      <p class="section-sub" style="margin:0 auto 48px" data-fr="Gratuit, open source, propre à désinstaller. Aucune donnée partagée." data-en="Free, open source, clean to uninstall. No shared data.">
+        Gratuit, open source, propre à désinstaller. Aucune donnée partagée.
+      </p>
+    </div>
 
-    <!-- Platform card -->
-    <div class="platform-card">
-      <div class="platform-os" data-fr="Système détecté" data-en="Detected system">Système détecté</div>
-      <div class="platform-name"><i class="bi bi-windows" style="color:#9b6fe0"></i> Windows 10 / 11</div>
-      <div class="platform-ver">Auralis v0.1.0 · 64-bit</div>
+    <!-- Download cards -->
+    <div class="dl-cards reveal">
 
-      <!-- Le lien pointera sur le .exe généré par tauri build -->
-      <a href="./nsis/Auralis_0.1.0_x64-setup.exe"
-         class="btn-cta" style="width:100%;justify-content:center;"
-         download>
-        <i class="bi bi-download"></i>
-        <span data-fr="Télécharger le setup (.exe)" data-en="Download setup (.exe)">Télécharger le setup (.exe)</span>
+      <!-- NSIS recommended -->
+      <div class="dl-card">
+        <div class="dl-card-badge recommended">
+          <i class="bi bi-star-fill" style="font-size:9px"></i>
+          <span data-fr="Recommandé" data-en="Recommended">Recommandé</span>
+        </div>
+        <div class="dl-card-name">
+          <i class="bi bi-windows" style="color:var(--violet);margin-right:6px"></i>
+          <span data-fr="Installateur Windows" data-en="Windows Installer">Installateur Windows</span>
+        </div>
+        <div class="dl-card-info">
+          Auralis v0.2.0 · 64-bit · NSIS
+        </div>
+        <a href="download/nsis/Auralis_0.2.0_x64-setup.exe" class="dl-card-btn" download>
+          <i class="bi bi-download"></i>
+          <span data-fr="Télécharger .exe" data-en="Download .exe">Télécharger .exe</span>
+        </a>
+        <div class="dl-reqs" data-fr="Windows 10 64-bit minimum · WebView2 Runtime (inclus dans Windows 11)" data-en="Windows 10 64-bit minimum · WebView2 Runtime (included in Windows 11)">
+          Windows 10 64-bit minimum · WebView2 Runtime (inclus dans Windows 11)
+        </div>
+      </div>
+
+      <!-- MSI enterprise -->
+      <div class="dl-card">
+        <div class="dl-card-badge enterprise">
+          <i class="bi bi-building" style="font-size:9px"></i>
+          <span data-fr="Entreprise / IT" data-en="Enterprise / IT">Entreprise / IT</span>
+        </div>
+        <div class="dl-card-name">
+          <i class="bi bi-box" style="color:var(--gold);margin-right:6px"></i>
+          <span data-fr="Package MSI" data-en="MSI Package">Package MSI</span>
+        </div>
+        <div class="dl-card-info">
+          Auralis v0.2.0 · 64-bit · MSI
+        </div>
+        <a href="download/msi/Auralis_0.2.0_x64_en-US.msi" class="dl-card-btn muted" download>
+          <i class="bi bi-download"></i>
+          <span data-fr="Télécharger .msi" data-en="Download .msi">Télécharger .msi</span>
+        </a>
+        <div class="dl-reqs" data-fr="Pour déploiement en entreprise via Group Policy ou SCCM." data-en="For enterprise deployment via Group Policy or SCCM.">
+          Pour déploiement en entreprise via Group Policy ou SCCM.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- GitHub alternative -->
+    <div style="text-align:center;margin-top:20px">
+      <a href="https://github.com/Cut0x/AuralisBrowser/releases" class="btn-ghost" target="_blank" rel="noopener" style="font-size:13px;height:38px;padding:0 18px">
+        <i class="bi bi-github"></i>
+        <span data-fr="Toutes les versions sur GitHub" data-en="All versions on GitHub">Toutes les versions sur GitHub</span>
       </a>
-
-      <p class="platform-reqs" data-fr="Nécessite Windows 10 64-bit · WebView2 Runtime (inclus dans Windows 11)" data-en="Requires Windows 10 64-bit · WebView2 Runtime (included in Windows 11)">
-        Nécessite Windows 10 64-bit · WebView2 Runtime (inclus dans Windows 11)
-      </p>
-
-      <div class="download-alts">
-        <a href="./msi/Auralis_0.1.0_x64_en-US.msi" class="alt-link" download>
-          <i class="bi bi-box"></i> MSI (entreprise)
-        </a>
-        <a href="https://github.com" class="alt-link" target="_blank">
-          <i class="bi bi-github"></i> Code source
-        </a>
-      </div>
     </div>
   </div>
 </section>
 
-<!-- CONFIGURATION REQUISE -->
+<!-- ─── SYSTEM REQUIREMENTS ───────────────────────────────────────────── -->
 <section class="section" style="padding-top:0">
-  <div class="container" style="max-width:640px">
-    <h2 class="section-title" style="font-size:24px;margin-bottom:24px" data-fr="Configuration requise" data-en="System requirements">Configuration requise</h2>
-    <table class="req-table">
-      <tr>
-        <th data-fr="Composant" data-en="Component">Composant</th>
-        <th data-fr="Minimum" data-en="Minimum">Minimum</th>
-        <th data-fr="Recommandé" data-en="Recommended">Recommandé</th>
-      </tr>
-      <tr>
-        <td>OS</td><td>Windows 10 (1903+)</td><td>Windows 11</td>
-      </tr>
-      <tr>
-        <td>Architecture</td><td>x86-64</td><td>x86-64</td>
-      </tr>
-      <tr>
-        <td>RAM</td><td>2 GB</td><td>4 GB</td>
-      </tr>
-      <tr>
-        <td>Stockage</td><td>50 MB</td><td>100 MB</td>
-      </tr>
-      <tr>
-        <td>WebView2</td>
-        <td data-fr="Runtime requis" data-en="Runtime required">Runtime requis</td>
-        <td data-fr="Intégré à Windows 11" data-en="Built into Windows 11">Intégré à Windows 11</td>
-      </tr>
-    </table>
+  <div class="container" style="max-width:680px">
 
-    <div style="margin-top:32px;padding:16px 20px;border-radius:12px;background:rgba(155,111,224,.1);border:1px solid rgba(155,111,224,.2)">
-      <p style="font-size:13px;color:rgba(255,255,255,.7)">
-        <i class="bi bi-info-circle" style="color:#9b6fe0"></i>
-        <span data-fr="WebView2 est pré-installé sur Windows 11. Pour Windows 10, il sera installé automatiquement si absent." data-en="WebView2 is pre-installed on Windows 11. For Windows 10, it will be installed automatically if missing.">
-          WebView2 est pré-installé sur Windows 11. Pour Windows 10, il sera installé automatiquement si absent.
-        </span>
+    <div class="reveal">
+      <h2 class="section-title" style="font-size:26px;margin-bottom:28px" data-fr="Configuration requise" data-en="System requirements">Configuration requise</h2>
+      <table class="req-table">
+        <thead>
+          <tr>
+            <th data-fr="Composant" data-en="Component">Composant</th>
+            <th data-fr="Minimum" data-en="Minimum">Minimum</th>
+            <th data-fr="Recommandé" data-en="Recommended">Recommandé</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>OS</td><td>Windows 10 (1903+)</td><td>Windows 11</td></tr>
+          <tr><td data-fr="Architecture" data-en="Architecture">Architecture</td><td>x86-64</td><td>x86-64</td></tr>
+          <tr><td>RAM</td><td>2 GB</td><td>4 GB</td></tr>
+          <tr><td data-fr="Stockage" data-en="Storage">Stockage</td><td>50 MB</td><td>100 MB</td></tr>
+          <tr>
+            <td>WebView2</td>
+            <td data-fr="Runtime requis" data-en="Runtime required">Runtime requis</td>
+            <td data-fr="Intégré à Windows 11" data-en="Built into Windows 11">Intégré à Windows 11</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box reveal" style="margin-top:24px">
+      <i class="bi bi-info-circle"></i>
+      <span data-fr="WebView2 est pré-installé sur Windows 11. Pour Windows 10, il sera téléchargé et installé automatiquement lors de la première installation d'Auralis." data-en="WebView2 is pre-installed on Windows 11. For Windows 10, it will be downloaded and installed automatically during Auralis's first installation.">
+        WebView2 est pré-installé sur Windows 11. Pour Windows 10, il sera téléchargé et installé automatiquement.
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── INSTALLATION STEPS ────────────────────────────────────────────── -->
+<section class="section" style="padding-top:0;padding-bottom:120px">
+  <div class="container" style="max-width:680px">
+
+    <div class="reveal">
+      <h2 class="section-title" style="font-size:26px;margin-bottom:32px" data-fr="Installation en 3 étapes" data-en="3-step installation">Installation en 3 étapes</h2>
+      <div class="steps">
+        <div class="step reveal reveal-delay-1">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-title" data-fr="Télécharger le fichier" data-en="Download the file">Télécharger le fichier</div>
+            <div class="step-desc" data-fr="Cliquez sur «&nbsp;Télécharger .exe&nbsp;» ci-dessus pour obtenir Auralis_0.2.0_x64-setup.exe." data-en="Click &quot;Download .exe&quot; above to get Auralis_0.2.0_x64-setup.exe.">
+              Cliquez sur « Télécharger .exe » ci-dessus pour obtenir <code style="font-size:12px;background:var(--glass);padding:1px 6px;border-radius:4px">Auralis_0.2.0_x64-setup.exe</code>.
+            </div>
+          </div>
+        </div>
+        <div class="step reveal reveal-delay-2">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-title" data-fr="Lancer l'installateur" data-en="Run the installer">Lancer l'installateur</div>
+            <div class="step-desc" data-fr="Double-cliquez sur le fichier .exe. Windows peut demander une confirmation UAC — c'est normal, Auralis est open source." data-en="Double-click the .exe file. Windows may ask for UAC confirmation — that's normal, Auralis is open source.">
+              Double-cliquez sur le .exe. Windows peut demander une confirmation UAC — c'est normal.
+            </div>
+          </div>
+        </div>
+        <div class="step reveal reveal-delay-3">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-title" data-fr="Choisir votre langue" data-en="Choose your language">Choisir votre langue</div>
+            <div class="step-desc" data-fr="L'installateur vous propose Français ou English. Auralis se lance automatiquement à la fin de l'installation." data-en="The installer offers French or English. Auralis launches automatically at the end of installation.">
+              Choisissez FR ou EN. Auralis se lance automatiquement.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── FOOTER ──────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand-col">
+      <div class="footer-logo">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+          <defs><linearGradient id="fng2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e8587a"/><stop offset="100%" stop-color="#9b6fe0"/></linearGradient></defs>
+          <path d="M16 4L26 28H6L16 4z" stroke="url(#fng2)" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+          <path d="M10 21h12" stroke="url(#fng2)" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Auralis
+      </div>
+      <p class="footer-tagline" data-fr="Un vrai navigateur propre, sécurisé, et entièrement personnalisable." data-en="A clean, secure, and fully customizable browser.">
+        Un vrai navigateur propre, sécurisé, et entièrement personnalisable.
       </p>
+      <div class="footer-social">
+        <a href="https://github.com/Cut0x/AuralisBrowser" class="footer-social-link" target="_blank" rel="noopener" title="GitHub">
+          <i class="bi bi-github"></i>
+        </a>
+      </div>
     </div>
-  </div>
-</section>
 
-<!-- INSTALLATION STEPS -->
-<section class="section" style="padding-top:0;padding-bottom:100px">
-  <div class="container" style="max-width:640px">
-    <h2 class="section-title" style="font-size:24px;margin-bottom:28px" data-fr="Installation en 3 étapes" data-en="3-step installation">Installation en 3 étapes</h2>
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;gap:16px;align-items:flex-start">
-        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e8587a,#9b6fe0);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">1</div>
-        <div>
-          <p style="font-weight:600;margin-bottom:4px" data-fr="Télécharger le fichier" data-en="Download the file">Télécharger le fichier</p>
-          <p style="font-size:13px;color:rgba(255,255,255,.55)" data-fr="Cliquez sur le bouton de téléchargement ci-dessus pour obtenir Auralis_0.1.0_x64-setup.exe" data-en="Click the download button above to get Auralis_0.1.0_x64-setup.exe">
-            Cliquez sur le bouton ci-dessus pour obtenir <code>Auralis_0.1.0_x64-setup.exe</code>
-          </p>
-        </div>
+    <div>
+      <div class="footer-col-title" data-fr="Navigation" data-en="Navigation">Navigation</div>
+      <div class="footer-col-links">
+        <a href="index.html"        data-fr="Accueil" data-en="Home">Accueil</a>
+        <a href="index.html#features" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
+        <a href="download.html"     data-fr="Télécharger" data-en="Download">Télécharger</a>
       </div>
-      <div style="display:flex;gap:16px;align-items:flex-start">
-        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e8587a,#9b6fe0);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">2</div>
-        <div>
-          <p style="font-weight:600;margin-bottom:4px" data-fr="Lancer l'installateur" data-en="Run the installer">Lancer l'installateur</p>
-          <p style="font-size:13px;color:rgba(255,255,255,.55)" data-fr="Double-cliquez sur le fichier .exe. Windows peut demander une confirmation UAC — c'est normal." data-en="Double-click the .exe file. Windows may ask for UAC confirmation — this is normal.">
-            Double-cliquez sur le .exe. Confirmez l'UAC si demandé.
-          </p>
-        </div>
+    </div>
+
+    <div>
+      <div class="footer-col-title" data-fr="Projet" data-en="Project">Projet</div>
+      <div class="footer-col-links">
+        <a href="https://github.com/Cut0x/AuralisBrowser" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/Cut0x/AuralisBrowser/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://github.com/Cut0x/AuralisBrowser/issues" target="_blank" rel="noopener" data-fr="Signaler un bug" data-en="Report a bug">Signaler un bug</a>
       </div>
-      <div style="display:flex;gap:16px;align-items:flex-start">
-        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e8587a,#9b6fe0);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">3</div>
-        <div>
-          <p style="font-weight:600;margin-bottom:4px" data-fr="Choisir votre langue" data-en="Choose your language">Choisir votre langue</p>
-          <p style="font-size:13px;color:rgba(255,255,255,.55)" data-fr="L'installateur vous propose Français ou English. Auralis se lance automatiquement à la fin." data-en="The installer offers French or English. Auralis launches automatically at the end.">
-            L'installateur vous propose FR ou EN. Auralis se lance à la fin.
-          </p>
-        </div>
+    </div>
+
+    <div>
+      <div class="footer-col-title" data-fr="Légal" data-en="Legal">Légal</div>
+      <div class="footer-col-links">
+        <a href="https://github.com/Cut0x/AuralisBrowser/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+        <span style="font-size:13px;color:var(--text-3)">Open Source © 2026</span>
       </div>
     </div>
   </div>
-</section>
 
-<footer>
-  <div class="footer-brand">Auralis</div>
-  <div class="footer-links">
-    <a href="index.html">Accueil</a>
-    <a href="open/index.html" data-fr="Démo" data-en="Demo">Démo</a>
-    <a href="https://github.com" target="_blank">GitHub</a>
+  <div class="footer-bottom">
+    <span>MIT License © 2026 Auralis Contributors</span>
+    <span>
+      <span data-fr="Site développé par" data-en="Site developed by">Site développé par</span>
+      <a href="https://valloic.fr" target="_blank" rel="noopener" style="margin-left:4px">Loïc</a>
+    </span>
   </div>
-  <div>MIT License © 2024 Auralis Contributors</div>
 </footer>
 
 <script>
@@ -180,6 +264,11 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => setLang(btn.dataset.lang));
 });
 setLang(localStorage.getItem('auralis_site_lang') || 'fr');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.06 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 </script>
 </body>
 </html>

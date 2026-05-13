@@ -3,115 +3,121 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Auralis — Navigateur Web</title>
-  <meta name="description" content="Auralis — Un navigateur web beau, léger et entièrement personnalisable. Propulsé par Tauri et Rust."/>
+  <title>Auralis — Navigateur Web Léger & Beau</title>
+  <meta name="description" content="Auralis, un navigateur web propulsé par Tauri & Rust. Ultra léger, magnifique, entièrement personnalisable. Aucun Electron. Aucun gaspillage."/>
+  <meta property="og:title"       content="Auralis — Navigateur Web"/>
+  <meta property="og:description" content="Ultra léger, propulsé par Tauri et Rust. Glassmorphism, thèmes, favoris avec dossiers, mots de passe sécurisés."/>
+  <meta property="og:image"       content="imgs/preview.png"/>
+  <meta property="og:type"        content="website"/>
   <link rel="icon" type="image/svg+xml" href="../public/auralis.svg"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
   <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
 
-<!-- Fond animé -->
 <div class="site-bg" aria-hidden="true">
   <div class="site-bg-glow site-bg-glow-1"></div>
   <div class="site-bg-glow site-bg-glow-2"></div>
   <div class="site-bg-glow site-bg-glow-3"></div>
 </div>
 
-<!-- ─── NAVBAR ─────────────────────────────────────────────────── -->
-<nav class="navbar">
+<!-- ─── NAVBAR ─────────────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
   <a href="index.html" class="navbar-brand">
-    <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
       <defs><linearGradient id="ng" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e8587a"/><stop offset="100%" stop-color="#9b6fe0"/></linearGradient></defs>
-      <rect width="32" height="32" rx="8" fill="rgba(255,255,255,.04)"/>
-      <path d="M16 5L24 27H8L16 5z" stroke="url(#ng)" stroke-width="1.6" stroke-linejoin="round" fill="none"/>
-      <path d="M10.5 20h11" stroke="url(#ng)" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M16 4L26 28H6L16 4z" stroke="url(#ng)" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+      <path d="M10 21h12" stroke="url(#ng)" stroke-width="1.8" stroke-linecap="round"/>
     </svg>
     Auralis
   </a>
   <div class="navbar-links">
-    <a href="#features"  class="navbar-link"><i class="bi bi-stars me-1"></i>Fonctionnalités</a>
-    <a href="#demo"      class="navbar-link"><i class="bi bi-play-circle me-1"></i>Démo</a>
-    <a href="download.html" class="navbar-link"><i class="bi bi-download me-1"></i>Télécharger</a>
-    <a href="https://github.com/Cut0x/AuralisBrowser" class="navbar-link" target="_blank" rel="noopener"><i class="bi bi-github me-1"></i>GitHub</a>
+    <a href="#features"  class="navbar-link" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
+    <a href="#screens"   class="navbar-link" data-fr="Aperçu" data-en="Preview">Aperçu</a>
+    <a href="download.html" class="navbar-link" data-fr="Télécharger" data-en="Download">Télécharger</a>
+    <a href="https://github.com/Cut0x/AuralisBrowser" class="navbar-link" target="_blank" rel="noopener">GitHub</a>
   </div>
   <div class="navbar-right">
     <div class="lang-toggle" id="lang-toggle">
       <button class="lang-btn active" data-lang="fr">FR</button>
       <button class="lang-btn" data-lang="en">EN</button>
     </div>
-    <a href="download.html" class="btn-cta" style="height:36px;font-size:13px;padding:0 18px;">
-      <i class="bi bi-download"></i> Télécharger
+    <a href="download.html" class="btn-primary" style="height:38px;font-size:13px;padding:0 18px;">
+      <i class="bi bi-download"></i>
+      <span data-fr="Télécharger" data-en="Download">Télécharger</span>
     </a>
   </div>
 </nav>
 
-<!-- ─── HERO ────────────────────────────────────────────────────── -->
+<!-- ─── HERO ────────────────────────────────────────────────────────── -->
 <section class="hero" id="hero">
   <div class="container">
     <div class="hero-badge">
       <span class="hero-badge-dot"></span>
-      <span class="hero-badge-text" data-fr="Open Source · Gratuit · Léger" data-en="Open Source · Free · Lightweight">Open Source · Gratuit · Léger</span>
+      <span data-fr="v0.2.0 · Open Source · Gratuit" data-en="v0.2.0 · Open Source · Free">v0.2.0 · Open Source · Gratuit</span>
     </div>
 
     <h1 class="hero-title">
-      <span class="gradient-text">Auralis</span><br>
-      <span class="hero-title-sub" data-fr="Le navigateur qu'il fait beau voir." data-en="The browser that's beautiful to see.">Le navigateur qu'il fait beau voir.</span>
+      <span class="gradient-text" data-fr="Auralis" data-en="Auralis">Auralis</span><br>
+      <span data-fr="Le navigateur qu'il" data-en="The browser that's">Le navigateur qu'il</span><br>
+      <em class="gradient-text" data-fr="fait beau voir." data-en="beautiful to see.">fait beau voir.</em>
     </h1>
 
-    <p class="hero-sub" data-fr="Ultra léger, propulsé par Tauri et Rust. Aucun Electron. Aucun gaspillage. Juste de la vitesse et une interface magnifique." data-en="Ultra-lightweight, powered by Tauri and Rust. No Electron. No waste. Just speed and a stunning interface.">
-      Ultra léger, propulsé par Tauri et Rust. Aucun Electron. Aucun gaspillage.
+    <p class="hero-sub" data-fr="Ultra léger, propulsé par Tauri & Rust. Aucun Electron. Glassmorphism, thèmes, favoris avec dossiers, mots de passe AES-GCM." data-en="Ultra-lightweight, powered by Tauri & Rust. No Electron. Glassmorphism, themes, folder bookmarks, AES-GCM passwords.">
+      Ultra léger, propulsé par Tauri &amp; Rust. Aucun Electron. Glassmorphism, thèmes, favoris avec dossiers.
     </p>
 
     <div class="hero-ctas">
-      <a href="download.html" class="btn-cta">
-        <i class="bi bi-download"></i>
+      <a href="download.html" class="btn-primary">
+        <i class="bi bi-windows"></i>
         <span data-fr="Télécharger pour Windows" data-en="Download for Windows">Télécharger pour Windows</span>
       </a>
-      <a href="open/index.html" class="btn-cta btn-outline-cta">
-        <i class="bi bi-browser-chrome"></i>
-        <span data-fr="Essayer dans le navigateur" data-en="Try in browser">Essayer dans le navigateur</span>
+      <a href="https://github.com/Cut0x/AuralisBrowser" class="btn-ghost" target="_blank" rel="noopener">
+        <i class="bi bi-github"></i>
+        <span data-fr="Voir le code source" data-en="View source code">Voir le code source</span>
       </a>
     </div>
 
-    <!-- Mockup navigateur -->
-    <div class="hero-preview">
-      <div class="preview-topbar">
-        <div class="preview-dots">
-          <div class="preview-dot"></div><div class="preview-dot"></div><div class="preview-dot"></div>
-        </div>
-        <div class="preview-tabs">
-          <div class="preview-tab active">Nouvel onglet</div>
-          <div class="preview-tab">github.com</div>
-        </div>
-        <div style="margin-left:auto;display:flex;gap:6px;">
-          <div style="width:22px;height:22px;border-radius:5px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="rgba(255,255,255,.5)" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <!-- Browser window with real screenshot -->
+    <div class="hero-screenshot reveal">
+      <div class="browser-window">
+        <div class="browser-titlebar">
+          <div class="bw-dots">
+            <div class="bw-dot"></div><div class="bw-dot"></div><div class="bw-dot"></div>
+          </div>
+          <div class="bw-tabs">
+            <div class="bw-tab active">
+              <span class="bw-tab-dot"></span>
+              <span data-fr="Nouvel onglet" data-en="New Tab">Nouvel onglet</span>
+            </div>
+            <div class="bw-tab">github.com</div>
+          </div>
+          <div style="margin-left:auto;width:22px;height:22px;border-radius:5px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;opacity:.5">
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 1.5l6 6M7.5 1.5l-6 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           </div>
         </div>
-      </div>
-      <div class="preview-urlbar">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" opacity=".4"><path d="M6 12.5L3 9.5l-1-4L7 1l5 4.5-1 4z" stroke="white" stroke-width="1"/></svg>
-        <div class="preview-urlbar-input">auralis · Un navigateur magnifique</div>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" opacity=".3"><circle cx="7" cy="7" r="2" stroke="white" stroke-width="1.1"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.9 2.9l1.4 1.4M9.7 9.7l1.4 1.4" stroke="white" stroke-width="1.1" stroke-linecap="round"/></svg>
-      </div>
-      <div class="preview-content">
-        <div class="preview-shimmer">
-          <div class="preview-line"></div>
-          <div class="preview-line"></div>
-          <div class="preview-line"></div>
+        <div class="bw-urlbar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" opacity=".35"><path d="M5.5 11L2.5 8.5l-.5-3.5L6.5 1 11 5l-.5 3.5z" stroke="currentColor" stroke-width=".9"/></svg>
+          <div class="bw-urlbar-input">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" opacity=".5"><path d="M5 1h6v6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 1L1 11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <span data-fr="auralis · Un navigateur magnifique" data-en="auralis · A beautiful browser">auralis · Un navigateur magnifique</span>
+          </div>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" opacity=".3"><circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1"/><path d="M6.5 1v1.5M6.5 10V11.5M1 6.5h1.5M10 6.5H11.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
+        </div>
+        <div class="bw-screenshot">
+          <img src="imgs/preview.png" alt="Aperçu d'Auralis" loading="lazy"/>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ─── STATS ────────────────────────────────────────────────────── -->
-<section class="section" style="padding-top:0">
+<!-- ─── STATS ─────────────────────────────────────────────────────────── -->
+<section class="section" style="padding-top:0;padding-bottom:80px">
   <div class="container">
-    <div class="stats-row">
+    <div class="stats-grid reveal">
       <div class="stat-card">
-        <div class="stat-value rose">&lt; 80 MB</div>
+        <div class="stat-value">&lt; 80 MB</div>
         <div class="stat-label" data-fr="RAM au démarrage" data-en="RAM at startup">RAM au démarrage</div>
       </div>
       <div class="stat-card">
@@ -119,143 +125,186 @@
         <div class="stat-label" data-fr="Temps de lancement" data-en="Startup time">Temps de lancement</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value gold">~0%</div>
+        <div class="stat-value gold">~0 %</div>
         <div class="stat-label" data-fr="CPU au repos" data-en="CPU at idle">CPU au repos</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value" style="font-size:28px;background:linear-gradient(135deg,#e8587a,#9b6fe0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">WebView2</div>
+        <div class="stat-value" style="font-size:22px">WebView2</div>
         <div class="stat-label" data-fr="Moteur natif Windows" data-en="Native Windows engine">Moteur natif Windows</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ─── FEATURES ─────────────────────────────────────────────────── -->
+<!-- ─── FEATURES ──────────────────────────────────────────────────────── -->
 <section class="section" id="features">
   <div class="container">
-    <span class="section-tag" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</span>
-    <h2 class="section-title" data-fr="Tout ce dont vous avez besoin.<br>Rien de plus." data-en="Everything you need.<br>Nothing more.">
-      Tout ce dont vous avez besoin.<br>Rien de plus.
-    </h2>
-    <p class="section-sub" data-fr="Auralis est taillé pour la performance et l'esthétique, sans jamais sacrifier l'un pour l'autre." data-en="Auralis is built for performance and aesthetics, without ever sacrificing one for the other.">
-      Auralis est taillé pour la performance et l'esthétique, sans jamais sacrifier l'un pour l'autre.
-    </p>
+    <div class="reveal">
+      <div class="section-eyebrow">
+        <span class="section-eyebrow-dot"></span>
+        <span data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</span>
+      </div>
+      <h2 class="section-title" data-fr="Tout ce qu'un navigateur<br>devrait être." data-en="Everything a browser<br>should be.">
+        Tout ce qu'un navigateur<br>devrait être.
+      </h2>
+      <p class="section-sub" data-fr="Auralis combine performance native et esthétique soignée. Chaque détail est pensé." data-en="Auralis combines native performance with refined aesthetics. Every detail is considered.">
+        Auralis combine performance native et esthétique soignée. Chaque détail est pensé.
+      </p>
+    </div>
+
     <div class="features-grid">
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-1">
         <div class="feature-icon"><i class="bi bi-lightning-charge-fill" style="color:#f0c060"></i></div>
         <h3 class="feature-title" data-fr="Ultra rapide" data-en="Ultra fast">Ultra rapide</h3>
-        <p class="feature-desc" data-fr="Démarrage en moins de 500 ms. WebView2 système, pas de Chromium embarqué." data-en="Starts in under 500ms. System WebView2, no bundled Chromium.">
-          Démarrage en moins de 500 ms. WebView2 système, pas de Chromium embarqué.
+        <p class="feature-desc" data-fr="Démarrage en moins de 500 ms. WebView2 système, pas de Chromium embarqué. Empreinte mémoire minimale." data-en="Starts in under 500ms. System WebView2, no bundled Chromium. Minimal memory footprint.">
+          Démarrage en moins de 500 ms. WebView2 système. Empreinte mémoire minimale.
         </p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-2">
         <div class="feature-icon"><i class="bi bi-palette2" style="color:#e8587a"></i></div>
-        <h3 class="feature-title" data-fr="Thèmes & Personnalisation" data-en="Themes & Customization">Thèmes & Personnalisation</h3>
-        <p class="feature-desc" data-fr="3 thèmes inclus (Aurora, Brume, Minuit). Glassmorphism, couleurs aurora, entièrement modifiable." data-en="3 included themes (Aurora, Mist, Midnight). Glassmorphism, aurora colors, fully customizable.">
-          3 thèmes inclus. Glassmorphism, couleurs aurora, entièrement modifiable.
+        <h3 class="feature-title" data-fr="Thèmes & Design" data-en="Themes & Design">Thèmes & Design</h3>
+        <p class="feature-desc" data-fr="3 thèmes : Aurora (sombre), Brume (beige chaud), Minuit. Glassmorphism, dégradés aurora." data-en="3 themes: Aurora (dark), Mist (warm beige), Midnight. Glassmorphism, aurora gradients.">
+          3 thèmes : Aurora, Brume (beige chaud), Minuit. Glassmorphism et dégradés aurora.
         </p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon"><i class="bi bi-shield-lock-fill" style="color:#9b6fe0"></i></div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon"><i class="bi bi-bookmarks-fill" style="color:#9b6fe0"></i></div>
+        <h3 class="feature-title" data-fr="Favoris & Dossiers" data-en="Bookmarks & Folders">Favoris & Dossiers</h3>
+        <p class="feature-desc" data-fr="Arborescence complète. Créez des dossiers, glissez-déposez pour réorganiser. Import/export Chrome & Firefox avec hiérarchie." data-en="Full tree structure. Create folders, drag-and-drop to reorganize. Import/export Chrome & Firefox with hierarchy.">
+          Arborescence complète. Glisser-déposer. Import Chrome &amp; Firefox avec hiérarchie.
+        </p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon"><i class="bi bi-shield-lock-fill" style="color:#e8587a"></i></div>
         <h3 class="feature-title" data-fr="Mots de passe sécurisés" data-en="Secure passwords">Mots de passe sécurisés</h3>
-        <p class="feature-desc" data-fr="Vos identifiants sont chiffrés localement via AES-GCM. Jamais transmis nulle part." data-en="Your credentials are locally encrypted via AES-GCM. Never transmitted anywhere.">
+        <p class="feature-desc" data-fr="Vos identifiants chiffrés localement via AES-GCM. Jamais transmis, jamais exposés." data-en="Your credentials encrypted locally via AES-GCM. Never transmitted, never exposed.">
           Chiffrement AES-GCM local. Jamais transmis nulle part.
         </p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon"><i class="bi bi-bookmarks-fill" style="color:#e8587a"></i></div>
-        <h3 class="feature-title" data-fr="Favoris & Import" data-en="Bookmarks & Import">Favoris & Import</h3>
-        <p class="feature-desc" data-fr="Barre des favoris visible. Import/export au format HTML Chrome et Firefox." data-en="Visible bookmarks bar. Import/export in Chrome and Firefox HTML format.">
-          Barre des favoris visible. Import/export Chrome et Firefox.
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon"><i class="bi bi-gear-wide-connected" style="color:#9b6fe0"></i></div>
+        <h3 class="feature-title" data-fr="Paramètres avancés" data-en="Advanced settings">Paramètres avancés</h3>
+        <p class="feature-desc" data-fr="Pages dédiées comme Chrome : auralis::settings/favoris, /historique, /cache… Appliqués en direct." data-en="Dedicated pages like Chrome: auralis::settings/bookmarks, /history, /cache… Applied live.">
+          Pages dédiées : auralis::settings/favoris, /historique, /cache. Appliqués en direct.
         </p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal reveal-delay-3">
         <div class="feature-icon"><i class="bi bi-translate" style="color:#f0c060"></i></div>
-        <h3 class="feature-title" data-fr="Français & Anglais" data-en="French & English">Français & Anglais</h3>
-        <p class="feature-desc" data-fr="Interface disponible en FR et EN. Changement à la volée dans les paramètres." data-en="Interface available in FR and EN. Change on the fly in settings.">
-          Interface disponible en FR et EN. Changement à la volée.
-        </p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon"><i class="bi bi-search" style="color:#9b6fe0"></i></div>
-        <h3 class="feature-title" data-fr="Multi-moteurs" data-en="Multi-engine">Multi-moteurs</h3>
-        <p class="feature-desc" data-fr="DuckDuckGo, Google, Brave Search, Startpage. Votre vie privée, votre choix." data-en="DuckDuckGo, Google, Brave Search, Startpage. Your privacy, your choice.">
-          DuckDuckGo, Google, Brave Search, Startpage.
+        <h3 class="feature-title" data-fr="Multi-moteurs & Langue" data-en="Multi-engine & Language">Multi-moteurs & Langue</h3>
+        <p class="feature-desc" data-fr="DuckDuckGo, Google, Brave Search, Startpage. Interface FR et EN avec bascule instantanée." data-en="DuckDuckGo, Google, Brave Search, Startpage. FR and EN interface with instant switch.">
+          DuckDuckGo, Google, Brave, Startpage. Interface FR/EN à la volée.
         </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ─── DEMO ──────────────────────────────────────────────────────── -->
-<section class="section" id="demo">
+<!-- ─── SCREENSHOT SECTION ───────────────────────────────────────────── -->
+<section class="section" id="screens" style="padding-top:0">
   <div class="container">
-    <div class="demo-card">
-      <div class="demo-text">
-        <span class="section-tag" data-fr="Démo live" data-en="Live demo">Démo live</span>
-        <h2 style="margin-top:12px" data-fr="Essayez Auralis<br>dans votre navigateur" data-en="Try Auralis<br>in your browser">
-          Essayez Auralis<br>dans votre navigateur
-        </h2>
-        <p data-fr="Découvrez l'interface complète d'Auralis sans rien installer. La démo tourne directement dans votre navigateur web." data-en="Discover the full Auralis interface without installing anything. The demo runs directly in your web browser.">
-          Découvrez l'interface complète d'Auralis sans rien installer.
-        </p>
-        <a href="open/index.html" class="btn-cta">
-          <i class="bi bi-play-fill"></i>
-          <span data-fr="Lancer la démo" data-en="Launch demo">Lancer la démo</span>
+    <div class="reveal" style="text-align:center;margin-bottom:48px">
+      <div class="section-eyebrow" style="margin:0 auto 20px">
+        <span class="section-eyebrow-dot"></span>
+        <span data-fr="Aperçu" data-en="Preview">Aperçu</span>
+      </div>
+      <h2 class="section-title" data-fr="Beau par défaut." data-en="Beautiful by default.">Beau par défaut.</h2>
+      <p class="section-sub" style="margin:0 auto" data-fr="Auralis est conçu pour être magnifique dès l'installation. Aucune configuration requise." data-en="Auralis is designed to look stunning out of the box. No configuration needed.">
+        Auralis est conçu pour être magnifique dès l'installation.
+      </p>
+    </div>
+
+    <div class="reveal" style="border-radius:var(--r-2xl);overflow:hidden;border:1px solid var(--border);box-shadow:0 40px 100px rgba(0,0,0,.55)">
+      <img src="imgs/preview.png" alt="Aperçu d'Auralis" style="width:100%;display:block;max-height:600px;object-fit:cover;object-position:top">
+    </div>
+  </div>
+</section>
+
+<!-- ─── DOWNLOAD CTA ───────────────────────────────────────────────────── -->
+<section class="section" style="padding-bottom:120px;text-align:center">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-eyebrow" style="margin:0 auto 20px">
+        <span class="section-eyebrow-dot"></span>
+        <span data-fr="Gratuit & Open Source" data-en="Free & Open Source">Gratuit & Open Source</span>
+      </div>
+      <h2 class="section-title" style="max-width:580px;margin:0 auto 16px" data-fr="Prêt à changer de navigateur ?" data-en="Ready to switch browsers?">
+        Prêt à changer de navigateur&nbsp;?
+      </h2>
+      <p class="section-sub" style="margin:0 auto 36px" data-fr="Installation propre, désinstallation propre. Aucune donnée partagée. Aucun tracking." data-en="Clean install, clean uninstall. No shared data. No tracking.">
+        Installation propre, désinstallation propre. Aucune donnée partagée.
+      </p>
+      <div class="hero-ctas" style="justify-content:center">
+        <a href="download.html" class="btn-primary">
+          <i class="bi bi-windows"></i>
+          <span data-fr="Télécharger pour Windows" data-en="Download for Windows">Télécharger pour Windows</span>
+        </a>
+        <a href="https://github.com/Cut0x/AuralisBrowser" class="btn-ghost" target="_blank" rel="noopener">
+          <i class="bi bi-github"></i>
+          <span data-fr="Code source" data-en="Source code">Code source</span>
         </a>
       </div>
-      <div style="flex:1;min-width:200px;display:flex;justify-content:center;">
-        <div style="width:180px;height:140px;border-radius:16px;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:48px;filter:drop-shadow(0 0 24px var(--rose-glow))">
-          <svg width="64" height="64" viewBox="0 0 56 56" fill="none">
-            <defs><linearGradient id="dg" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e8587a"/><stop offset="100%" stop-color="#9b6fe0"/></linearGradient></defs>
-            <path d="M28 8L44 46H12L28 8z" stroke="url(#dg)" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
-            <path d="M18 34h20" stroke="url(#dg)" stroke-width="2.5" stroke-linecap="round"/>
-            <circle cx="28" cy="28" r="26" stroke="url(#dg)" stroke-width="0.6" opacity="0.3"/>
-          </svg>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
-<!-- ─── DOWNLOAD CTA ─────────────────────────────────────────────── -->
-<section class="section" style="padding-bottom:120px">
-  <div class="container" style="text-align:center">
-    <span class="section-tag" data-fr="Gratuit & Open Source" data-en="Free & Open Source">Gratuit & Open Source</span>
-    <h2 class="section-title" style="margin:16px auto;max-width:560px" data-fr="Prêt à changer de navigateur ?" data-en="Ready to switch browsers?">
-      Prêt à changer de navigateur ?
-    </h2>
-    <p class="section-sub" style="margin:0 auto 36px" data-fr="Téléchargez Auralis gratuitement. Installation propre, désinstallation propre." data-en="Download Auralis for free. Clean install, clean uninstall.">
-      Téléchargez Auralis gratuitement. Installation propre, désinstallation propre.
-    </p>
-    <a href="download.html" class="btn-cta">
-      <i class="bi bi-windows"></i>
-      <span data-fr="Télécharger pour Windows" data-en="Download for Windows">Télécharger pour Windows</span>
-    </a>
-  </div>
-</section>
+<!-- ─── FOOTER ─────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand-col">
+      <div class="footer-logo">
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+          <defs><linearGradient id="fng" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e8587a"/><stop offset="100%" stop-color="#9b6fe0"/></linearGradient></defs>
+          <path d="M16 4L26 28H6L16 4z" stroke="url(#fng)" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+          <path d="M10 21h12" stroke="url(#fng)" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Auralis
+      </div>
+      <p class="footer-tagline" data-fr="Un vrai navigateur propre, sécurisé, et entièrement personnalisable." data-en="A clean, secure, and fully customizable browser.">
+        Un vrai navigateur propre, sécurisé, et entièrement personnalisable.
+      </p>
+      <div class="footer-social">
+        <a href="https://github.com/Cut0x/AuralisBrowser" class="footer-social-link" target="_blank" rel="noopener" title="GitHub">
+          <i class="bi bi-github"></i>
+        </a>
+      </div>
+    </div>
 
-<!-- ─── FOOTER ────────────────────────────────────────────────────── -->
-<footer>
-  <div class="footer-brand">Auralis</div>
-  <div class="footer-links">
-    <a href="#features" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
-    <a href="download.html" data-fr="Télécharger" data-en="Download">Télécharger</a>
-    <a href="open/index.html" data-fr="Démo" data-en="Demo">Démo</a>
-    <a href="https://github.com/Cut0x/AuralisBrowser" target="_blank" rel="noopener">GitHub</a>
+    <div>
+      <div class="footer-col-title" data-fr="Navigation" data-en="Navigation">Navigation</div>
+      <div class="footer-col-links">
+        <a href="#features"     data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
+        <a href="#screens"      data-fr="Aperçu" data-en="Preview">Aperçu</a>
+        <a href="download.html" data-fr="Télécharger" data-en="Download">Télécharger</a>
+      </div>
+    </div>
+
+    <div>
+      <div class="footer-col-title" data-fr="Projet" data-en="Project">Projet</div>
+      <div class="footer-col-links">
+        <a href="https://github.com/Cut0x/AuralisBrowser" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/Cut0x/AuralisBrowser/releases" target="_blank" rel="noopener" data-fr="Releases" data-en="Releases">Releases</a>
+        <a href="https://github.com/Cut0x/AuralisBrowser/issues" target="_blank" rel="noopener" data-fr="Signaler un bug" data-en="Report a bug">Signaler un bug</a>
+      </div>
+    </div>
+
+    <div>
+      <div class="footer-col-title" data-fr="Légal" data-en="Legal">Légal</div>
+      <div class="footer-col-links">
+        <a href="https://github.com/Cut0x/AuralisBrowser/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+        <span style="font-size:13px;color:var(--text-3)" data-fr="Open Source © 2026" data-en="Open Source © 2026">Open Source © 2026</span>
+      </div>
+    </div>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:rgba(255,255,255,.35)">
+
+  <div class="footer-bottom">
     <span>MIT License © 2026 Auralis Contributors</span>
-    <span>Site développé par <a href="https://valloic.fr" target="_blank" rel="noopener" style="color:rgba(255,255,255,.55);text-decoration:underline;text-underline-offset:2px">Loïc</a></span>
+    <span data-fr="Site développé par" data-en="Site developed by">Site développé par</span>
+    <a href="https://valloic.fr" target="_blank" rel="noopener">Loïc</a>
   </div>
 </footer>
 
 <script>
-// Language toggle
-const translations = {
-  fr: {}, en: {}
-};
-
+// ─── Language toggle ──────────────────────────────────────────────────────────
 function setLang(lang) {
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-' + lang + ']').forEach(el => {
@@ -266,13 +315,31 @@ function setLang(lang) {
   });
   localStorage.setItem('auralis_site_lang', lang);
 }
-
 document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => setLang(btn.dataset.lang));
 });
+setLang(localStorage.getItem('auralis_site_lang') || 'fr');
 
-const savedLang = localStorage.getItem('auralis_site_lang') || 'fr';
-setLang(savedLang);
+// ─── Navbar scroll effect ─────────────────────────────────────────────────────
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 20);
+}, { passive: true });
+
+// ─── Scroll reveal ─────────────────────────────────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ─── Feature card mouse glow ──────────────────────────────────────────────────
+document.querySelectorAll('.feature-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+    card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+  });
+});
 </script>
 </body>
 </html>

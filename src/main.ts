@@ -9,6 +9,8 @@ import {
   loadSettings, saveSettings,
   addBookmark, removeBookmark, isBookmarked, addHistoryEntry, mergeBookmarks,
   addFolder, renameItem, findBookmarkByUrl, countBookmarkLinks,
+  moveBookmark, findBookmarkById, getFlatFolders,
+  getLocalStorageSize, extractItem,
   type BrowserSettings, type BookmarkItem, type BookmarkFolder,
 } from './storage.js';
 import {
@@ -59,6 +61,167 @@ function displayTitle(url: string): string {
 
 let auralisReturnUrl = 'about:newtab';
 let currentPopover: HTMLElement | null = null;
+
+// ─── Drag-and-drop state ─────────────────────────────────────────────────────
+
+let dragItemId: string | null = null;
+
+// ─── Context menu ─────────────────────────────────────────────────────────────
+
+let ctxItemId: string | null = null;
+
+function getCtxMenu(): HTMLElement {
+  let el = document.getElementById('bm-ctx-menu');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'bm-ctx-menu';
+    el.className = 'bm-ctx-menu';
+    el.style.display = 'none';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function showCtxMenu(e: MouseEvent, itemId: string): void {
+  e.preventDefault();
+  e.stopPropagation();
+  ctxItemId = itemId;
+
+  const item = findBookmarkById(settings.bookmarks, itemId);
+  if (!item) return;
+
+  const menu = getCtxMenu();
+  menu.innerHTML = '';
+
+  if (item.type === 'link') {
+    addCtxBtn(menu, 'open',   '↗ Ouvrir');
+    addCtxSep(menu);
+  }
+  addCtxBtn(menu, 'rename', '✎ Renommer');
+  addCtxBtn(menu, 'move',   '⇢ Déplacer vers…');
+  addCtxSep(menu);
+  addCtxBtn(menu, 'delete', '🗑 Supprimer', true);
+
+  const x = Math.min(e.clientX, window.innerWidth  - 200);
+  const y = Math.min(e.clientY, window.innerHeight - 160);
+  menu.style.cssText = `display:block;left:${x}px;top:${y}px`;
+
+  setTimeout(() => {
+    document.addEventListener('pointerdown', closeCtxOnOutside, { once: true });
+  }, 0);
+}
+
+function addCtxBtn(menu: HTMLElement, action: string, label: string, danger = false): void {
+  const b = document.createElement('button');
+  b.className = `bm-ctx-item${danger ? ' bm-ctx-danger' : ''}`;
+  b.textContent = label;
+  b.addEventListener('click', () => { closeCtxMenu(); handleCtxAction(action); });
+  menu.appendChild(b);
+}
+
+function addCtxSep(menu: HTMLElement): void {
+  const d = document.createElement('div');
+  d.className = 'bm-ctx-sep';
+  menu.appendChild(d);
+}
+
+function closeCtxMenu(): void {
+  const menu = document.getElementById('bm-ctx-menu');
+  if (menu) menu.style.display = 'none';
+}
+
+function closeCtxOnOutside(e: PointerEvent): void {
+  const menu = document.getElementById('bm-ctx-menu');
+  if (menu && !menu.contains(e.target as Node)) closeCtxMenu();
+}
+
+function handleCtxAction(action: string): void {
+  const id = ctxItemId;
+  ctxItemId = null;
+  if (!id) return;
+
+  const item = findBookmarkById(settings.bookmarks, id);
+  if (!item) return;
+
+  switch (action) {
+    case 'open': {
+      if (item.type === 'link') { hideAuralisPage(); navigate(item.url); }
+      break;
+    }
+    case 'rename': {
+      const name = prompt('Nouveau nom :', item.type === 'link' ? item.title : item.name);
+      if (!name?.trim()) return;
+      settings = renameItem(settings, id, name.trim());
+      saveSettings(settings); renderFavBar(); renderNewtabFavs();
+      refreshFavorisPage();
+      break;
+    }
+    case 'move': {
+      showMovePicker(id);
+      break;
+    }
+    case 'delete': {
+      settings = removeBookmark(settings, id);
+      saveSettings(settings); renderFavBar(); renderNewtabFavs();
+      refreshFavorisPage();
+      break;
+    }
+  }
+}
+
+function refreshFavorisPage(): void {
+  const content = document.getElementById('ap-content');
+  if (content && !document.getElementById('auralis-page')!.classList.contains('hidden')) {
+    renderPageFavoris(content);
+  }
+}
+
+function showMovePicker(itemId: string): void {
+  const folders = getFlatFolders(settings.bookmarks).filter(f => f.id !== itemId);
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'bm-move-backdrop';
+
+  const modal = document.createElement('div');
+  modal.className = 'bm-move-modal';
+  modal.innerHTML = `<div class="bm-move-title">Déplacer vers…</div>`;
+
+  function cleanup(): void { backdrop.remove(); modal.remove(); }
+
+  const addFolderBtn = (id: string | null, label: string) => {
+    const b = document.createElement('button');
+    b.className = 'bm-move-item';
+    b.innerHTML = id
+      ? `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 3a1 1 0 0 1 1-1h3l1.5 2H12a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3z" fill="currentColor" opacity=".55"/></svg><span>${esc(label)}</span>`
+      : `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".7"/></svg><span>${esc(label)}</span>`;
+    b.addEventListener('click', () => {
+      if (id) {
+        settings = moveBookmark(settings, itemId, id, 'inside');
+      } else {
+        const [extracted, rest] = extractItem(settings.bookmarks, itemId);
+        if (extracted) settings = { ...settings, bookmarks: [extracted, ...rest] };
+      }
+      saveSettings(settings); renderFavBar(); renderNewtabFavs();
+      refreshFavorisPage();
+      cleanup();
+    });
+    modal.appendChild(b);
+  };
+
+  addFolderBtn(null, '↖ Racine (sans dossier)');
+  for (const f of folders) addFolderBtn(f.id, f.path);
+
+  const cancel = document.createElement('button');
+  cancel.className = 'bm-move-cancel';
+  cancel.textContent = 'Annuler';
+  cancel.addEventListener('click', cleanup);
+  modal.appendChild(cancel);
+
+  backdrop.addEventListener('click', cleanup);
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(modal);
+}
 
 function isAuralisPageVisible(): boolean {
   return !document.getElementById('auralis-page')!.classList.contains('hidden');
@@ -222,7 +385,7 @@ function renderFavBar(): void {
           <path d="M2 3.5L4.5 6 7 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
         </svg>`;
       btn.addEventListener('click', e => { e.stopPropagation(); showFolderPopover(item, btn); });
-      btn.addEventListener('contextmenu', e => { e.preventDefault(); settings = removeBookmark(settings, item.id); saveSettings(settings); renderFavBar(); });
+      btn.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
       favBar.insertBefore(btn, importBtn);
     } else {
       const btn = document.createElement('button');
@@ -232,7 +395,7 @@ function renderFavBar(): void {
         <img class="favbar-favicon" src="${faviconFor(item.url)}" width="14" height="14" alt="" loading="lazy" onerror="this.style.display='none'">
         <span class="favbar-label">${truncate(item.title, 16)}</span>`;
       btn.addEventListener('click', () => navigate(item.url));
-      btn.addEventListener('contextmenu', e => { e.preventDefault(); settings = removeBookmark(settings, item.id); saveSettings(settings); renderFavBar(); renderNewtabFavs(); });
+      btn.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
       favBar.insertBefore(btn, importBtn);
     }
   }
@@ -295,6 +458,7 @@ function renderNewtabFavs(): void {
         </span>
         <span class="fav-label">${truncate(item.name, 14)}</span>`;
       tile.addEventListener('click', () => showFolderPopover(item, tile));
+      tile.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
     } else {
       tile.className = 'fav-tile';
       tile.title = item.title;
@@ -304,6 +468,7 @@ function renderNewtabFavs(): void {
         </span>
         <span class="fav-label">${truncate(item.title, 14)}</span>`;
       tile.addEventListener('click', () => navigate(item.url));
+      tile.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
     }
     newtabFavsEl.appendChild(tile);
   }
@@ -528,10 +693,67 @@ function renderPageFavoris(el: HTMLElement): void {
   el.querySelector('#ap-bm-export')!.addEventListener('click', () => exportBookmarks(settings.bookmarks));
 }
 
+function bmDragClearAll(): void {
+  document.querySelectorAll<HTMLElement>('.bm-item').forEach(el =>
+    el.classList.remove('bm-drop-before', 'bm-drop-after', 'bm-drop-inside', 'bm-dragging'));
+}
+
+function bmDropPosition(e: DragEvent, el: HTMLElement, isFolder: boolean): 'before' | 'after' | 'inside' {
+  const rect = el.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  const h = rect.height;
+  if (y < h * 0.28) return 'before';
+  if (y > h * 0.72) return 'after';
+  return isFolder ? 'inside' : (y < h * 0.5 ? 'before' : 'after');
+}
+
+function attachBmDragDrop(row: HTMLElement, itemId: string, isFolder: boolean): void {
+  row.setAttribute('draggable', 'true');
+
+  row.addEventListener('dragstart', e => {
+    dragItemId = itemId;
+    e.dataTransfer!.effectAllowed = 'move';
+    e.dataTransfer!.setData('text/plain', itemId);
+    setTimeout(() => row.classList.add('bm-dragging'), 0);
+  });
+
+  row.addEventListener('dragend', () => {
+    dragItemId = null;
+    bmDragClearAll();
+  });
+
+  row.addEventListener('dragover', e => {
+    if (!dragItemId || dragItemId === itemId) return;
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = 'move';
+    bmDragClearAll();
+    const pos = bmDropPosition(e, row, isFolder);
+    row.classList.add(pos === 'before' ? 'bm-drop-before' : pos === 'after' ? 'bm-drop-after' : 'bm-drop-inside');
+  });
+
+  row.addEventListener('dragleave', () => {
+    row.classList.remove('bm-drop-before', 'bm-drop-after', 'bm-drop-inside');
+  });
+
+  row.addEventListener('drop', e => {
+    if (!dragItemId) return;
+    e.preventDefault(); e.stopPropagation();
+    const srcId = dragItemId;
+    dragItemId = null;
+    const pos = bmDropPosition(e, row, isFolder);
+    bmDragClearAll();
+    if (srcId === itemId) return;
+    settings = moveBookmark(settings, srcId, itemId, pos);
+    saveSettings(settings); renderFavBar(); renderNewtabFavs();
+    refreshFavorisPage();
+  });
+}
+
 function renderBmTree(container: HTMLElement, items: BookmarkItem[], depth: number): void {
   for (const item of items) {
     if (item.type === 'folder') {
       const wrapper = document.createElement('div');
+      wrapper.className = 'bm-wrapper';
       wrapper.innerHTML = `
         <div class="bm-item" data-id="${item.id}" style="padding-left:${8 + depth * 18}px">
           <span class="bm-item-chevron open">
@@ -541,6 +763,7 @@ function renderBmTree(container: HTMLElement, items: BookmarkItem[], depth: numb
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 3a1 1 0 0 1 1-1h3l1.5 2H12a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3z" fill="var(--accent-violet)" opacity=".6"/></svg>
           </span>
           <span class="bm-item-name">${esc(item.name)}</span>
+          <span class="bm-item-count">${item.children.length}</span>
           <div class="bm-item-actions">
             <button class="bm-action-btn bm-rename" title="Renommer">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 9h1.5L8.5 3.5 7 2 1.5 7.5V9zM10 1L11 2l-1 1-1-1 1-1z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -550,14 +773,17 @@ function renderBmTree(container: HTMLElement, items: BookmarkItem[], depth: numb
             </button>
           </div>
         </div>
-        <div class="bm-folder-children" data-folder-id="${item.id}"></div>`;
+        <div class="bm-folder-children"></div>`;
       container.appendChild(wrapper);
 
-      // Render children
+      const row = wrapper.querySelector<HTMLElement>('.bm-item')!;
       const childContainer = wrapper.querySelector<HTMLElement>('.bm-folder-children')!;
       renderBmTree(childContainer, item.children, depth + 1);
 
-      // Chevron toggle
+      attachBmDragDrop(row, item.id, true);
+
+      row.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
+
       const chevron = wrapper.querySelector<HTMLElement>('.bm-item-chevron')!;
       chevron.addEventListener('click', e => {
         e.stopPropagation();
@@ -572,7 +798,7 @@ function renderBmTree(container: HTMLElement, items: BookmarkItem[], depth: numb
         e.stopPropagation();
         const nameSpan = wrapper.querySelector<HTMLElement>('.bm-item-name')!;
         const old = item.name;
-        nameSpan.innerHTML = `<input class="bm-rename-input" value="${esc(old)}" style="flex:1">`;
+        nameSpan.innerHTML = `<input class="bm-rename-input" value="${esc(old)}">`;
         const inp = nameSpan.querySelector<HTMLInputElement>('input')!;
         inp.focus(); inp.select();
         const commit = () => {
@@ -582,7 +808,10 @@ function renderBmTree(container: HTMLElement, items: BookmarkItem[], depth: numb
           nameSpan.textContent = v;
         };
         inp.addEventListener('blur', commit);
-        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') commit(); if (ev.key === 'Escape') nameSpan.textContent = old; });
+        inp.addEventListener('keydown', ev => {
+          if (ev.key === 'Enter') { ev.stopPropagation(); commit(); }
+          if (ev.key === 'Escape') { ev.stopPropagation(); nameSpan.textContent = old; }
+        });
       });
 
       wrapper.querySelector('.bm-delete')!.addEventListener('click', e => {
@@ -602,6 +831,9 @@ function renderBmTree(container: HTMLElement, items: BookmarkItem[], depth: numb
           <span class="bm-item-name">${esc(item.title)}</span>
           <span class="bm-item-url">${esc(item.url)}</span>
           <div class="bm-item-actions">
+            <button class="bm-action-btn bm-rename" title="Renommer">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 9h1.5L8.5 3.5 7 2 1.5 7.5V9zM10 1L11 2l-1 1-1-1 1-1z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <button class="bm-action-btn bm-delete" title="Supprimer">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4 3V2h4v1M2.5 3l.75 7h5.5l.75-7" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
             </button>
@@ -609,10 +841,37 @@ function renderBmTree(container: HTMLElement, items: BookmarkItem[], depth: numb
         </div>`;
       container.appendChild(row);
 
-      row.querySelector<HTMLElement>('.bm-item')!.addEventListener('click', () => {
-        hideAuralisPage();
-        navigate(item.url);
+      const bmRow = row.querySelector<HTMLElement>('.bm-item')!;
+
+      attachBmDragDrop(bmRow, item.id, false);
+
+      bmRow.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
+
+      bmRow.addEventListener('click', e => {
+        if ((e.target as HTMLElement).closest('.bm-item-actions')) return;
+        hideAuralisPage(); navigate(item.url);
       });
+
+      row.querySelector('.bm-rename')!.addEventListener('click', e => {
+        e.stopPropagation();
+        const nameSpan = row.querySelector<HTMLElement>('.bm-item-name')!;
+        const old = item.title;
+        nameSpan.innerHTML = `<input class="bm-rename-input" value="${esc(old)}">`;
+        const inp = nameSpan.querySelector<HTMLInputElement>('input')!;
+        inp.focus(); inp.select();
+        const commit = () => {
+          const v = inp.value.trim() || old;
+          settings = renameItem(settings, item.id, v);
+          saveSettings(settings); renderFavBar(); renderNewtabFavs();
+          nameSpan.textContent = v;
+        };
+        inp.addEventListener('blur', commit);
+        inp.addEventListener('keydown', ev => {
+          if (ev.key === 'Enter') { ev.stopPropagation(); commit(); }
+          if (ev.key === 'Escape') { ev.stopPropagation(); nameSpan.textContent = old; }
+        });
+      });
+
       row.querySelector('.bm-delete')!.addEventListener('click', e => {
         e.stopPropagation();
         settings = removeBookmark(settings, item.id);
@@ -711,9 +970,41 @@ function renderPageSecurite(el: HTMLElement): void {
 
 // ─── Cache ────────────────────────────────────────────────────────────────────
 function renderPageCache(el: HTMLElement): void {
+  const { used, quota } = getLocalStorageSize();
+  const usedKB  = (used  / 1024).toFixed(1);
+  const quotaMB = (quota / (1024 * 1024)).toFixed(0);
+  const pct     = Math.min(100, (used / quota) * 100).toFixed(1);
+  const barColor = parseFloat(pct) > 80 ? 'var(--accent-rose)' : parseFloat(pct) > 50 ? '#f0c060' : 'var(--accent-violet)';
+
   el.innerHTML = `
     <h2 class="ap-page-title">${t('settings.cache')}</h2>
     <div class="ap-group" style="max-width:560px">
+      <div class="ap-group-title">Stockage local</div>
+      <div class="storage-bar-wrap">
+        <div class="storage-bar-labels">
+          <span>${usedKB} Ko utilisés</span>
+          <span>${pct}% · quota ${quotaMB} Mo</span>
+        </div>
+        <div class="storage-bar-track">
+          <div class="storage-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+        </div>
+        <div class="storage-bar-breakdown">
+          <div class="storage-breakdown-item">
+            <span class="sbi-dot" style="background:var(--accent-violet)"></span>
+            <span>Favoris (${countBookmarkLinks(settings.bookmarks)} liens, ${settings.bookmarks.length} items racine)</span>
+          </div>
+          <div class="storage-breakdown-item">
+            <span class="sbi-dot" style="background:#f0c060"></span>
+            <span>Historique (${settings.history.length} entrées)</span>
+          </div>
+          <div class="storage-breakdown-item">
+            <span class="sbi-dot" style="background:var(--accent-rose)"></span>
+            <span>Mots de passe (${settings.passwords.length} enregistrés)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ap-group" style="max-width:560px;margin-top:16px">
       <div class="ap-group-title">Historique de navigation</div>
       <div class="ap-row ap-row--toggle">
         <div class="ap-label">
@@ -728,6 +1019,7 @@ function renderPageCache(el: HTMLElement): void {
     settings = { ...settings, history: [] };
     saveSettings(settings);
     toast(t('toast.history_cleared'));
+    renderPageCache(el);
   });
 }
 
