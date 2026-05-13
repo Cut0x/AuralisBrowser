@@ -54,6 +54,7 @@ export function resolveInput(input: string, engine: SearchEngine): string {
   const trimmed = input.trim();
   if (!trimmed) return 'about:newtab';
   if (trimmed === 'about:newtab' || trimmed === 'about:blank') return trimmed;
+  if (trimmed.startsWith('auralis::')) return trimmed; // internal pages
   if (isUrl(trimmed)) return normalizeUrl(trimmed);
   if (isDomain(trimmed)) return normalizeUrl(trimmed);
   return buildSearchUrl(trimmed, engine);

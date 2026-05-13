@@ -20,9 +20,7 @@
     <!-- TOPBAR : onglets + bouton + contrôles fenêtre à DROITE -->
     <div id="topbar" class="topbar" data-tauri-drag-region>
 
-      <!-- Zone d'onglets — le bouton + est le DERNIER enfant -->
       <div id="tab-strip" class="tab-strip" data-tauri-drag-region="false">
-        <!-- Onglets injectés ici par main.ts, AVANT ce bouton -->
         <button class="btn-new-tab" id="btn-new-tab"
                 data-i18n-title="tab.new_title" title="Nouvel onglet (Ctrl+T)"
                 aria-label="Nouvel onglet">
@@ -32,10 +30,8 @@
         </button>
       </div>
 
-      <!-- Espace flexible pour pousser les contrôles à droite -->
       <div class="topbar-spacer" data-tauri-drag-region></div>
 
-      <!-- Contrôles fenêtre (DROITE) -->
       <div class="window-controls" data-tauri-drag-region="false">
         <button class="win-btn win-minimize" id="btn-minimize" title="Réduire" aria-label="Réduire">
           <svg width="10" height="2" viewBox="0 0 10 2" fill="none" aria-hidden="true">
@@ -56,7 +52,7 @@
 
     </div><!-- /topbar -->
 
-    <!-- NAVBAR : précédent / suivant / recharger + URL + favoris + mots de passe + paramètres -->
+    <!-- NAVBAR -->
     <div id="navbar" class="navbar">
 
       <div class="nav-controls">
@@ -131,7 +127,6 @@
 
     <!-- BARRE DES FAVORIS -->
     <div id="favorites-bar" class="favorites-bar" role="navigation" aria-label="Favoris">
-      <!-- Items injectés par main.ts AVANT ce bouton -->
       <button class="favbar-import-btn" id="btn-favbar-import"
               data-i18n-title="favbar.import_title" title="Importer les favoris">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
@@ -172,7 +167,6 @@
             </svg>
           </div>
           <h1 class="logo-wordmark">Auralis</h1>
-          <p class="logo-tagline" data-i18n="newtab.tagline">Un navigateur beau, léger et entièrement personnalisable.</p>
         </div>
         <div class="newtab-search-wrap">
           <div class="newtab-search-inner">
@@ -192,8 +186,7 @@
       </div>
     </div>
 
-    <!-- Le contenu web est rendu dans un child webview natif Tauri (géré par lib.rs).
-         Pas d'iframe ici — aucune restriction X-Frame-Options. -->
+    <!-- Le contenu web est rendu dans un child webview natif Tauri (lib.rs). -->
     <button id="btn-open-external" class="btn-open-external hidden"
             title="Ouvrir dans le navigateur système" aria-label="Ouvrir externalement">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -202,113 +195,65 @@
     </button>
 
     <!-- ══════════════════════════════════════
-         PANNEAU PARAMÈTRES
+         AURALIS PAGES (auralis::settings/...)
     ══════════════════════════════════════ -->
-    <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="true" aria-label="Paramètres">
-      <div class="settings-backdrop" id="settings-backdrop"></div>
-      <div class="settings-inner glass-panel">
+    <div id="auralis-page" class="auralis-page hidden" role="main">
 
-        <div class="settings-header">
-          <h2 data-i18n="settings.title">Paramètres</h2>
-          <button class="icon-btn" id="btn-close-settings" aria-label="Fermer">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
-          </button>
+      <aside class="ap-sidebar">
+        <div class="ap-sidebar-brand">
+          <svg width="18" height="18" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="apg" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="var(--accent-rose)"/>
+                <stop offset="100%" stop-color="var(--accent-violet)"/>
+              </linearGradient>
+            </defs>
+            <path d="M28 8L44 46H12L28 8z" stroke="url(#apg)" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+            <path d="M18 34h20" stroke="url(#apg)" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <span>Auralis</span>
         </div>
+        <nav id="ap-nav">
+          <a class="ap-nav-item" data-page="apparence" href="#">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M7 2v3M7 9v3M2 7h3M9 7h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span data-i18n="settings.apparence">Apparence</span>
+          </a>
+          <a class="ap-nav-item" data-page="moteur" href="#">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M9.5 9.5L12.5 12.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span data-i18n="settings.moteur">Moteur</span>
+          </a>
+          <a class="ap-nav-item" data-page="demarrage" href="#">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7a5 5 0 1 1 10 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M7 2v2M4.2 3.2l1.4 1.4M2.5 6h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M2 8h10v4H2z" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+            <span data-i18n="settings.demarrage">Démarrage</span>
+          </a>
+          <a class="ap-nav-item" data-page="favoris" href="#">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 2h4l1 1.5H12a1 1 0 0 1 1 1V11a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.2"/></svg>
+            <span data-i18n="settings.favoris">Favoris</span>
+          </a>
+          <a class="ap-nav-item" data-page="historique" href="#">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span data-i18n="settings.historique">Historique</span>
+          </a>
+          <a class="ap-nav-item" data-page="securite" href="#">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="2.5" y="6" width="9" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="9.5" r=".8" fill="currentColor"/></svg>
+            <span data-i18n="settings.securite">Sécurité</span>
+          </a>
+          <a class="ap-nav-item" data-page="cache" href="#">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 4h10M4 4V2.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5V4M3 4l.75 8h6.5L11 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span data-i18n="settings.cache">Cache</span>
+          </a>
+          <a class="ap-nav-item" data-page="a-propos" href="#">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M7 6v5M7 4.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <span data-i18n="settings.a_propos">À propos</span>
+          </a>
+        </nav>
+      </aside>
 
-        <div class="settings-body">
+      <div class="ap-content" id="ap-content">
+        <!-- Rendered by main.ts -->
+      </div>
 
-          <section class="settings-section">
-            <h3 class="settings-section-title" data-i18n="settings.appearance">Apparence</h3>
-            <div class="setting-row">
-              <label class="setting-label" for="setting-theme" data-i18n="settings.theme">Thème</label>
-              <select id="setting-theme" class="setting-select">
-                <option value="dark"     data-i18n="settings.theme_dark">Sombre — Aurora</option>
-                <option value="light"    data-i18n="settings.theme_light">Clair — Brume</option>
-                <option value="midnight" data-i18n="settings.theme_midnight">Minuit</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <label class="setting-label" for="setting-lang" data-i18n="settings.language">Langue</label>
-              <select id="setting-lang" class="setting-select">
-                <option value="fr">Français</option>
-                <option value="en">English</option>
-              </select>
-            </div>
-            <div class="setting-row setting-row--toggle">
-              <label class="setting-label" for="setting-favbar" data-i18n="settings.favbar">Afficher la barre des favoris</label>
-              <label class="toggle">
-                <input type="checkbox" id="setting-favbar" checked/>
-                <span class="toggle-track"></span>
-              </label>
-            </div>
-          </section>
-
-          <section class="settings-section">
-            <h3 class="settings-section-title" data-i18n="settings.search">Moteur de recherche</h3>
-            <div class="setting-row">
-              <label class="setting-label" for="setting-engine" data-i18n="settings.engine">Moteur par défaut</label>
-              <select id="setting-engine" class="setting-select">
-                <option value="duckduckgo">DuckDuckGo</option>
-                <option value="google">Google</option>
-                <option value="brave">Brave Search</option>
-                <option value="startpage">Startpage</option>
-              </select>
-            </div>
-          </section>
-
-          <section class="settings-section">
-            <h3 class="settings-section-title" data-i18n="settings.homepage">Page d'accueil</h3>
-            <div class="setting-row setting-row--col">
-              <label class="setting-label" for="setting-homepage" data-i18n="settings.homepage_url">URL de démarrage</label>
-              <input type="text" id="setting-homepage" class="setting-input" placeholder="about:newtab"/>
-            </div>
-          </section>
-
-          <section class="settings-section">
-            <h3 class="settings-section-title" data-i18n="settings.bookmarks">Favoris</h3>
-            <div class="setting-row setting-row--btns">
-              <button class="btn-outline" id="btn-import-bookmarks" data-i18n="settings.import_btn">
-                Importer (HTML Chrome/Firefox)
-              </button>
-              <button class="btn-outline" id="btn-export-bookmarks" data-i18n="settings.export_btn">
-                Exporter
-              </button>
-            </div>
-          </section>
-
-          <section class="settings-section">
-            <h3 class="settings-section-title" data-i18n="settings.shortcuts">Raccourcis clavier</h3>
-            <div class="shortcuts-list">
-              <div class="shortcut-row"><kbd>Ctrl+L</kbd><span>Barre d'adresse</span></div>
-              <div class="shortcut-row"><kbd>Ctrl+T</kbd><span>Nouvel onglet</span></div>
-              <div class="shortcut-row"><kbd>Ctrl+W</kbd><span>Fermer l'onglet</span></div>
-              <div class="shortcut-row"><kbd>Ctrl+R</kbd><span>Recharger</span></div>
-              <div class="shortcut-row"><kbd>Alt+←</kbd><span>Précédent</span></div>
-              <div class="shortcut-row"><kbd>Alt+→</kbd><span>Suivant</span></div>
-            </div>
-          </section>
-
-          <section class="settings-section">
-            <h3 class="settings-section-title" data-i18n="settings.about">À propos</h3>
-            <div class="about-card glass-card-sm">
-              <p class="about-name">Auralis <span class="about-version">v0.1.0</span></p>
-              <p class="about-desc" data-i18n="about.desc">Un navigateur beau, léger et personnalisable.</p>
-              <p class="about-stack" data-i18n="about.stack">Tauri · Rust · TypeScript</p>
-              <p class="about-license" data-i18n="about.license">Licence MIT</p>
-            </div>
-          </section>
-
-        </div><!-- /settings-body -->
-
-        <div class="settings-footer">
-          <button class="btn-secondary" id="btn-cancel-settings" data-i18n="settings.cancel">Annuler</button>
-          <button class="btn-primary"   id="btn-save-settings"   data-i18n="settings.save">Enregistrer</button>
-        </div>
-
-      </div><!-- /settings-inner -->
-    </div><!-- /settings-panel -->
+    </div><!-- /auralis-page -->
 
     <!-- ══════════════════════════════════════
          PANNEAU MOTS DE PASSE
@@ -318,7 +263,7 @@
       <div class="pw-inner glass-panel">
 
         <div class="settings-header">
-          <h2 data-i18n="settings.passwords">Mots de passe</h2>
+          <h2 data-i18n="settings.securite">Sécurité</h2>
           <button class="icon-btn" id="btn-close-pw" aria-label="Fermer">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>

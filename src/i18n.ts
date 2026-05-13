@@ -1,12 +1,10 @@
 // Internationalisation — FR / EN.
-// All UI strings live here. Call t(key) after setLang(lang).
 
 export type Lang = 'fr' | 'en';
 
 const STRINGS: Record<Lang, Record<string, string>> = {
   fr: {
     /* New tab */
-    'newtab.tagline':         'Un navigateur beau, léger et entièrement personnalisable.',
     'newtab.search':          'Rechercher sur le web…',
     'newtab.no_bookmarks':    'Pas encore de favoris — naviguez vers une page et cliquez sur ☆.',
     /* Topbar */
@@ -24,26 +22,32 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     /* Favorites bar */
     'favbar.import':          'Importer',
     'favbar.import_title':    'Importer les favoris (Chrome/Firefox HTML)',
-    /* Settings */
+    /* Settings pages */
     'settings.title':         'Paramètres',
-    'settings.appearance':    'Apparence',
+    'settings.apparence':     'Apparence',
+    'settings.moteur':        'Moteur de recherche',
+    'settings.demarrage':     'Démarrage',
+    'settings.favoris':       'Favoris',
+    'settings.historique':    'Historique',
+    'settings.securite':      'Sécurité',
+    'settings.cache':         'Cache & Données',
+    'settings.a_propos':      'À propos',
+    /* Settings fields */
     'settings.theme':         'Thème',
     'settings.theme_dark':    'Sombre — Aurora',
     'settings.theme_light':   'Clair — Brume',
     'settings.theme_midnight':'Minuit',
     'settings.language':      'Langue',
-    'settings.search':        'Moteur de recherche',
     'settings.engine':        'Moteur par défaut',
-    'settings.homepage':      'Page d\'accueil',
     'settings.homepage_url':  'URL de démarrage',
     'settings.favbar':        'Afficher la barre des favoris',
-    'settings.bookmarks':     'Favoris',
     'settings.import_btn':    'Importer (HTML Chrome/Firefox)',
     'settings.export_btn':    'Exporter',
-    'settings.passwords':     'Mots de passe',
-    'settings.passwords_hint':'Les mots de passe sont chiffrés localement.',
+    'settings.new_folder':    'Nouveau dossier',
+    'settings.clear_history': 'Effacer l\'historique',
+    'settings.clear_confirm': 'Tout l\'historique sera supprimé définitivement.',
+    'settings.passwords_hint':'Les mots de passe sont chiffrés localement (AES-GCM).',
     'settings.shortcuts':     'Raccourcis clavier',
-    'settings.about':         'À propos',
     'settings.save':          'Enregistrer',
     'settings.cancel':        'Annuler',
     /* Passwords */
@@ -54,11 +58,6 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     'pw.fill':                'Copier',
     'pw.delete':              'Supprimer',
     'pw.no_saved':            'Aucun mot de passe enregistré.',
-    'pw.domain':              'Domaine',
-    /* Blocked page */
-    'blocked.title':          'Impossible d\'afficher cette page ici',
-    'blocked.desc':           'Ce site bloque l\'intégration. Ouvrez-le dans votre navigateur système.',
-    'blocked.open':           'Ouvrir dans le navigateur système',
     /* Toasts */
     'toast.bookmark_added':   'Favori ajouté',
     'toast.bookmark_removed': 'Favori supprimé',
@@ -67,14 +66,14 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     'toast.pw_deleted':       'Mot de passe supprimé',
     'toast.copied':           'Copié dans le presse-papiers',
     'toast.imported':         'Favoris importés',
+    'toast.history_cleared':  'Historique effacé',
+    'toast.folder_created':   'Dossier créé',
     /* About */
-    'about.desc':             'Un navigateur beau, léger et personnalisable.',
     'about.stack':            'Tauri · Rust · TypeScript',
-    'about.license':          'Licence MIT',
+    'about.license':          'Licence MIT © 2026',
   },
 
   en: {
-    'newtab.tagline':         'A beautiful, lightweight and fully customizable browser.',
     'newtab.search':          'Search the web…',
     'newtab.no_bookmarks':    'No bookmarks yet — browse to a page and click ☆ to save.',
     'tab.new':                'New Tab',
@@ -90,24 +89,29 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     'favbar.import':          'Import',
     'favbar.import_title':    'Import bookmarks (Chrome/Firefox HTML)',
     'settings.title':         'Settings',
-    'settings.appearance':    'Appearance',
+    'settings.apparence':     'Appearance',
+    'settings.moteur':        'Search Engine',
+    'settings.demarrage':     'Startup',
+    'settings.favoris':       'Bookmarks',
+    'settings.historique':    'History',
+    'settings.securite':      'Security',
+    'settings.cache':         'Cache & Data',
+    'settings.a_propos':      'About',
     'settings.theme':         'Theme',
     'settings.theme_dark':    'Dark — Aurora',
     'settings.theme_light':   'Light — Mist',
     'settings.theme_midnight':'Midnight',
     'settings.language':      'Language',
-    'settings.search':        'Search Engine',
     'settings.engine':        'Default engine',
-    'settings.homepage':      'Homepage',
     'settings.homepage_url':  'Startup URL',
     'settings.favbar':        'Show favorites bar',
-    'settings.bookmarks':     'Bookmarks',
     'settings.import_btn':    'Import (Chrome/Firefox HTML)',
     'settings.export_btn':    'Export',
-    'settings.passwords':     'Passwords',
-    'settings.passwords_hint':'Passwords are encrypted locally.',
+    'settings.new_folder':    'New folder',
+    'settings.clear_history': 'Clear history',
+    'settings.clear_confirm': 'All browsing history will be permanently deleted.',
+    'settings.passwords_hint':'Passwords are encrypted locally (AES-GCM).',
     'settings.shortcuts':     'Keyboard shortcuts',
-    'settings.about':         'About',
     'settings.save':          'Save',
     'settings.cancel':        'Cancel',
     'pw.save_prompt':         'Save password for this site?',
@@ -117,10 +121,6 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     'pw.fill':                'Copy',
     'pw.delete':              'Delete',
     'pw.no_saved':            'No saved passwords.',
-    'pw.domain':              'Domain',
-    'blocked.title':          'Cannot display this page here',
-    'blocked.desc':           'This site blocks embedding. Open it in your system browser.',
-    'blocked.open':           'Open in system browser',
     'toast.bookmark_added':   'Bookmark added',
     'toast.bookmark_removed': 'Bookmark removed',
     'toast.settings_saved':   'Settings saved',
@@ -128,9 +128,10 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     'toast.pw_deleted':       'Password deleted',
     'toast.copied':           'Copied to clipboard',
     'toast.imported':         'Bookmarks imported',
-    'about.desc':             'A beautiful, lightweight and customizable browser.',
+    'toast.history_cleared':  'History cleared',
+    'toast.folder_created':   'Folder created',
     'about.stack':            'Tauri · Rust · TypeScript',
-    'about.license':          'MIT License',
+    'about.license':          'MIT License © 2026',
   },
 };
 
@@ -149,7 +150,6 @@ export function t(key: string): string {
   return STRINGS[_lang][key] ?? STRINGS['en'][key] ?? key;
 }
 
-/** Update every element with data-i18n and data-i18n-placeholder in the DOM. */
 export function applyAll(): void {
   document.querySelectorAll<HTMLElement>('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n!;
