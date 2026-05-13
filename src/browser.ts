@@ -101,7 +101,7 @@ export class BrowserEngine {
     setNavLoading(true);
     this._navigationPending = true;
     this._lastHandledUrl    = '';
-    invoke<void>('content_eval', { js: 'location.reload()' }).catch(console.error);
+    invoke<void>('content_reload').catch(console.error);
   }
 
   showNewtab(): void {
@@ -164,7 +164,7 @@ export class BrowserEngine {
 
       // Inject interceptors after each real page load
       void this.injectNewTabScript();
-      void this.injectFormListener();
+      void this.injectFormCapture();
     });
 
     await listen<{ url: string; title: string }>('content-title', e => {
@@ -206,30 +206,45 @@ export class BrowserEngine {
     invoke<void>('content_navigate', { url }).catch(console.error);
   }
 
-  /** Inject a form submit interceptor to auto-detect password logins.
-   *  On form submit with a password field: encodes credentials, navigates to sentinel URL.
-   *  Rust intercepts, decodes, emits content-pw-detected, cancels navigation.
-   *  The form then re-submits normally via setTimeout. */
-  private async injectFormListener(): Promise<void> {
+  /** Capture password credentials on form submit WITHOUT preventing default navigation.
+   *  Strategy: store creds in window.name before the form navigates away; on the next
+   *  page load, retrieve them from window.name and trigger the sentinel URL so Rust
+   *  can emit content-pw-detected.  window.name persists across cross-origin navigations
+   *  in the same tab, making this work even when login and success pages differ in origin. */
+  private async injectFormCapture(): Promise<void> {
     const js = `(function(){
-if(window.__a_pwpatch)return;
-window.__a_pwpatch=true;
-document.addEventListener('submit',function(e){
-  var form=e.target;
-  if(!form||form.tagName!=='FORM')return;
-  var pw=form.querySelector('input[type="password"]');
-  if(!pw||!pw.value)return;
-  if(form.__auralis_sub)return;
-  var uf=form.querySelector('input[type="email"],input[type="text"],[name*="user"],[name*="email"],[name*="login"],[id*="user"],[id*="email"],[id*="login"]');
-  var u=uf?uf.value:'';
-  form.__auralis_sub=true;
-  e.preventDefault();
+  if(window.__a_pwcap)return;
+  window.__a_pwcap=true;
+  function bd(h){var p=h.replace(/^www\\./,'').split('.');return p.length>=2?p.slice(-2).join('.'):h;}
+  // Submit listener — NO preventDefault, credentials captured just before nav
+  document.addEventListener('submit',function(e){
+    var f=e.target;
+    if(!f||f.tagName!=='FORM')return;
+    var pw=f.querySelector('input[type="password"]');
+    if(!pw||!pw.value)return;
+    var uf=f.querySelector('input[type="email"],input[type="text"],[autocomplete*="username"],[autocomplete*="email"],[name*="user"],[name*="email"],[name*="login"],[id*="user"],[id*="email"],[id*="login"]');
+    try{
+      var n={};try{n=JSON.parse(window.name);}catch{}
+      n.__a_pw={u:uf?uf.value:'',p:pw.value,h:window.location.hostname,t:Date.now()};
+      window.name=JSON.stringify(n);
+    }catch{}
+  },true);
+  // Check for creds saved by the previous page (after successful login redirect)
   try{
-    var d=btoa(unescape(encodeURIComponent(JSON.stringify({u:u,p:pw.value}))));
-    window.location.href='http://auralis-pw.invalid/save?d='+encodeURIComponent(d);
-  }catch(err){}
-  setTimeout(function(){form.__auralis_sub=false;form.submit();},200);
-},true);
+    var n={};try{n=JSON.parse(window.name);}catch{}
+    if(n.__a_pw&&(Date.now()-n.__a_pw.t)<20000){
+      var c=n.__a_pw;
+      if(bd(c.h)===bd(window.location.hostname)){
+        delete n.__a_pw;window.name=JSON.stringify(n);
+        setTimeout(function(){
+          try{
+            var d=btoa(unescape(encodeURIComponent(JSON.stringify({u:c.u,p:c.p}))));
+            window.location.href='http://auralis-pw.invalid/save?d='+encodeURIComponent(d);
+          }catch{}
+        },600);
+      }
+    }
+  }catch{}
 })();`;
     await invoke<void>('content_eval', { js }).catch(() => {});
   }

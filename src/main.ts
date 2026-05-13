@@ -2,7 +2,6 @@
 
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke }           from '@tauri-apps/api/core';
-import { listen }           from '@tauri-apps/api/event';
 import { TabManager }       from './tabs.js';
 import { BrowserEngine }    from './browser.js';
 import { setLang, applyAll, t } from './i18n.js';
@@ -33,11 +32,6 @@ applyTheme(settings.theme);
 setLang(settings.language);
 applyAll();
 
-// ─── Settings window mode ────────────────────────────────────────────────────
-// When opened via open_settings_window(), the Tauri window label is "settings".
-// Detect this synchronously; the initial page is fetched async via command.
-const _isSettingsWin = appWindow.label === 'settings';
-
 // ─── DOM refs ────────────────────────────────────────────────────────────────
 
 const urlbar       = document.getElementById('urlbar')           as HTMLInputElement;
@@ -60,6 +54,8 @@ function esc(s: string): string {
 
 function displayTitle(url: string): string {
   if (!url || url === 'about:newtab') return t('tab.new');
+  if (url.startsWith('auralis::settings')) return 'Paramètres';
+  if (url.startsWith('auralis::')) return url.replace('auralis::', '');
   try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
 }
 
@@ -275,8 +271,11 @@ const tabs = new TabManager((allTabs, activeId) => {
 // ─── Browser engine ──────────────────────────────────────────────────────────
 
 const browser = new BrowserEngine(state => {
-  // When real navigation completes, close auralis-page
-  if (state.url !== 'about:newtab') hideAuralisPage();
+  // When real navigation completes, close auralis-page and any pending prompts
+  if (state.url !== 'about:newtab') {
+    hideAuralisPage();
+    pwSavePrompt.classList.add('hidden');
+  }
 
   const active = tabs.getActive();
   if (!active) return;
@@ -321,12 +320,6 @@ renderNewtabFavs();
 
 function navigate(input: string): void {
   const url = resolveInput(input, settings.searchEngine);
-  if (url.startsWith('auralis::settings')) {
-    // Settings always opens in a dedicated native window
-    const page = url.replace(/^auralis::settings\/?/, '') || 'apparence';
-    invoke<void>('open_settings_window', { page }).catch(console.error);
-    return;
-  }
   if (url.startsWith('auralis::')) {
     showAuralisPage(url);
     return;
@@ -396,7 +389,6 @@ function attachFavbarDrag(btn: HTMLButtonElement, itemId: string): void {
     if (e.button !== 0) return;
     startX = e.clientX;
     dragging = false;
-    btn.setPointerCapture(e.pointerId);
 
     const onMove = (ev: PointerEvent) => {
       const dx = ev.clientX - startX;
@@ -427,8 +419,8 @@ function attachFavbarDrag(btn: HTMLButtonElement, itemId: string): void {
     };
 
     const onUp = (ev: PointerEvent) => {
-      btn.removeEventListener('pointermove', onMove);
-      btn.removeEventListener('pointerup',   onUp);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup',   onUp);
 
       if (dragging) {
         favDragGhost?.remove(); favDragGhost = null;
@@ -442,15 +434,17 @@ function attachFavbarDrag(btn: HTMLButtonElement, itemId: string): void {
         if (target && srcId) {
           const targetId = (target as HTMLElement).dataset.bmId;
           if (targetId && targetId !== srcId) {
-            settings = moveBookmark(settings, srcId, targetId, 'before');
+            // Drop INTO a folder, BEFORE a link/folder otherwise
+            const pos = (target as HTMLElement).classList.contains('favbar-folder') ? 'inside' : 'before';
+            settings = moveBookmark(settings, srcId, targetId, pos);
             saveSettings(settings); renderFavBar(); renderNewtabFavs();
           }
         }
       }
     };
 
-    btn.addEventListener('pointermove', onMove);
-    btn.addEventListener('pointerup',   onUp);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup',   onUp);
   });
 }
 
@@ -822,8 +816,11 @@ function attachBmDragDrop(row: HTMLElement, itemId: string, isFolder: boolean): 
     row.classList.add(pos === 'before' ? 'bm-drop-before' : pos === 'after' ? 'bm-drop-after' : 'bm-drop-inside');
   });
 
-  row.addEventListener('dragleave', () => {
-    row.classList.remove('bm-drop-before', 'bm-drop-after', 'bm-drop-inside');
+  row.addEventListener('dragleave', e => {
+    // Only clear when mouse truly leaves the row, not when it enters a child element
+    if (!row.contains(e.relatedTarget as Node)) {
+      row.classList.remove('bm-drop-before', 'bm-drop-after', 'bm-drop-inside');
+    }
   });
 
   row.addEventListener('drop', e => {
@@ -1054,8 +1051,50 @@ function renderHistoryList(listEl: HTMLElement): void {
 function renderPageSecurite(el: HTMLElement): void {
   el.innerHTML = `
     <h2 class="ap-page-title">${t('settings.securite')}</h2>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">${t('settings.passwords_hint')}</p>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">${t('settings.passwords_hint')}</p>
+    <button class="btn-outline" id="ap-pw-add-btn" style="margin-bottom:14px;display:inline-flex;align-items:center;gap:6px">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Ajouter manuellement
+    </button>
+    <div id="ap-pw-add-form" class="pw-add-form" style="display:none;max-width:560px;margin-bottom:14px">
+      <div class="pw-add-row">
+        <input type="text"     id="ap-pw-f-domain" class="setting-input" placeholder="Domaine (ex: github.com)" autocomplete="off"/>
+        <input type="text"     id="ap-pw-f-user"   class="setting-input" placeholder="Identifiant / Email" autocomplete="off"/>
+        <input type="password" id="ap-pw-f-pass"   class="setting-input" placeholder="Mot de passe"/>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-primary"   id="ap-pw-f-ok">Enregistrer</button>
+        <button class="btn-secondary" id="ap-pw-f-cancel">Annuler</button>
+      </div>
+    </div>
     <div id="ap-pw-list" class="pw-list" style="max-width:560px"></div>`;
+
+  const addForm  = el.querySelector<HTMLElement>('#ap-pw-add-form')!;
+  const fDomain  = el.querySelector<HTMLInputElement>('#ap-pw-f-domain')!;
+  const fUser    = el.querySelector<HTMLInputElement>('#ap-pw-f-user')!;
+  const fPass    = el.querySelector<HTMLInputElement>('#ap-pw-f-pass')!;
+
+  el.querySelector('#ap-pw-add-btn')!.addEventListener('click', () => {
+    addForm.style.display = '';
+    fDomain.focus();
+  });
+  el.querySelector('#ap-pw-f-cancel')!.addEventListener('click', () => {
+    addForm.style.display = 'none';
+    fDomain.value = ''; fUser.value = ''; fPass.value = '';
+  });
+  el.querySelector('#ap-pw-f-ok')!.addEventListener('click', async () => {
+    const domain = fDomain.value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    const user   = fUser.value.trim();
+    const pass   = fPass.value;
+    if (!domain || !user || !pass) { toast('Remplissez tous les champs'); return; }
+    settings = { ...settings, passwords: await savePassword(settings.passwords, domain, user, pass) };
+    saveSettings(settings);
+    addForm.style.display = 'none';
+    fDomain.value = ''; fUser.value = ''; fPass.value = '';
+    renderPasswordList(el.querySelector<HTMLElement>('#ap-pw-list')!);
+    toast(t('toast.pw_saved'), 'success');
+  });
+
   renderPasswordList(el.querySelector<HTMLElement>('#ap-pw-list')!);
 }
 
@@ -1307,7 +1346,7 @@ document.getElementById('btn-show-pw-prompt')?.addEventListener('click', () => {
 
 // ─── Settings button ──────────────────────────────────────────────────────────
 document.getElementById('btn-settings')?.addEventListener('click', () => {
-  invoke<void>('open_settings_window', { page: 'apparence' }).catch(console.error);
+  showAuralisPage('auralis::settings/apparence');
 });
 
 // ─── Favorites bar import ─────────────────────────────────────────────────────
@@ -1347,30 +1386,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ─── Settings window mode bootstrap ──────────────────────────────────────────
-if (_isSettingsWin) {
-  void (async () => {
-    const page = await invoke<string>('get_settings_init').catch(() => 'apparence') || 'apparence';
-    document.body.classList.add('settings-window');
-    document.getElementById('browser-chrome')?.style.setProperty('display', 'none');
-    document.getElementById('newtab-page')?.classList.remove('active');
-    const ap = document.getElementById('auralis-page')!;
-    ap.classList.remove('hidden');
-    updateApNavItems(page);
-    renderAuralisContent(page);
-
-    // Listen for cross-window navigate requests (when this window is already open)
-    await listen<string>('settings-navigate', e => {
-      const p = e.payload || 'apparence';
-      updateApNavItems(p);
-      renderAuralisContent(p);
-    });
-
-    // Hide the overlay close button — native window has its own title bar
-    document.querySelector<HTMLElement>('.ap-close-btn')?.style.setProperty('display', 'none');
-  })();
-}
-
 // ─── Update check (GitHub releases) ──────────────────────────────────────────
 async function checkForUpdates(): Promise<void> {
   try {
@@ -1406,6 +1421,4 @@ function showUpdateBanner(version: string): void {
   document.getElementById('update-dismiss')?.addEventListener('click', () => banner.remove());
 }
 
-if (!_isSettingsWin) {
-  setTimeout(() => void checkForUpdates(), 4000);
-}
+setTimeout(() => void checkForUpdates(), 4000);
