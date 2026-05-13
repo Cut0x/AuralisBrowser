@@ -1,295 +1,114 @@
 # Auralis
 
-**A beautiful, lightweight and fully customizable browser.**
+**Auralis** est un navigateur web moderne, beau et ultra-léger, propulsé par [Tauri](https://tauri.app/) et Rust. Aucun Chromium embarqué — il utilise le moteur WebView2 natif de Windows.
 
-Built with Tauri + Rust + TypeScript. No Electron. No bloat. Just a fast, artistic, premium browsing experience.
+## Fonctionnalités
 
----
-
-## Philosophy
-
-Auralis was born from a simple conviction: a browser should be beautiful **and** lightweight. Modern browsers consume gigabytes of RAM, run dozens of background processes, and offer zero visual identity.
-
-Auralis is the opposite. It uses the **system's native WebView** (WebView2 on Windows, WebKit on macOS/Linux) through Tauri, meaning the rendering engine is already loaded by the OS. Auralis itself barely adds anything on top — just a clean, glassmorphic shell around it.
-
-The visual identity draws from Japanese fantasy landscapes: mist, deep purple skies, soft gold light, and the kind of calm beauty you feel in a painting.
-
----
-
-## Performance Goals
-
-| Metric | Target |
-|--------|--------|
-| RAM usage (idle) | < 80 MB |
-| RAM usage (1 tab) | < 120 MB |
-| Startup time | < 500 ms |
-| CPU idle | ~0% |
-| Binary size | < 15 MB |
-
-These targets are achievable because:
-- Tauri uses the system WebView (no bundled Chromium)
-- The frontend is vanilla TypeScript + CSS (no React, no Vue)
-- No unnecessary background polling or timers
-- Minimal IPC calls between Rust and JS
-
----
-
-## Technical Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Desktop shell | Tauri v2 |
-| Backend | Rust |
-| Frontend | TypeScript (vanilla) |
-| Bundler | Vite |
-| Styling | CSS custom properties + Glassmorphism |
-| Storage | localStorage (settings, bookmarks, history) |
-| WebView | System native (WebView2 / WebKit) |
-
----
-
-## Prerequisites
-
-Before installing, make sure you have:
-
-- **Node.js** v18 or later — https://nodejs.org
-- **Rust** (stable toolchain) — https://rustup.rs
-- **Tauri CLI prerequisites** for your OS:
-  - **Windows**: WebView2 (included in Windows 11, or download the bootstrapper)
-  - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
-  - **Linux**: See https://tauri.app/start/prerequisites/
-
-Verify your setup:
-```bash
-node --version
-rustc --version
-cargo --version
-```
-
----
+- **Ultra léger** — Moins de 80 Mo de RAM au démarrage, lancement en moins de 500 ms, ~0 % CPU au repos
+- **WebView2 natif** — Pas de Chromium bundle, juste le moteur système Windows
+- **Design glassmorphique** — 3 thèmes : Aurora (sombre), Brume (beige chaleureux), Minuit
+- **Multi-onglets** — Gestion complète des onglets avec navigation par historique
+- **Favoris avec dossiers** — Import/export Chrome & Firefox, organisation en dossiers imbriqués
+- **Liens `target="_blank"`** — Ouverts automatiquement dans un nouvel onglet, exactement comme Chrome
+- **Paramètres en pages** — Navigation via `auralis::settings` et ses sous-pages
+- **Mots de passe chiffrés** — AES-GCM 256 bits local, jamais transmis sur le réseau
+- **Multi-moteurs** — DuckDuckGo, Google, Brave Search, Startpage
+- **Bilingue** — Interface disponible en français et en anglais
 
 ## Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/your-username/auralis.git
-cd auralis
+### Programme d'installation (recommandé)
 
-# Install JavaScript dependencies
+1. Téléchargez `Auralis_0.2.0_x64-setup.exe` depuis les [releases](https://github.com/Cut0x/AuralisBrowser/releases)
+2. Lancez l'installeur et suivez les instructions
+3. Profitez d'Auralis !
+
+### Depuis les sources
+
+**Prérequis :** Node.js 18+, Rust 1.77+, WebView2 Runtime (Windows)
+
+```bash
+git clone https://github.com/Cut0x/AuralisBrowser
+cd AuralisBrowser
 npm install
+npm run tauri build
 ```
 
----
-
-## Development
-
-Start the development server with hot-reload:
+## Développement
 
 ```bash
 npm run tauri dev
 ```
 
-This will:
-1. Start the Vite dev server on `http://localhost:1420`
-2. Compile the Rust backend
-3. Open the Auralis window
+L'application se lance avec le rechargement à chaud pour le frontend TypeScript.
 
-Changes to TypeScript/CSS files reload instantly. Changes to Rust files trigger a Rust recompile.
-
----
-
-## Build & Compile
-
-Compile a production build:
-
-```bash
-npm run tauri build
-```
-
-This generates optimized bundles for your platform in `src-tauri/target/release/bundle/`.
-
-### Windows Build
-
-```bash
-npm run tauri build
-```
-
-Output: `src-tauri/target/release/bundle/msi/Auralis_0.1.0_x64_en-US.msi`
-Also produces a portable `.exe` in `src-tauri/target/release/`.
-
-### macOS Build
-
-```bash
-npm run tauri build
-```
-
-Output: `src-tauri/target/release/bundle/macos/Auralis.app`
-Also produces a `.dmg` installer.
-
-### Linux Build
-
-```bash
-npm run tauri build
-```
-
-Output: `.deb`, `.rpm`, and `.AppImage` depending on your distro.
-
----
-
-## Tab System
-
-Auralis implements a lightweight tab system entirely in TypeScript:
-
-- Each tab has: `id`, `title`, `url`, `favicon`, `isLoading`, `canGoBack`, `canGoForward`
-- Tabs are managed by `TabManager` in `src/tabs.ts`
-- The active tab drives the URL bar and navigation state
-- Closing the last tab automatically creates a new one
-- Tab state is kept in memory (not persisted between sessions, by design)
-
----
-
-## Search Engines
-
-| Engine | Keyword |
-|--------|---------|
-| DuckDuckGo | Default |
-| Google | `google` |
-| Brave Search | `brave` |
-| Startpage | `startpage` |
-
-The URL bar is "smart": if you type a full URL it navigates directly. If you type anything else, it searches with your default engine.
-
-To change your default engine: **Settings → Search Engine**.
-
----
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+L` | Focus URL bar |
-| `Ctrl+T` | New tab |
-| `Ctrl+W` | Close current tab |
-| `Ctrl+R` | Reload page |
-| `Alt+←` | Go back |
-| `Alt+→` | Go forward |
-
----
-
-## Theme Customization
-
-Auralis ships with three themes:
-
-| Theme | Description |
-|-------|-------------|
-| **Dark (Aurora)** | Deep purple-black with rose/violet accents |
-| **Light (Mist)** | Soft lavender whites, airy and clean |
-| **Midnight** | Near-black with ultra-subtle glows |
-
-Themes are defined as CSS custom properties in `src/styles/theme.css`. To create a new theme:
-
-1. Add a `[data-theme="yourtheme"]` block in `theme.css`
-2. Override the CSS variables
-3. Add the option in `src/settings.ts` and `index.html`
-
----
-
-## File Structure
+## Architecture
 
 ```
-auralis/
-├── README.md                    # This file
-├── LICENSE                      # MIT license
-├── package.json                 # npm scripts and dependencies
-├── vite.config.ts               # Vite bundler configuration
-├── tsconfig.json                # TypeScript compiler options
-├── index.html                   # Main HTML shell (browser chrome)
-├── public/
-│   └── auralis.svg              # App favicon
-├── src/
-│   ├── main.ts                  # App entry point, wires all modules
-│   ├── browser.ts               # WebView/iframe navigation engine
-│   ├── tabs.ts                  # Tab management (create/close/switch)
-│   ├── settings.ts              # Settings panel controller
-│   ├── storage.ts               # localStorage wrapper (settings/bookmarks)
-│   ├── search.ts                # URL resolution and search engine logic
-│   ├── ui.ts                    # DOM utilities, theme, notifications
-│   ├── styles/
-│   │   ├── theme.css            # CSS custom properties for all themes
-│   │   ├── glass.css            # Glassmorphism utility classes
-│   │   └── main.css             # Full application layout and components
-│   └── assets/
-│       └── bg.svg               # Decorative background asset
-└── src-tauri/
-    ├── Cargo.toml               # Rust dependencies
-    ├── build.rs                 # Tauri build script
-    ├── tauri.conf.json          # Tauri window and app configuration
-    ├── capabilities/
-    │   └── default.json         # Tauri permission declarations
-    └── src/
-        ├── main.rs              # Rust entry point
-        └── lib.rs               # Tauri commands and setup
+Auralis/
+├── src/                     # Interface TypeScript (chrome du navigateur)
+│   ├── main.ts              # Point d'entrée — bootstrap et événements
+│   ├── browser.ts           # Moteur de navigation (WebView2 natif)
+│   ├── storage.ts           # Persistance — favoris avec dossiers, historique, mots de passe
+│   ├── tabs.ts              # Gestionnaire d'onglets
+│   ├── import.ts            # Import/export de favoris (format Netscape + dossiers)
+│   ├── passwords.ts         # Chiffrement AES-GCM
+│   ├── i18n.ts              # Internationalisation FR/EN
+│   ├── search.ts            # Résolution d'URL et moteurs de recherche
+│   └── styles/
+│       ├── theme.css        # Tokens de design — 3 thèmes
+│       ├── glass.css        # Utilitaires glassmorphisme
+│       └── main.css         # Layout complet du navigateur
+├── src-tauri/               # Backend Rust (Tauri v2)
+│   ├── Cargo.toml
+│   └── src/lib.rs           # Commandes Tauri, WebView enfant natif
+├── docs/                    # Site de présentation
+└── index.html               # Interface principale du navigateur
 ```
 
----
+## Pages internes
 
-## Roadmap
+Auralis propose un système de pages internes accessibles depuis la barre d'adresse :
 
-- [x] Tab system
-- [x] URL bar with smart search
-- [x] Glassmorphic UI
-- [x] Bookmarks
-- [x] History
-- [x] Settings panel
-- [x] Multiple themes
-- [x] Keyboard shortcuts
-- [ ] Bookmark manager page
-- [ ] Full history viewer
-- [ ] Per-tab zoom control
-- [ ] Find in page (Ctrl+F)
-- [ ] Download manager
-- [ ] Extensions API
-- [ ] Custom CSS injection
-- [ ] Picture-in-picture
-- [ ] Privacy mode (no history)
-- [ ] Sync across devices (optional, self-hosted)
+| URL | Description |
+|-----|-------------|
+| `auralis::settings` | Page principale des paramètres |
+| `auralis::settings/apparence` | Thème, langue, barre des favoris |
+| `auralis::settings/moteur` | Moteur de recherche et page d'accueil |
+| `auralis::settings/favoris` | Gestion des favoris et dossiers |
+| `auralis::settings/historique` | Historique de navigation |
+| `auralis::settings/securite` | Mots de passe chiffrés |
+| `auralis::settings/cache` | Vider les données de navigation |
+| `auralis::settings/a-propos` | Informations sur Auralis |
 
----
+## Raccourcis clavier
 
-## Contributing
+| Raccourci | Action |
+|-----------|--------|
+| `Ctrl+L` | Focaliser la barre d'adresse |
+| `Ctrl+T` | Nouvel onglet |
+| `Ctrl+W` | Fermer l'onglet actif |
+| `Ctrl+R` | Recharger la page |
+| `Alt+←` | Page précédente |
+| `Alt+→` | Page suivante |
 
-Pull requests are welcome. For major changes, please open an issue first.
+## Sécurité
 
-**Code style guidelines:**
-- TypeScript: strict mode, no `any`, minimal comments
-- Rust: idiomatic Rust, `clippy`-clean
-- CSS: BEM-ish naming, CSS variables for theming
-- No framework dependencies on the frontend
+- Les mots de passe sont chiffrés localement via **AES-GCM 256 bits** avant stockage
+- La clé de chiffrement est générée par le navigateur et stockée localement
+- Aucune donnée n'est transmise à des serveurs tiers
+- Le navigateur n'embarque aucun code de télémétrie
 
-```bash
-# Lint TypeScript
-npx tsc --noEmit
+## Performances
 
-# Lint Rust
-cargo clippy --manifest-path src-tauri/Cargo.toml
-```
+| Métrique | Objectif |
+|----------|---------|
+| RAM au repos | < 80 Mo |
+| RAM (1 onglet) | < 120 Mo |
+| Démarrage | < 500 ms |
+| CPU au repos | ~0 % |
+| Taille du binaire | < 15 Mo |
 
----
+## Licence
 
-## Security
-
-- Auralis uses Tauri's strict CSP and permission system
-- No remote code execution via IPC
-- Bookmarks and history are stored locally only
-- No telemetry, no analytics, no cloud sync by default
-- The iframe sandbox attribute limits what embedded pages can do
-
-**Report security vulnerabilities** by opening a GitHub issue marked `[SECURITY]`.
-
----
-
-## License
-
-MIT © Auralis Contributors
-
-See [LICENSE](./LICENSE) for the full text.
+MIT © 2026 Auralis Contributors

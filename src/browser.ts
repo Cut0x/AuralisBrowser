@@ -14,21 +14,21 @@ export interface NavigationState {
   canForward: boolean;
 }
 
-type NavCallback = (state: NavigationState) => void;
+type NavCallback    = (state: NavigationState) => void;
+type NewTabCallback = (url: string) => void;
 
 export class BrowserEngine {
   private newtabPage: HTMLElement;
   private urlbar:     HTMLInputElement;
 
-  // Client-side history stack (shared across tabs — real per-tab history lives in the webview).
   private navHistory: string[] = [];
   private navIdx     = -1;
 
-  // When true, any incoming content-navigated / content-title events are stale
-  // (fired for a page that was loaded in a tab that has since been closed or replaced).
+  // True while the new-tab page is active — stale content-navigated events are ignored.
   private isShowingNewtab = true;
 
-  private onNavigate: NavCallback;
+  private onNavigate:   NavCallback;
+  private onNewTab?:    NewTabCallback;
 
   constructor(onNavigate: NavCallback) {
     this.newtabPage = document.getElementById('newtab-page')!;
@@ -46,6 +46,10 @@ export class BrowserEngine {
   }
 
   // ─── Public API ────────────────────────────────────────────────────────────
+
+  setNewTabCallback(fn: NewTabCallback): void {
+    this.onNewTab = fn;
+  }
 
   loadUrl(url: string): void {
     if (!url || url === 'about:newtab') { this.showNewtab(); return; }
@@ -103,13 +107,13 @@ export class BrowserEngine {
     return this.navHistory[this.navIdx] ?? 'about:newtab';
   }
 
-  /** Resize the content child webview to fill the area below the chrome.
-   *  Call after layout changes: resize, favbar toggle, tab close. */
+  canGoBack(): boolean    { return this.navIdx > 0; }
+  canGoForward(): boolean { return this.navIdx < this.navHistory.length - 1; }
+
   async updateBounds(visible: boolean): Promise<void> {
     const chrome = document.getElementById('browser-chrome');
     if (!chrome) return;
     if (!visible) {
-      // Park the webview off-screen so the newtab HTML shows through.
       await invoke<void>('content_set_bounds', { top: 9999, width: 0, height: 1 })
         .catch(() => {});
       return;
@@ -123,32 +127,30 @@ export class BrowserEngine {
   // ─── Private ───────────────────────────────────────────────────────────────
 
   private async init(): Promise<void> {
-    // Fired by Rust (lib.rs) on every PageLoadEvent::Finished in the content webview.
     await listen<string>('content-navigated', e => {
       const url = e.payload;
       if (!url || url === 'about:blank') return;
-      if (this.isShowingNewtab) return; // stale event — user already closed the tab
+      if (this.isShowingNewtab) return;
 
       setNavLoading(false);
       const canBack    = this.navIdx > 0;
       const canForward = this.navIdx < this.navHistory.length - 1;
       setNavState(canBack, canForward);
 
-      // Update URL bar to the final URL after any redirects.
       this.urlbar.value = url;
 
       this.onNavigate({
         url, title: displayHostname(url), favicon: faviconFor(url),
         canBack, canForward,
       });
+
+      // Inject new-tab interceptor after each real page load
+      void this.injectNewTabScript();
     });
 
-    // Fired by Rust after fetch_title_inner resolves (can arrive seconds later).
     await listen<{ url: string; title: string }>('content-title', e => {
       const { url, title } = e.payload;
-      // Guard 1: we've already moved to a new/different page.
       if (this.isShowingNewtab) return;
-      // Guard 2: the title belongs to a URL that's no longer current.
       if (url !== this.currentUrl()) return;
 
       const canBack    = this.navIdx > 0;
@@ -156,7 +158,12 @@ export class BrowserEngine {
       this.onNavigate({ url, title, favicon: faviconFor(url), canBack, canForward });
     });
 
-    // Start with the content webview hidden (newtab HTML is shown instead).
+    // Rust fires this when the injected script routes a target="_blank" link
+    await listen<string>('content-open-new-tab', e => {
+      const url = e.payload;
+      if (url && this.onNewTab) this.onNewTab(url);
+    });
+
     await this.updateBounds(false);
   }
 
@@ -167,5 +174,38 @@ export class BrowserEngine {
     this.urlbar.value = url;
     void this.updateBounds(true);
     invoke<void>('content_navigate', { url }).catch(console.error);
+  }
+
+  /** Inject a tiny script that intercepts window.open() and target="_blank" clicks,
+   *  routing them through our sentinel URL so Rust can emit content-open-new-tab. */
+  private async injectNewTabScript(): Promise<void> {
+    const js = `(function(){
+  if(window.__a_ntpatch)return;
+  window.__a_ntpatch=true;
+  const _open=window.open.bind(window);
+  window.open=function(url,target,f){
+    if(url&&typeof url==='string'&&(url.startsWith('http://')||url.startsWith('https://'))){
+      if(!target||target==='_blank'||target==='_new'||target==='_tab'){
+        window.location.href='http://auralis-open.invalid/?url='+encodeURIComponent(url);
+        return{closed:false,close:function(){},focus:function(){}};
+      }
+    }
+    return _open(url,target,f);
+  };
+  document.addEventListener('click',function(e){
+    let el=e.target;
+    while(el&&el.tagName!=='A')el=el.parentElement;
+    if(!el)return;
+    const t=el.getAttribute('target');
+    if(t&&t!=='_self'&&t!=='_top'&&t!=='_parent'){
+      const h=el.href||el.getAttribute('href');
+      if(h&&(h.startsWith('http://')||h.startsWith('https://'))){
+        e.preventDefault();e.stopImmediatePropagation();
+        window.location.href='http://auralis-open.invalid/?url='+encodeURIComponent(h);
+      }
+    }
+  },true);
+})();`;
+    await invoke<void>('content_eval', { js }).catch(() => {});
   }
 }
