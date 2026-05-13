@@ -849,10 +849,22 @@ kbd {
   border-radius: var(--r-sm);
 }
 
-/* ─── Settings window mode ───────────────────────────────────────── */
-body.settings-window #browser-chrome { display: none !important; }
-body.settings-window #newtab-page    { display: none !important; }
-body.settings-window .auralis-page   { position: fixed !important; inset: 0 !important; z-index: 1 !important; }
+/* ─── Manual password add form ──────────────────────────────────── */
+.pw-add-form {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px;
+}
+.pw-add-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pw-add-row .setting-input {
+  width: 100%;
+  box-sizing: border-box;
+}
 
 /* ─── Update banner ──────────────────────────────────────────────── */
 .update-banner {
