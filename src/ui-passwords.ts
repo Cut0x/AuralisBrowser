@@ -19,6 +19,28 @@ export function checkPasswordIndicator(url: string): void {
   document.getElementById('pw-indicator')?.classList.toggle('has-saved', matches.length > 0);
 }
 
+export async function tryAutofillPassword(url: string): Promise<void> {
+  const matches = findForDomain(settings.passwords, url);
+  if (matches.length === 0) return;
+  const entry = matches[0];
+  const plain = await decryptPassword(entry).catch(() => '');
+  if (!plain) return;
+
+  const u = JSON.stringify(entry.username ?? '');
+  const p = JSON.stringify(plain);
+  const js = `(function(){
+    try{
+      var user=${u}, pass=${p};
+      var pw=document.querySelector('input[type="password"]');
+      if(!pw) return;
+      var uf=document.querySelector('input[type="email"],input[type="text"],input[name*="user" i],input[name*="email" i],input[name*="login" i],input[id*="user" i],input[id*="email" i],input[id*="login" i],input[autocomplete*="username" i],input[autocomplete*="email" i]');
+      if(uf && !uf.value && user){ uf.value=user; uf.dispatchEvent(new Event('input',{bubbles:true})); uf.dispatchEvent(new Event('change',{bubbles:true})); }
+      if(!pw.value){ pw.value=pass; pw.dispatchEvent(new Event('input',{bubbles:true})); pw.dispatchEvent(new Event('change',{bubbles:true})); }
+    }catch{}
+  })();`;
+  browser.eval(js);
+}
+
 // ─── Liste des mots de passe ─────────────────────────────────────────────────
 
 export function renderPasswordList(container: HTMLElement): void {

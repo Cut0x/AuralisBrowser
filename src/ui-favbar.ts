@@ -1,23 +1,34 @@
 /**
  * ui-favbar.ts — Barre des favoris (rendering + drag-to-reorder + popover dossier).
  *
- * Important : quand un popover de dossier s'ouvre, browser.parkForOverlay() est
- * appelé pour masquer la webview native — sinon le popover serait invisible
- * derrière le contrôle WebView2 qui se superpose toujours au HTML.
+ * Important : quand un popover de dossier s'ouvre, browser.shiftBoundsTop() est
+ * appelé pour pousser la webview native sous le popover (sans masquer la page).
  */
 
-import { truncate, faviconFor }              from './ui.js';
+import { truncate, faviconFor, setStatusUrl } from './ui.js';
 import { saveSettings }                      from './storage.js';
 import { moveBookmark }                      from './bookmarks-store.js';
-import { browser, settings, updateSettings } from './state.js';
+import { settings, updateSettings } from './state.js';
 import { navigate }                          from './ui-nav.js';
 import { renderNewtabFavs }                  from './ui-newtab.js';
 import { showCtxMenu }                       from './ui-ctx-menu.js';
 import type { BookmarkItem, BookmarkFolder } from './storage.js';
 
 let currentPopover: HTMLElement | null = null;
+let currentAnchor:  HTMLElement | null = null;
 let favDragId:      string | null      = null;
 let favDragGhost:   HTMLElement | null = null;
+
+function onGlobalPointerDown(e: PointerEvent): void {
+  if (!currentPopover) return;
+  const target = e.target as Node | null;
+  if (target && (currentPopover.contains(target) || (currentAnchor && currentAnchor.contains(target)))) return;
+  closeFolderPopover();
+}
+
+function onGlobalKeyDown(e: KeyboardEvent): void {
+  if (e.key === 'Escape' && currentPopover) closeFolderPopover();
+}
 
 // ─── Barre des favoris ───────────────────────────────────────────────────────
 
@@ -29,6 +40,7 @@ export function renderFavBar(): void {
   for (const item of settings.bookmarks.slice(0, 16)) {
     const btn = document.createElement('button');
     btn.dataset.bmId = item.id;
+    btn.setAttribute('data-tauri-drag-region', 'false');
 
     if (item.type === 'folder') {
       btn.className = 'favbar-folder';
@@ -50,6 +62,10 @@ export function renderFavBar(): void {
         <img class="favbar-favicon" src="${faviconFor(item.url)}" width="14" height="14" alt="" loading="lazy" onerror="this.style.display='none'">
         <span class="favbar-label">${truncate(item.title, 16)}</span>`;
       btn.addEventListener('click', () => navigate(item.url));
+      btn.addEventListener('mouseenter', () => setStatusUrl(item.url));
+      btn.addEventListener('mouseleave', () => setStatusUrl(null));
+      btn.addEventListener('focus',      () => setStatusUrl(item.url));
+      btn.addEventListener('blur',       () => setStatusUrl(null));
       btn.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
     }
 
@@ -112,19 +128,34 @@ function attachFavbarDrag(btn: HTMLButtonElement, itemId: string): void {
 // ─── Popover dossier ─────────────────────────────────────────────────────────
 
 export function showFolderPopover(folder: BookmarkFolder, anchor: HTMLElement): void {
+  if (currentPopover && currentAnchor === anchor) {
+    closeFolderPopover();
+    return;
+  }
   closeFolderPopover();
-  browser.parkForOverlay(); // masque la webview : le popover serait sinon invisible derrière
 
-  const rect = anchor.getBoundingClientRect();
   const pop  = document.createElement('div');
   pop.className = 'favbar-popover';
-  pop.style.left = `${rect.left}px`;
-  pop.style.top  = `${rect.bottom + 2}px`;
+  pop.style.left = `0px`;
+  pop.style.top  = `0px`;
   renderFolderItems(folder.children, pop, 0);
   document.body.appendChild(pop);
-  currentPopover = pop;
+  currentPopover = pop; currentAnchor = anchor;
 
-  setTimeout(() => document.addEventListener('click', closeFolderPopover, { once: true }), 0);
+  const rect = anchor.getBoundingClientRect();
+  const pr   = pop.getBoundingClientRect();
+  const pad  = 8;
+  let left   = rect.left;
+  let top    = rect.top - pr.height - 2;
+  if (left + pr.width > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - pr.width - pad);
+  if (left < pad) left = pad;
+  if (top < pad) top = pad;
+  pop.style.left = `${left}px`;
+  pop.style.top  = `${top}px`;
+  pop.style.maxHeight = `${Math.max(120, top - pad + pr.height)}px`;
+
+  document.addEventListener('pointerdown', onGlobalPointerDown, true);
+  document.addEventListener('keydown', onGlobalKeyDown, true);
 }
 
 function renderFolderItems(items: BookmarkItem[], container: HTMLElement, depth: number): void {
@@ -142,6 +173,10 @@ function renderFolderItems(items: BookmarkItem[], container: HTMLElement, depth:
       btn.style.paddingLeft = `${14 + depth * 14}px`;
       btn.innerHTML = `<img src="${faviconFor(item.url)}" width="14" height="14" alt="" loading="lazy" onerror="this.style.display='none'"><span>${esc(truncate(item.title, 30))}</span>`;
       btn.addEventListener('click', () => { closeFolderPopover(); navigate(item.url); });
+      btn.addEventListener('mouseenter', () => setStatusUrl(item.url));
+      btn.addEventListener('mouseleave', () => setStatusUrl(null));
+      btn.addEventListener('focus',      () => setStatusUrl(item.url));
+      btn.addEventListener('blur',       () => setStatusUrl(null));
       container.appendChild(btn);
     }
   }
@@ -149,7 +184,9 @@ function renderFolderItems(items: BookmarkItem[], container: HTMLElement, depth:
 
 export function closeFolderPopover(): void {
   currentPopover?.remove(); currentPopover = null;
-  browser.restoreFromOverlay(); // restaure la webview après fermeture du popover
+  currentAnchor = null;
+  document.removeEventListener('pointerdown', onGlobalPointerDown, true);
+  document.removeEventListener('keydown', onGlobalKeyDown, true);
 }
 
 function esc(s: string): string {

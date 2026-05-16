@@ -19,7 +19,7 @@
 
 ### Programme d'installation (recommandé)
 
-1. Téléchargez `Auralis_x.x.x_x64-setup.exe` depuis les [releases](https://github.com/Cut0x/AuralisBrowser/releases)
+1. Téléchargez `Auralis_0.2.0_x64-setup.exe` depuis les [releases](https://github.com/Cut0x/AuralisBrowser/releases)
 2. Lancez l'installeur et suivez les instructions
 3. Profitez d'Auralis !
 
@@ -31,13 +31,13 @@
 git clone https://github.com/Cut0x/AuralisBrowser
 cd AuralisBrowser
 npm install
-npm run tauri:build
+npm run tauri build
 ```
 
 ## Développement
 
 ```bash
-npm run tauri:dev
+npm run tauri dev
 ```
 
 L'application se lance avec le rechargement à chaud pour le frontend TypeScript.

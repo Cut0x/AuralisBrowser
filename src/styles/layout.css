@@ -32,6 +32,26 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 /* Zone de contenu — le webview natif est positionné ici par Rust (lib.rs). */
 .content-area { flex: 1; position: relative; overflow: hidden; }
 
+.status-url {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 6500;
+  max-width: min(62vw, 900px);
+  padding: 4px 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+.status-url.hidden { display: none; }
+
 /* Conteneur webview iframe (non utilisé en mode Tauri ; conservé par compatibilité). */
 .webview-container { position: absolute; inset: 0; display: none; }
 .webview-container.active { display: block; }

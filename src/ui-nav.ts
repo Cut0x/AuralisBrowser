@@ -35,6 +35,7 @@ export function showAuralisPage(url: string): void {
 
 export function hideAuralisPage(): void {
   document.getElementById('auralis-page')?.classList.add('hidden');
+  browser.restoreFromOverlay();
 }
 
 export function updateApNavItems(activePath: string): void {
@@ -95,11 +96,15 @@ export function renderTabStrip(allTabs: Tab[], activeId: string | null): void {
       e.stopPropagation();
       const wasActive = tab.id === activeId;
       tabs.closeTab(tab.id);
-      if (wasActive) { const n = tabs.getActive(); if (n) browser.loadUrl(n.url); else browser.showNewtab(); }
+      if (wasActive) { const n = tabs.getActive(); if (n) browser.showTabUrl(n.url); else browser.showNewtab(); }
     });
 
     el.appendChild(fav); el.appendChild(title); el.appendChild(close);
-    el.addEventListener('click', () => { hideAuralisPage(); tabs.setActive(tab.id); browser.loadUrl(tab.url); });
+    el.addEventListener('click', () => {
+      hideAuralisPage();
+      tabs.setActive(tab.id);
+      browser.showTabUrl(tab.url);
+    });
     tabStrip.insertBefore(el, btn);
   }
 }

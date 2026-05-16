@@ -42,8 +42,7 @@
 .favbar-folder-chevron    { opacity: .5; }
 
 /* Popover de dossier — positionné via JS au-dessus du chrome (z-index 5000).
-   La webview est parkée (parkForOverlay) avant affichage pour éviter qu'elle
-   ne recouvre ce popover en raison du z-index OS des fenêtres natives. */
+   La webview est poussée sous le popover (shiftBoundsTop) pour garder la page visible. */
 .favbar-popover {
   position: fixed; z-index: 5000;
   background: var(--bg-1); border: 1px solid var(--glass-border);
