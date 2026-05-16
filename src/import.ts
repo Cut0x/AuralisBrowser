@@ -1,5 +1,8 @@
-// Bookmark import/export — parses the Netscape Bookmark File Format
-// used by Chrome, Firefox, Edge, and Safari. Preserves folder structure.
+/**
+ * import.ts — Import/export de favoris au format Netscape Bookmark File
+ * (HTML généré par Chrome, Firefox, Edge, Safari). Préserve l'arborescence
+ * de dossiers. Fournit aussi l'ouverture d'un sélecteur de fichier natif.
+ */
 
 import type { BookmarkItem, BookmarkLink, BookmarkFolder } from './storage.js';
 

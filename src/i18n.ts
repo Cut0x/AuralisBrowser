@@ -1,4 +1,9 @@
-// Internationalisation — FR / EN.
+/**
+ * i18n.ts — Internationalisation (FR / EN).
+ * Expose t(key) pour obtenir une chaîne traduite, setLang() pour changer
+ * la langue active, et applyAll() pour mettre à jour les éléments HTML
+ * portant les attributs data-i18n, data-i18n-ph et data-i18n-title.
+ */
 
 export type Lang = 'fr' | 'en';
 

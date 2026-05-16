@@ -1,0 +1,73 @@
+/* navbar.css — Barre de navigation : boutons Précédent/Suivant/Recharger, URL bar. */
+
+/* Barre de navigation principale */
+.navbar {
+  display: flex; align-items: center;
+  height: 44px; padding: 0 8px; gap: 5px; position: relative;
+}
+
+/* Barre de progression de chargement (ligne de 2 px en bas) */
+.navbar::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: auto;
+  height: 2px; width: 0;
+  background: linear-gradient(90deg, var(--accent-rose), var(--accent-violet));
+  border-radius: var(--r-full); transition: width 2s var(--ease);
+}
+.navbar.is-loading::after { width: 85%; }
+
+.nav-controls { display: flex; align-items: center; gap: 1px; }
+
+/* Boutons de navigation ronds */
+.nav-btn {
+  width: 30px; height: 30px; border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--btn-color);
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.nav-btn:hover:not(:disabled) { background: var(--btn-bg-hover); color: var(--btn-color-hover); }
+.nav-btn:active:not(:disabled) { background: var(--btn-bg-press); }
+.nav-btn:disabled { color: var(--text-muted); cursor: default; }
+.nav-btn#btn-reload.spinning svg { animation: spin 0.7s linear infinite; }
+
+/* Conteneur de la barre d'adresse avec fond pill */
+.urlbar-wrapper {
+  flex: 1; display: flex; align-items: center;
+  height: 32px; padding: 0 8px; gap: 5px;
+  background: var(--input-bg); border: 1px solid var(--input-border);
+  border-radius: var(--r-full);
+  transition: background var(--t-normal) var(--ease), border-color var(--t-normal) var(--ease), box-shadow var(--t-normal) var(--ease);
+}
+.urlbar-wrapper:focus-within {
+  background: var(--input-bg-focus); border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 2.5px var(--accent-rose-glow);
+}
+
+.urlbar-security-icon { flex-shrink: 0; color: var(--text-muted); display: flex; align-items: center; }
+
+/* Champ de saisie URL */
+.urlbar {
+  flex: 1; height: 100%; font-size: 12.5px;
+  color: var(--text-primary); caret-color: var(--accent-rose); min-width: 0;
+}
+.urlbar::placeholder { color: var(--text-muted); }
+.urlbar::selection   { background: var(--accent-rose-glow); }
+
+/* Petits boutons d'action dans la barre d'adresse (étoile favori, cadenas MDP) */
+.urlbar-action-btn {
+  flex-shrink: 0; width: 22px; height: 22px;
+  border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.urlbar-action-btn:hover { color: var(--text-primary); background: var(--btn-bg-hover); }
+.urlbar-action-btn.is-active .bm-stroke { fill: var(--accent-gold); stroke: var(--accent-gold); }
+.urlbar-action-btn.is-active { color: var(--accent-gold); }
+
+/* Point rouge — indique qu'un MDP est enregistré pour ce domaine */
+#pw-indicator { position: relative; display: flex; align-items: center; }
+#pw-indicator.has-saved::after {
+  content: ''; position: absolute; top: -1px; right: -1px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent-rose);
+}
+
+.navbar-right { display: flex; align-items: center; gap: 1px; }

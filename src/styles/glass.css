@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   Glassmorphism utility classes.
-   Apply .glass-card, .glass-panel, etc. to get the frosted effect.
+   glass.css — Classes utilitaires de glassmorphisme.
+   Appliquer .glass-card, .glass-panel, etc. pour obtenir l'effet
+   de verre dépoli avec flou d'arrière-plan (backdrop-filter).
    ═══════════════════════════════════════════════════════════════ */
 
-/* ─── Base glass surface ────────────────────────────────────── */
+/* ─── Surface verre de base ─────────────────────────────────── */
 .glass {
   background:    var(--glass-bg);
   border:        1px solid var(--glass-border);
@@ -11,7 +12,7 @@
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
 }
 
-/* Elevated card with shadow */
+/* Carte élevée avec ombre portée */
 .glass-card {
   background:    var(--glass-bg);
   border:        1px solid var(--glass-border);
@@ -30,7 +31,7 @@
   box-shadow:    var(--shadow-sm);
 }
 
-/* Large frosted panel (settings, drawers) */
+/* Grand panneau dépoli — panneau MDP, tiroirs */
 .glass-panel {
   background:    rgba(var(--bg-2-raw, 17, 14, 34), 0.82);
   border:        1px solid var(--glass-border);
@@ -40,7 +41,7 @@
   box-shadow:    var(--shadow-lg);
 }
 
-/* ─── Interactive glass surfaces ────────────────────────────── */
+/* ─── Surfaces de verre interactives (boutons) ──────────────── */
 .glass-btn {
   background:  var(--btn-bg);
   border:      1px solid var(--glass-border);
@@ -65,7 +66,7 @@
   background: var(--btn-bg-press);
 }
 
-/* ─── Glowing border accent ─────────────────────────────────── */
+/* ─── Bordures lumineuses (lueur colorée) ───────────────────── */
 .glass-glow-rose {
   box-shadow: var(--glow-rose), var(--shadow-md);
 }
@@ -74,7 +75,7 @@
   box-shadow: var(--glow-violet), var(--shadow-md);
 }
 
-/* ─── Scrollbar theming ─────────────────────────────────────── */
+/* ─── Thème des barres de défilement ───────────────────────── */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);

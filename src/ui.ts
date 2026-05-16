@@ -1,4 +1,7 @@
-// UI utilities: theme application, toast notifications, DOM helpers.
+/**
+ * ui.ts — Utilitaires d'interface partagés : thème, état de navigation,
+ * toasts, favicon, troncature. Aucune dépendance vers les autres modules UI.
+ */
 
 import { t } from './i18n.js';
 

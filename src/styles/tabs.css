@@ -1,0 +1,82 @@
+/* tabs.css — Barre d'onglets (topbar) et boutons de contrôle de fenêtre. */
+
+/* ─── TOPBAR ─────────────────────────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center;
+  height: 38px; padding: 0 0 0 6px; gap: 0;
+}
+
+/* Bandeau d'onglets — défilement horizontal, scrollbar masquée */
+.tab-strip {
+  display: flex; align-items: center;
+  flex: 1; min-width: 0; height: 100%;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none; gap: 2px; padding: 4px 0;
+}
+.tab-strip::-webkit-scrollbar { display: none; }
+
+/* Onglet individuel */
+.tab {
+  display: flex; align-items: center; gap: 5px;
+  min-width: 80px; max-width: 200px; flex: 1;
+  height: 30px; padding: 0 7px 0 9px;
+  border-radius: var(--r-md); border: 1px solid transparent;
+  background: var(--tab-bg); color: var(--text-secondary);
+  font-size: 12px; cursor: pointer; text-align: left;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  overflow: hidden; flex-shrink: 0;
+}
+.tab:hover { background: var(--tab-bg-hover); color: var(--text-primary); }
+.tab.is-active {
+  background: var(--tab-bg-active); border-color: var(--glass-border);
+  color: var(--text-primary); border-bottom-color: var(--tab-border-active);
+}
+
+.tab-favicon { flex-shrink: 0; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; }
+.tab-favicon img { display: block; width: 14px; height: 14px; object-fit: contain; }
+
+/* Spinner de chargement dans l'onglet */
+.tab-spinner {
+  display: block; width: 12px; height: 12px;
+  border: 1.5px solid var(--glass-border); border-top-color: var(--accent-rose);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tab-title { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
+
+/* Bouton × de fermeture — visible au survol */
+.tab-close {
+  flex-shrink: 0; width: 18px; height: 18px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); opacity: 0;
+  transition: opacity var(--t-fast) var(--ease), background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.tab:hover .tab-close, .tab.is-active .tab-close { opacity: 1; }
+.tab-close:hover { background: var(--btn-bg-hover); color: var(--accent-rose); }
+
+/* Bouton + nouvel onglet — à droite du dernier onglet */
+.btn-new-tab {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); margin-left: 2px;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.btn-new-tab:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+
+/* Espaceur flexible entre onglets et contrôles fenêtre */
+.topbar-spacer { flex: 1; min-width: 8px; max-width: 40px; }
+
+/* Contrôles fenêtre Windows — pleine hauteur, sans cercles (style moderne) */
+.window-controls { display: flex; align-items: stretch; height: 100%; flex-shrink: 0; }
+
+.win-btn {
+  width: 46px; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary); border-radius: 0;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.win-btn:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+.win-close:hover { background: #e81123; color: #fff; }
+.win-btn:active  { background: var(--btn-bg-press); }
+.win-close:active { background: #c50f1f; }

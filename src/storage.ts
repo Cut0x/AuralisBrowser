@@ -1,305 +1,99 @@
-// Typed localStorage wrapper. Single source of truth for all persistent state.
+/**
+ * storage.ts — Persistence via localStorage.
+ * Types, valeurs par défaut, chargement et sauvegarde des paramètres.
+ * Les fonctions de manipulation des favoris sont dans bookmarks-store.ts.
+ */
 
 import type { SavedPassword } from './passwords.js';
-import type { Lang } from './i18n.js';
+import type { Lang }          from './i18n.js';
 
 export type ThemeName    = 'dark' | 'light' | 'midnight';
 export type SearchEngine = 'google' | 'duckduckgo' | 'brave' | 'startpage';
 
 export interface BookmarkLink {
-  id: string;
-  type: 'link';
-  title: string;
-  url: string;
-  createdAt: number;
+  id: string; type: 'link';
+  title: string; url: string; createdAt: number;
 }
 
 export interface BookmarkFolder {
-  id: string;
-  type: 'folder';
-  name: string;
-  children: BookmarkItem[];
-  createdAt: number;
+  id: string; type: 'folder';
+  name: string; children: BookmarkItem[]; createdAt: number;
 }
 
 export type BookmarkItem = BookmarkLink | BookmarkFolder;
 
 export interface HistoryEntry {
-  id: string;
-  title: string;
-  url: string;
-  visitedAt: number;
+  id: string; title: string; url: string; visitedAt: number;
 }
 
 export interface BrowserSettings {
-  theme: ThemeName;
-  searchEngine: SearchEngine;
-  homepage: string;
-  language: Lang;
+  theme:            ThemeName;
+  searchEngine:     SearchEngine;
+  homepage:         string;
+  language:         Lang;
   showFavoritesBar: boolean;
-  bookmarks: BookmarkItem[];
-  history: HistoryEntry[];
-  passwords: SavedPassword[];
+  bookmarks:        BookmarkItem[];
+  history:          HistoryEntry[];
+  passwords:        SavedPassword[];
 }
 
 const KEY = 'auralis_v2';
 
 const DEFAULTS: BrowserSettings = {
-  theme:           'dark',
-  searchEngine:    'duckduckgo',
-  homepage:        'about:newtab',
-  language:        'fr',
-  showFavoritesBar: true,
-  bookmarks:       [],
-  history:         [],
-  passwords:       [],
+  theme: 'dark', searchEngine: 'duckduckgo', homepage: 'about:newtab',
+  language: 'fr', showFavoritesBar: true,
+  bookmarks: [], history: [], passwords: [],
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateBookmarks(raw: any[]): BookmarkItem[] {
   if (!Array.isArray(raw)) return [];
   return raw.map(item => {
-    if (item && item.type === 'folder') {
-      return {
-        id: item.id ?? crypto.randomUUID(),
-        type: 'folder' as const,
-        name: item.name ?? 'Dossier',
-        children: migrateBookmarks(item.children ?? []),
-        createdAt: item.createdAt ?? Date.now(),
-      };
+    if (item?.type === 'folder') {
+      return { id: item.id ?? crypto.randomUUID(), type: 'folder' as const,
+        name: item.name ?? 'Dossier', children: migrateBookmarks(item.children ?? []),
+        createdAt: item.createdAt ?? Date.now() };
     }
-    return {
-      id: item.id ?? crypto.randomUUID(),
-      type: 'link' as const,
-      title: item.title ?? item.url ?? '',
-      url: item.url ?? '',
-      createdAt: item.createdAt ?? Date.now(),
-    };
+    return { id: item.id ?? crypto.randomUUID(), type: 'link' as const,
+      title: item.title ?? item.url ?? '', url: item.url ?? '',
+      createdAt: item.createdAt ?? Date.now() };
   });
 }
 
+/** Charge les paramètres depuis localStorage (avec migration et valeurs par défaut). */
 export function loadSettings(): BrowserSettings {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(DEFAULTS);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p = JSON.parse(raw) as any;
-    return {
-      ...DEFAULTS, ...p,
+    return { ...DEFAULTS, ...p,
       bookmarks: migrateBookmarks(Array.isArray(p.bookmarks) ? p.bookmarks : []),
       history:   Array.isArray(p.history)   ? p.history   : [],
       passwords: Array.isArray(p.passwords) ? p.passwords : [],
     };
-  } catch {
-    return structuredClone(DEFAULTS);
-  }
+  } catch { return structuredClone(DEFAULTS); }
 }
 
+/** Sérialise et sauvegarde les paramètres en localStorage. */
 export function saveSettings(s: BrowserSettings): void {
   try { localStorage.setItem(KEY, JSON.stringify(s)); }
-  catch (e) { console.error('[Auralis] save failed', e); }
+  catch (e) { console.error('[Auralis] sauvegarde échouée', e); }
 }
 
-// ─── Bookmark helpers ────────────────────────────────────────────────────────
-
-function hasUrl(items: BookmarkItem[], url: string): boolean {
-  for (const item of items) {
-    if (item.type === 'link' && item.url === url) return true;
-    if (item.type === 'folder' && hasUrl(item.children, url)) return true;
-  }
-  return false;
-}
-
-function removeById(items: BookmarkItem[], id: string): BookmarkItem[] {
-  return items
-    .filter(item => item.id !== id)
-    .map(item => item.type === 'folder'
-      ? { ...item, children: removeById(item.children, id) }
-      : item
-    );
-}
-
-function renameById(items: BookmarkItem[], id: string, newName: string): BookmarkItem[] {
-  return items.map(item => {
-    if (item.id === id) {
-      if (item.type === 'link')   return { ...item, title: newName };
-      if (item.type === 'folder') return { ...item, name:  newName };
-    }
-    if (item.type === 'folder') return { ...item, children: renameById(item.children, id, newName) };
-    return item;
-  });
-}
-
-export function flattenBookmarks(items: BookmarkItem[]): BookmarkLink[] {
-  const result: BookmarkLink[] = [];
-  for (const item of items) {
-    if (item.type === 'link') result.push(item);
-    else result.push(...flattenBookmarks(item.children));
-  }
-  return result;
-}
-
-export function countBookmarkLinks(items: BookmarkItem[]): number {
-  return items.reduce((n, item) =>
-    n + (item.type === 'link' ? 1 : countBookmarkLinks(item.children)), 0);
-}
-
-export function findBookmarkByUrl(items: BookmarkItem[], url: string): BookmarkLink | null {
-  for (const item of items) {
-    if (item.type === 'link' && item.url === url) return item;
-    if (item.type === 'folder') {
-      const found = findBookmarkByUrl(item.children, url);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
-export function addBookmark(s: BrowserSettings, title: string, url: string): BrowserSettings {
-  if (isBookmarked(s, url)) return s;
-  const b: BookmarkLink = { id: crypto.randomUUID(), type: 'link', title, url, createdAt: Date.now() };
-  return { ...s, bookmarks: [...s.bookmarks, b] };
-}
-
-export function addFolder(s: BrowserSettings, name: string): BrowserSettings {
-  const f: BookmarkFolder = { id: crypto.randomUUID(), type: 'folder', name, children: [], createdAt: Date.now() };
-  return { ...s, bookmarks: [...s.bookmarks, f] };
-}
-
-export function removeBookmark(s: BrowserSettings, id: string): BrowserSettings {
-  return { ...s, bookmarks: removeById(s.bookmarks, id) };
-}
-
-export function renameItem(s: BrowserSettings, id: string, newName: string): BrowserSettings {
-  return { ...s, bookmarks: renameById(s.bookmarks, id, newName) };
-}
-
-export function isBookmarked(s: BrowserSettings, url: string): boolean {
-  return hasUrl(s.bookmarks, url);
-}
-
-function filterDuplicateLinks(items: BookmarkItem[], existing: Set<string>): BookmarkItem[] {
-  return items.reduce<BookmarkItem[]>((acc, item) => {
-    if (item.type === 'link') {
-      if (!existing.has(item.url)) { existing.add(item.url); acc.push(item); }
-    } else {
-      const filtered = filterDuplicateLinks(item.children, existing);
-      if (filtered.length > 0) acc.push({ ...item, children: filtered });
-    }
-    return acc;
-  }, []);
-}
-
-export function mergeBookmarks(s: BrowserSettings, incoming: BookmarkItem[]): BrowserSettings {
-  const existingUrls = new Set(flattenBookmarks(s.bookmarks).map(b => b.url));
-  const toAdd = filterDuplicateLinks(incoming, existingUrls);
-  return { ...s, bookmarks: [...s.bookmarks, ...toAdd] };
-}
-
-// ─── Bookmark tree helpers ───────────────────────────────────────────────────
-
-/** Extract an item by ID, returning [item, treeWithoutItem]. */
-export function extractItem(items: BookmarkItem[], id: string): [BookmarkItem | null, BookmarkItem[]] {
-  let extracted: BookmarkItem | null = null;
-  const remaining: BookmarkItem[] = [];
-  for (const item of items) {
-    if (item.id === id) {
-      extracted = item;
-    } else if (item.type === 'folder') {
-      const [found, newChildren] = extractItem(item.children, id);
-      if (found) extracted = found;
-      remaining.push({ ...item, children: newChildren });
-    } else {
-      remaining.push(item);
-    }
-  }
-  return [extracted, remaining];
-}
-
-function insertItem(
-  items: BookmarkItem[],
-  item: BookmarkItem,
-  targetId: string,
-  position: 'before' | 'after' | 'inside',
-): BookmarkItem[] {
-  if (position === 'inside') {
-    return items.map(i => {
-      if (i.id === targetId && i.type === 'folder')
-        return { ...i, children: [...i.children, item] };
-      if (i.type === 'folder')
-        return { ...i, children: insertItem(i.children, item, targetId, position) };
-      return i;
-    });
-  }
-  const result: BookmarkItem[] = [];
-  for (const i of items) {
-    if (i.id === targetId) {
-      if (position === 'before') { result.push(item); result.push(i); }
-      else { result.push(i); result.push(item); }
-    } else if (i.type === 'folder') {
-      result.push({ ...i, children: insertItem(i.children, item, targetId, position) });
-    } else {
-      result.push(i);
-    }
-  }
-  return result;
-}
-
-export function moveBookmark(
-  s: BrowserSettings,
-  itemId: string,
-  targetId: string,
-  position: 'before' | 'after' | 'inside',
-): BrowserSettings {
-  if (itemId === targetId) return s;
-  const [item, withoutItem] = extractItem(s.bookmarks, itemId);
-  if (!item) return s;
-  return { ...s, bookmarks: insertItem(withoutItem, item, targetId, position) };
-}
-
-export function moveBookmarkToRoot(s: BrowserSettings, itemId: string): BrowserSettings {
-  const [item, withoutItem] = extractItem(s.bookmarks, itemId);
-  if (!item) return s;
-  return { ...s, bookmarks: [...withoutItem, item] };
-}
-
-export function findBookmarkById(items: BookmarkItem[], id: string): BookmarkItem | null {
-  for (const item of items) {
-    if (item.id === id) return item;
-    if (item.type === 'folder') {
-      const found = findBookmarkById(item.children, id);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
-export function getFlatFolders(
-  items: BookmarkItem[],
-  prefix = '',
-): { id: string; name: string; path: string }[] {
-  const result: { id: string; name: string; path: string }[] = [];
-  for (const item of items) {
-    if (item.type === 'folder') {
-      const path = prefix ? `${prefix} / ${item.name}` : item.name;
-      result.push({ id: item.id, name: item.name, path });
-      result.push(...getFlatFolders(item.children, path));
-    }
-  }
-  return result;
-}
-
-export function getLocalStorageSize(): { used: number; quota: number } {
-  let used = 0;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)!;
-    used += (key.length + (localStorage.getItem(key)?.length ?? 0)) * 2;
-  }
-  return { used, quota: 5 * 1024 * 1024 };
-}
-
+/** Ajoute une entrée en tête d'historique (max 1000). */
 export function addHistoryEntry(s: BrowserSettings, title: string, url: string): BrowserSettings {
   if (!url || url === 'about:newtab') return s;
   const e: HistoryEntry = { id: crypto.randomUUID(), title, url, visitedAt: Date.now() };
   return { ...s, history: [e, ...s.history].slice(0, 1000) };
+}
+
+/** Calcule l'espace localStorage utilisé et le quota estimé. */
+export function getLocalStorageSize(): { used: number; quota: number } {
+  let used = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)!;
+    used += (k.length + (localStorage.getItem(k)?.length ?? 0)) * 2;
+  }
+  return { used, quota: 5 * 1024 * 1024 };
 }
