@@ -1,5 +1,8 @@
-// Password manager — AES-GCM encryption via Web Crypto API.
-// Passwords are never stored in plain text.
+/**
+ * passwords.ts — Gestionnaire de mots de passe chiffrés (AES-GCM 256 bits).
+ * La clé maître est générée aléatoirement à l'installation et stockée dans
+ * localStorage. Les mots de passe ne sont jamais persistés en clair.
+ */
 
 export interface SavedPassword {
   id: string;

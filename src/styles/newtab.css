@@ -1,0 +1,70 @@
+/* newtab.css — Page nouvel onglet : fond animé, logo, barre de recherche, tuiles favoris. */
+
+.newtab-page { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; }
+.newtab-page.active { display: flex; }
+
+/* Fond avec halos colorés animés */
+.newtab-bg { position: absolute; inset: 0; background: var(--bg-base); overflow: hidden; }
+.newtab-glow {
+  position: absolute; border-radius: 50%; filter: blur(90px);
+  animation: drift 20s ease-in-out infinite alternate; will-change: transform;
+}
+.newtab-glow-1 { width: 60vw; height: 55vh; top: -10%; left: -5%;   background: radial-gradient(ellipse, rgba(155,111,224,.14) 0%, transparent 70%); animation-duration: 24s; }
+.newtab-glow-2 { width: 50vw; height: 50vh; bottom: -15%; right: -5%; background: radial-gradient(ellipse, rgba(232,88,122,.12) 0%, transparent 70%); animation-duration: 18s; animation-delay: -6s; }
+.newtab-glow-3 { width: 40vw; height: 40vh; top: 30%; left: 30%;    background: radial-gradient(ellipse, rgba(240,192,96,.07) 0%, transparent 70%); animation-duration: 28s; animation-delay: -12s; }
+@keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(28px,-18px) scale(1.05); } }
+
+.newtab-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: 56px 24px 40px; gap: 32px; min-height: 100%; }
+
+/* Logo Auralis avec lueur pulsée */
+.newtab-logo { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.logo-emblem  { filter: drop-shadow(0 0 16px var(--accent-rose-glow)) drop-shadow(0 0 32px var(--accent-violet-glow)); animation: pulse-glow 4s ease-in-out infinite; }
+@keyframes pulse-glow {
+  0%,100% { filter: drop-shadow(0 0 14px var(--accent-rose-glow)) drop-shadow(0 0 28px var(--accent-violet-glow)); }
+  50%     { filter: drop-shadow(0 0 22px var(--accent-rose-glow)) drop-shadow(0 0 44px var(--accent-violet-glow)); }
+}
+.logo-wordmark {
+  font-size: 40px; font-weight: 700; letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-violet) 60%, var(--accent-gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.logo-tagline { display: none; }
+
+/* Barre de recherche centrale */
+.newtab-search-wrap  { width: 100%; max-width: 520px; }
+.newtab-search-inner {
+  display: flex; align-items: center; height: 46px; padding: 0 16px; gap: 10px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-full);
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow-md);
+  transition: background var(--t-normal) var(--ease), border-color var(--t-normal) var(--ease), box-shadow var(--t-normal) var(--ease);
+}
+.newtab-search-inner:focus-within { background: var(--input-bg-focus); border-color: var(--input-border-focus); box-shadow: 0 0 0 3px var(--accent-rose-glow), var(--shadow-md); }
+.newtab-search-icon { flex-shrink: 0; color: var(--text-muted); }
+.newtab-searchbar   { flex: 1; font-size: 14.5px; caret-color: var(--accent-rose); }
+.newtab-searchbar::placeholder { color: var(--text-muted); }
+
+/* Grille de tuiles favoris */
+.newtab-favorites { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 520px; }
+.newtab-hint      { font-size: 12px; color: var(--text-muted); text-align: center; max-width: 300px; }
+
+/* Tuile favori individuelle */
+.fav-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 74px; padding: 12px 8px 10px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-lg);
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  color: var(--text-secondary); cursor: pointer;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.fav-tile:hover  { background: var(--glass-bg-hover); border-color: var(--glass-border-strong); transform: translateY(-2px); color: var(--text-primary); }
+.fav-tile:active { transform: translateY(0); }
+.fav-icon  { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: var(--glass-bg); border-radius: var(--r-md); }
+.fav-label { font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+/* Page bloquée (inutilisée en mode Tauri natif) */
+.frame-blocked { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-base); z-index: 10; }
+.frame-blocked.hidden { display: none; }
+.blocked-card { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 40px 36px; text-align: center; max-width: 380px; }
+.blocked-card h3 { font-size: 16px; font-weight: 600; }
+.blocked-card p  { font-size: 13px; color: var(--text-secondary); }

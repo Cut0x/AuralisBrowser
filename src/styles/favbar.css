@@ -1,0 +1,74 @@
+/* favbar.css — Barre des favoris, popover de dossier, indicateur de glisser-déposer. */
+
+/* Barre des favoris — défilement horizontal invisible */
+.favorites-bar {
+  display: flex; align-items: center;
+  height: 30px; padding: 0 8px; gap: 2px;
+  border-top: 1px solid var(--glass-border);
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+}
+.favorites-bar::-webkit-scrollbar { display: none; }
+.favorites-bar.hidden { display: none; }
+
+/* Élément lien dans la barre */
+.favbar-item {
+  display: flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 8px; border-radius: var(--r-sm);
+  color: var(--text-secondary); font-size: 12px; white-space: nowrap; flex-shrink: 0;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.favbar-item:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+.favbar-favicon    { display: block; width: 14px; height: 14px; object-fit: contain; }
+.favbar-label      { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+
+/* Bouton d'import — toujours à l'extrémité droite */
+.favbar-import-btn {
+  display: flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 8px; border-radius: var(--r-sm);
+  color: var(--text-muted); font-size: 11px; white-space: nowrap;
+  flex-shrink: 0; margin-left: auto;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.favbar-import-btn:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+
+/* Élément dossier dans la barre (avec flèche) */
+.favbar-folder {
+  display: flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 8px; border-radius: var(--r-sm);
+  color: var(--text-secondary); font-size: 12px; white-space: nowrap; flex-shrink: 0;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.favbar-folder:hover      { background: var(--btn-bg-hover); color: var(--text-primary); }
+.favbar-folder-chevron    { opacity: .5; }
+
+/* Popover de dossier — positionné via JS au-dessus du chrome (z-index 5000).
+   La webview est parkée (parkForOverlay) avant affichage pour éviter qu'elle
+   ne recouvre ce popover en raison du z-index OS des fenêtres natives. */
+.favbar-popover {
+  position: fixed; z-index: 5000;
+  background: var(--bg-1); border: 1px solid var(--glass-border);
+  border-radius: var(--r-md); box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  min-width: 180px; max-width: 300px;
+  padding: 4px 0; max-height: 60vh; overflow-y: auto;
+}
+.favbar-popover-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 6px 14px;
+  color: var(--text-secondary); font-size: 12px; text-align: left;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.favbar-popover-item:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+.favbar-popover-item img   { flex-shrink: 0; width: 14px; height: 14px; object-fit: contain; }
+.favbar-popover-item span  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.favbar-popover-separator  {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-muted);
+  padding: 6px 14px 2px; border-top: 1px solid var(--glass-border); margin-top: 2px;
+}
+
+/* Indicateur de survol lors du glisser-déposer dans la barre des favoris */
+.favbar-drag-over { outline: 2px solid var(--accent-violet); outline-offset: -2px; border-radius: var(--r-sm); }
+
+/* Tuile dossier sur la page nouvel onglet — fond violet translucide */
+.fav-tile-folder .fav-icon { background: var(--accent-violet-glow); }

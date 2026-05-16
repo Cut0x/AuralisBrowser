@@ -1,0 +1,90 @@
+/* buttons.css — Boutons partagés, champs de saisie, bascule (toggle), touche kbd. */
+
+/* ─── Boutons principaux ─────────────────────────────────────────────── */
+
+/* Bouton primaire — dégradé rose → violet avec lueur */
+.btn-primary {
+  height: 34px; padding: 0 18px; border-radius: var(--r-full);
+  font-size: 13px; font-weight: 500; color: #fff;
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-violet));
+  box-shadow: 0 2px 12px var(--accent-rose-glow);
+  transition: filter var(--t-fast) var(--ease), transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.btn-primary:hover  { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-rose-glow); }
+.btn-primary:active { filter: brightness(0.92); transform: translateY(0); }
+
+/* Bouton secondaire — neutre avec bordure */
+.btn-secondary {
+  height: 34px; padding: 0 18px; border-radius: var(--r-full);
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary); background: var(--btn-bg); border: 1px solid var(--glass-border);
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.btn-secondary:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+
+/* Bouton outline compact — utilisé dans les pages de paramètres */
+.btn-outline {
+  height: 30px; padding: 0 12px; border-radius: var(--r-sm);
+  font-size: 12px; color: var(--text-secondary);
+  border: 1px solid var(--glass-border); background: var(--glass-bg);
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.btn-outline:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+
+/* Bouton icône carré (fermeture, actions discrètes) */
+.icon-btn {
+  width: 30px; height: 30px; border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.icon-btn:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+
+/* ─── Champs de saisie ───────────────────────────────────────────────── */
+
+/* Sélecteur déroulant personnalisé */
+.setting-select {
+  height: 28px; padding: 0 26px 0 8px; border-radius: var(--r-sm);
+  background: var(--input-bg); border: 1px solid var(--input-border);
+  color: var(--text-primary); font-size: 12px; cursor: pointer;
+  min-width: 150px; appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+  transition: border-color var(--t-fast) var(--ease);
+}
+.setting-select:focus  { border-color: var(--input-border-focus); box-shadow: 0 0 0 2px var(--accent-rose-glow); }
+.setting-select option { background: var(--bg-2); color: var(--text-primary); }
+
+/* Champ texte générique */
+.setting-input {
+  width: 100%; height: 30px; padding: 0 10px; border-radius: var(--r-sm);
+  background: var(--input-bg); border: 1px solid var(--input-border);
+  color: var(--text-primary); font-size: 13px;
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.setting-input:focus       { border-color: var(--input-border-focus); box-shadow: 0 0 0 2px var(--accent-rose-glow); }
+.setting-input::placeholder { color: var(--text-muted); }
+
+/* ─── Bascule on/off ─────────────────────────────────────────────────── */
+.toggle { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; inset: 0; border-radius: 20px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  cursor: pointer; transition: background var(--t-normal) var(--ease);
+}
+.toggle-track::before {
+  content: ''; position: absolute;
+  width: 14px; height: 14px; left: 2px; bottom: 2px; border-radius: 50%;
+  background: var(--text-muted); transition: transform var(--t-normal) var(--ease), background var(--t-normal) var(--ease);
+}
+.toggle input:checked + .toggle-track { background: var(--accent-violet); border-color: var(--accent-violet); }
+.toggle input:checked + .toggle-track::before { transform: translateX(16px); background: #fff; }
+
+/* ─── Touche clavier ─────────────────────────────────────────────────── */
+kbd {
+  display: inline-flex; align-items: center; padding: 2px 7px;
+  font-size: 11px; font-family: inherit;
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm); color: var(--text-primary); min-width: 54px; justify-content: center;
+}

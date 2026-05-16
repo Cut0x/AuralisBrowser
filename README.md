@@ -19,7 +19,7 @@
 
 ### Programme d'installation (recommandé)
 
-1. Téléchargez `Auralis_0.2.0_x64-setup.exe` depuis les [releases](https://cut0x.github.io/AuralisBrowser/download.html)
+1. Téléchargez `Auralis_x.x.x_x64-setup.exe` depuis les [releases](https://github.com/Cut0x/AuralisBrowser/releases)
 2. Lancez l'installeur et suivez les instructions
 3. Profitez d'Auralis !
 

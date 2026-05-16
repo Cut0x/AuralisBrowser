@@ -1,0 +1,48 @@
+/* layout.css — Structure racine : reset, app, chrome, zone de contenu. */
+
+/* ─── Reset universel ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px; line-height: 1.45;
+  color: var(--text-primary); background: var(--bg-base);
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  user-select: none;
+}
+button { font-family: inherit; font-size: inherit; cursor: pointer; border: none; outline: none; background: none; -webkit-tap-highlight-color: transparent; }
+input  { font-family: inherit; font-size: inherit; outline: none; border: none; background: none; color: var(--text-primary); }
+
+/* ─── App root ───────────────────────────────────────────────────────── */
+#app { display: flex; flex-direction: column; width: 100vw; height: 100vh; background: var(--bg-base); }
+
+/* Chrome principal — topbar + navbar + favbar + barres inline (prompt MDP, bandeau MAJ).
+   Sa hauteur est observée par ResizeObserver dans browser.ts : toute variation
+   déclenche updateBounds() pour repositionner le webview natif. */
+.browser-chrome {
+  flex-shrink: 0;
+  background: var(--chrome-bg);
+  border-bottom: 1px solid var(--chrome-border);
+  backdrop-filter: blur(var(--glass-blur-lg));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+  z-index: 100;
+}
+
+/* Zone de contenu — le webview natif est positionné ici par Rust (lib.rs). */
+.content-area { flex: 1; position: relative; overflow: hidden; }
+
+/* Conteneur webview iframe (non utilisé en mode Tauri ; conservé par compatibilité). */
+.webview-container { position: absolute; inset: 0; display: none; }
+.webview-container.active { display: block; }
+.webview-frame { width: 100%; height: 100%; border: none; display: block; background: #fff; }
+
+/* ─── Accessibilité ──────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--accent-violet); outline-offset: 2px; }
+
+/* ─── Scrollbars discrètes ───────────────────────────────────────────── */
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--glass-border-strong); }

@@ -7,7 +7,15 @@
   <title>Auralis</title>
   <link rel="stylesheet" href="/src/styles/theme.css"/>
   <link rel="stylesheet" href="/src/styles/glass.css"/>
-  <link rel="stylesheet" href="/src/styles/main.css"/>
+  <link rel="stylesheet" href="/src/styles/layout.css"/>
+  <link rel="stylesheet" href="/src/styles/tabs.css"/>
+  <link rel="stylesheet" href="/src/styles/navbar.css"/>
+  <link rel="stylesheet" href="/src/styles/favbar.css"/>
+  <link rel="stylesheet" href="/src/styles/newtab.css"/>
+  <link rel="stylesheet" href="/src/styles/buttons.css"/>
+  <link rel="stylesheet" href="/src/styles/panels.css"/>
+  <link rel="stylesheet" href="/src/styles/auralis-page.css"/>
+  <link rel="stylesheet" href="/src/styles/data.css"/>
 </head>
 <body>
 <div id="app">
@@ -135,6 +143,24 @@
         </svg>
         <span data-i18n="favbar.import">Importer</span>
       </button>
+    </div>
+
+    <!-- PROMPT ENREGISTREMENT MDP — barre inline dans le chrome.
+         En devenant visible (retrait de .hidden), elle augmente la hauteur du
+         chrome → le ResizeObserver dans browser.ts appelle updateBounds()
+         pour décaler le webview natif vers le bas. -->
+    <div id="pw-save-prompt" class="pw-save-prompt hidden" role="dialog" aria-label="Enregistrer le mot de passe">
+      <p class="pw-save-title" data-i18n="pw.save_prompt">Enregistrer le mot de passe pour ce site ?</p>
+      <div class="pw-save-fields">
+        <input type="text"     id="pw-username-input" class="setting-input"
+               data-i18n-ph="pw.username" placeholder="Identifiant" autocomplete="username"/>
+        <input type="password" id="pw-password-input" class="setting-input"
+               data-i18n-ph="pw.password" placeholder="Mot de passe" autocomplete="current-password"/>
+      </div>
+      <div class="pw-save-actions">
+        <button class="btn-secondary" id="btn-pw-save-cancel" data-i18n="settings.cancel">Annuler</button>
+        <button class="btn-primary"   id="btn-pw-save-confirm" data-i18n="pw.save">Enregistrer</button>
+      </div>
     </div>
 
   </div><!-- /browser-chrome -->
@@ -276,23 +302,6 @@
           <div id="pw-list" class="pw-list"></div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- ══════════════════════════════════════
-         PROMPT ENREGISTREMENT MDP
-    ══════════════════════════════════════ -->
-    <div id="pw-save-prompt" class="pw-save-prompt hidden glass-card" role="dialog" aria-label="Enregistrer le mot de passe">
-      <p class="pw-save-title" data-i18n="pw.save_prompt">Enregistrer le mot de passe pour ce site ?</p>
-      <div class="pw-save-fields">
-        <input type="text"     id="pw-username-input" class="setting-input"
-               data-i18n-ph="pw.username" placeholder="Identifiant" autocomplete="username"/>
-        <input type="password" id="pw-password-input" class="setting-input"
-               data-i18n-ph="pw.password" placeholder="Mot de passe" autocomplete="current-password"/>
-      </div>
-      <div class="pw-save-actions">
-        <button class="btn-secondary" id="btn-pw-save-cancel" data-i18n="settings.cancel">Annuler</button>
-        <button class="btn-primary"   id="btn-pw-save-confirm" data-i18n="pw.save">Enregistrer</button>
       </div>
     </div>
 

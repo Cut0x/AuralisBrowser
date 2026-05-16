@@ -1,39 +1,39 @@
-// BrowserEngine — navigation via Tauri child webview (native WebView2, no iframe).
-// The content webview is a separate native layer managed by Rust (lib.rs).
+/**
+ * browser.ts — Moteur de navigation via la child webview native Tauri (WebView2).
+ *
+ * Architecture clé : la webview "content" est un contrôle natif Windows qui se
+ * superpose TOUJOURS au-dessus du HTML de la fenêtre principale, quels que soient
+ * les z-index CSS. Pour afficher un panneau HTML par-dessus la zone de contenu,
+ * appeler parkForOverlay() avant et restoreFromOverlay() après.
+ */
 
-import { invoke }          from '@tauri-apps/api/core';
-import { listen }          from '@tauri-apps/api/event';
-import { openUrl }         from '@tauri-apps/plugin-opener';
+import { invoke }  from '@tauri-apps/api/core';
+import { listen }  from '@tauri-apps/api/event';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { setNavLoading, setNavState, faviconFor, displayHostname } from './ui.js';
+import { FORM_CAPTURE_SCRIPT, NEW_TAB_SCRIPT } from './browser-scripts.js';
 
 export interface NavigationState {
-  url:        string;
-  title:      string;
-  favicon:    string;
-  canBack:    boolean;
-  canForward: boolean;
+  url: string; title: string; favicon: string;
+  canBack: boolean; canForward: boolean;
 }
 
 type NavCallback    = (state: NavigationState) => void;
 type NewTabCallback = (url: string) => void;
 
 export class BrowserEngine {
-  private newtabPage: HTMLElement;
-  private urlbar:     HTMLInputElement;
+  private newtabPage:        HTMLElement;
+  private urlbar:            HTMLInputElement;
+  private navHistory:        string[] = [];
+  private navIdx             = -1;
+  private isShowingNewtab    = true;
+  private _navPending        = false;   // vrai entre un loadUrl et la réception de content-navigated
+  private _lastUrl           = '';      // dernière URL émise — sert à dédupliquer
+  private _overlayActive     = false;   // vrai quand un panneau masque la webview
 
-  private navHistory: string[] = [];
-  private navIdx     = -1;
-
-  // True while the new-tab page is active — stale content-navigated events are ignored.
-  private isShowingNewtab = true;
-
-  // Dedup: prevents spurious WebView2 re-fires when window regains focus.
-  private _navigationPending = false;
-  private _lastHandledUrl    = '';
-
-  private onNavigate:   NavCallback;
-  private onNewTab?:    NewTabCallback;
-  private onPwDetected?: (username: string, password: string) => void;
+  private onNavigate:    NavCallback;
+  private onNewTab?:     NewTabCallback;
+  private onPwDetected?: (u: string, p: string) => void;
 
   constructor(onNavigate: NavCallback) {
     this.newtabPage = document.getElementById('newtab-page')!;
@@ -45,62 +45,51 @@ export class BrowserEngine {
       if (url && url !== 'about:newtab') openUrl(url).catch(console.error);
     });
 
+    // Redimensionner la webview à chaque redimensionnement de la fenêtre
     window.addEventListener('resize', () => { void this.updateBounds(true); });
+
+    // ResizeObserver sur le chrome : ajuste automatiquement les bornes si la hauteur
+    // du chrome change (bannière de MAJ, barre prompt MDP, barre des favoris…)
+    const chrome = document.getElementById('browser-chrome');
+    if (chrome) {
+      new ResizeObserver(() => {
+        if (!this.isShowingNewtab && !this._overlayActive) void this.updateBounds(true);
+      }).observe(chrome);
+    }
 
     void this.init();
   }
 
-  // ─── Public API ────────────────────────────────────────────────────────────
+  // ─── API publique ────────────────────────────────────────────────────────────
 
-  setNewTabCallback(fn: NewTabCallback): void {
-    this.onNewTab = fn;
-  }
-
-  setPwDetectedCallback(fn: (username: string, password: string) => void): void {
-    this.onPwDetected = fn;
-  }
+  setNewTabCallback(fn: NewTabCallback): void { this.onNewTab = fn; }
+  setPwDetectedCallback(fn: (u: string, p: string) => void): void { this.onPwDetected = fn; }
 
   loadUrl(url: string): void {
     if (!url || url === 'about:newtab') { this.showNewtab(); return; }
-
     this.isShowingNewtab = false;
+    this._overlayActive  = false;
     this.newtabPage.classList.remove('active');
     setNavLoading(true);
-    this._navigationPending = true;
-    this._lastHandledUrl    = '';
-
-    if (this.navIdx < this.navHistory.length - 1) {
+    this._navPending = true;
+    this._lastUrl    = '';
+    if (this.navIdx < this.navHistory.length - 1)
       this.navHistory = this.navHistory.slice(0, this.navIdx + 1);
-    }
     this.navHistory.push(url);
     this.navIdx = this.navHistory.length - 1;
     this.urlbar.value = url;
-
     void this.updateBounds(true);
     invoke<void>('content_navigate', { url }).catch(err => {
-      console.error('[Auralis] navigation error:', err);
-      setNavLoading(false);
+      console.error('[Auralis] erreur navigation:', err); setNavLoading(false);
     });
   }
 
-  goBack(): void {
-    if (this.navIdx <= 0) return;
-    this.navIdx--;
-    this.loadWithoutHistory(this.navHistory[this.navIdx]);
-  }
-
-  goForward(): void {
-    if (this.navIdx >= this.navHistory.length - 1) return;
-    this.navIdx++;
-    this.loadWithoutHistory(this.navHistory[this.navIdx]);
-  }
+  goBack():    void { if (this.navIdx <= 0) return; this.navIdx--; this.loadDirect(this.navHistory[this.navIdx]); }
+  goForward(): void { if (this.navIdx >= this.navHistory.length - 1) return; this.navIdx++; this.loadDirect(this.navHistory[this.navIdx]); }
 
   reload(): void {
-    const url = this.currentUrl();
-    if (!url || url === 'about:newtab') return;
-    setNavLoading(true);
-    this._navigationPending = true;
-    this._lastHandledUrl    = '';
+    if (!this.currentUrl() || this.currentUrl() === 'about:newtab') return;
+    setNavLoading(true); this._navPending = true; this._lastUrl = '';
     invoke<void>('content_reload').catch(console.error);
   }
 
@@ -110,25 +99,31 @@ export class BrowserEngine {
     void this.updateBounds(false);
     invoke<void>('content_navigate', { url: 'about:blank' }).catch(() => {});
     this.urlbar.value = '';
-    this.onNavigate({
-      url: 'about:newtab', title: 'Nouvel onglet', favicon: '',
-      canBack: this.navIdx > 0, canForward: this.navIdx < this.navHistory.length - 1,
-    });
+    this.onNavigate({ url: 'about:newtab', title: 'Nouvel onglet', favicon: '',
+      canBack: this.navIdx > 0, canForward: this.navIdx < this.navHistory.length - 1 });
   }
 
-  currentUrl(): string {
-    return this.navHistory[this.navIdx] ?? 'about:newtab';
-  }
-
-  canGoBack(): boolean    { return this.navIdx > 0; }
+  currentUrl():   string  { return this.navHistory[this.navIdx] ?? 'about:newtab'; }
+  canGoBack():    boolean { return this.navIdx > 0; }
   canGoForward(): boolean { return this.navIdx < this.navHistory.length - 1; }
+
+  /** Masque la webview pour afficher un panneau HTML sur la zone de contenu. */
+  parkForOverlay(): void {
+    this._overlayActive = true;
+    void this.updateBounds(false);
+  }
+
+  /** Restaure la webview après fermeture d'un panneau. */
+  restoreFromOverlay(): void {
+    this._overlayActive = false;
+    if (!this.isShowingNewtab) void this.updateBounds(true);
+  }
 
   async updateBounds(visible: boolean): Promise<void> {
     const chrome = document.getElementById('browser-chrome');
     if (!chrome) return;
     if (!visible) {
-      await invoke<void>('content_set_bounds', { top: 9999, width: 0, height: 1 })
-        .catch(() => {});
+      await invoke<void>('content_set_bounds', { top: 9999, width: 0, height: 1 }).catch(() => {});
       return;
     }
     const top    = chrome.getBoundingClientRect().bottom;
@@ -137,148 +132,50 @@ export class BrowserEngine {
     await invoke<void>('content_set_bounds', { top, width, height }).catch(() => {});
   }
 
-  // ─── Private ───────────────────────────────────────────────────────────────
+  // ─── Privé ───────────────────────────────────────────────────────────────────
 
-  private async init(): Promise<void> {
-    await listen<string>('content-navigated', e => {
-      const url = e.payload;
-      if (!url || url === 'about:blank') return;
-      if (this.isShowingNewtab) return;
-
-      // Skip spurious WebView2 re-fires (window focus events) when we didn't initiate nav
-      if (!this._navigationPending && url === this._lastHandledUrl) return;
-      this._navigationPending = false;
-      this._lastHandledUrl    = url;
-
-      setNavLoading(false);
-      const canBack    = this.navIdx > 0;
-      const canForward = this.navIdx < this.navHistory.length - 1;
-      setNavState(canBack, canForward);
-
-      this.urlbar.value = url;
-
-      this.onNavigate({
-        url, title: displayHostname(url), favicon: faviconFor(url),
-        canBack, canForward,
-      });
-
-      // Inject interceptors after each real page load
-      void this.injectNewTabScript();
-      void this.injectFormCapture();
-    });
-
-    await listen<{ url: string; title: string }>('content-title', e => {
-      const { url, title } = e.payload;
-      if (this.isShowingNewtab) return;
-      if (url !== this.currentUrl()) return;
-
-      const canBack    = this.navIdx > 0;
-      const canForward = this.navIdx < this.navHistory.length - 1;
-      this.onNavigate({ url, title, favicon: faviconFor(url), canBack, canForward });
-    });
-
-    // Rust fires this when the injected script routes a target="_blank" link
-    await listen<string>('content-open-new-tab', e => {
-      const url = e.payload;
-      if (url && this.onNewTab) this.onNewTab(url);
-    });
-
-    // Rust fires this when a password form is submitted via sentinel URL
-    await listen<string>('content-pw-detected', e => {
-      try {
-        const decoded = decodeURIComponent(e.payload);
-        const { u, p } = JSON.parse(atob(decoded)) as { u: string; p: string };
-        if (p && this.onPwDetected) this.onPwDetected(u || '', p);
-      } catch { /* ignore malformed payload */ }
-    });
-
-    await this.updateBounds(false);
-  }
-
-  private loadWithoutHistory(url: string): void {
-    this.isShowingNewtab = false;
+  private loadDirect(url: string): void {
+    this.isShowingNewtab = false; this._overlayActive = false;
     this.newtabPage.classList.remove('active');
-    setNavLoading(true);
-    this._navigationPending = true;
-    this._lastHandledUrl    = '';
+    setNavLoading(true); this._navPending = true; this._lastUrl = '';
     this.urlbar.value = url;
     void this.updateBounds(true);
     invoke<void>('content_navigate', { url }).catch(console.error);
   }
 
-  /** Capture password credentials on form submit WITHOUT preventing default navigation.
-   *  Strategy: store creds in window.name before the form navigates away; on the next
-   *  page load, retrieve them from window.name and trigger the sentinel URL so Rust
-   *  can emit content-pw-detected.  window.name persists across cross-origin navigations
-   *  in the same tab, making this work even when login and success pages differ in origin. */
-  private async injectFormCapture(): Promise<void> {
-    const js = `(function(){
-  if(window.__a_pwcap)return;
-  window.__a_pwcap=true;
-  function bd(h){var p=h.replace(/^www\\./,'').split('.');return p.length>=2?p.slice(-2).join('.'):h;}
-  // Submit listener — NO preventDefault, credentials captured just before nav
-  document.addEventListener('submit',function(e){
-    var f=e.target;
-    if(!f||f.tagName!=='FORM')return;
-    var pw=f.querySelector('input[type="password"]');
-    if(!pw||!pw.value)return;
-    var uf=f.querySelector('input[type="email"],input[type="text"],[autocomplete*="username"],[autocomplete*="email"],[name*="user"],[name*="email"],[name*="login"],[id*="user"],[id*="email"],[id*="login"]');
-    try{
-      var n={};try{n=JSON.parse(window.name);}catch{}
-      n.__a_pw={u:uf?uf.value:'',p:pw.value,h:window.location.hostname,t:Date.now()};
-      window.name=JSON.stringify(n);
-    }catch{}
-  },true);
-  // Check for creds saved by the previous page (after successful login redirect)
-  try{
-    var n={};try{n=JSON.parse(window.name);}catch{}
-    if(n.__a_pw&&(Date.now()-n.__a_pw.t)<20000){
-      var c=n.__a_pw;
-      if(bd(c.h)===bd(window.location.hostname)){
-        delete n.__a_pw;window.name=JSON.stringify(n);
-        setTimeout(function(){
-          try{
-            var d=btoa(unescape(encodeURIComponent(JSON.stringify({u:c.u,p:c.p}))));
-            window.location.href='http://auralis-pw.invalid/save?d='+encodeURIComponent(d);
-          }catch{}
-        },600);
-      }
-    }
-  }catch{}
-})();`;
-    await invoke<void>('content_eval', { js }).catch(() => {});
-  }
+  private async init(): Promise<void> {
+    await listen<string>('content-navigated', e => {
+      const url = e.payload;
+      if (!url || url === 'about:blank' || this.isShowingNewtab) return;
+      if (!this._navPending && url === this._lastUrl) return; // déduplique les re-fires WebView2
+      this._navPending = false; this._lastUrl = url;
+      setNavLoading(false);
+      const canBack = this.navIdx > 0, canForward = this.navIdx < this.navHistory.length - 1;
+      setNavState(canBack, canForward);
+      this.urlbar.value = url;
+      this.onNavigate({ url, title: displayHostname(url), favicon: faviconFor(url), canBack, canForward });
+      void invoke<void>('content_eval', { js: NEW_TAB_SCRIPT }).catch(() => {});
+      void invoke<void>('content_eval', { js: FORM_CAPTURE_SCRIPT }).catch(() => {});
+    });
 
-  /** Inject a tiny script that intercepts window.open() and target="_blank" clicks,
-   *  routing them through our sentinel URL so Rust can emit content-open-new-tab. */
-  private async injectNewTabScript(): Promise<void> {
-    const js = `(function(){
-  if(window.__a_ntpatch)return;
-  window.__a_ntpatch=true;
-  const _open=window.open.bind(window);
-  window.open=function(url,target,f){
-    if(url&&typeof url==='string'&&(url.startsWith('http://')||url.startsWith('https://'))){
-      if(!target||target==='_blank'||target==='_new'||target==='_tab'){
-        window.location.href='http://auralis-open.invalid/?url='+encodeURIComponent(url);
-        return{closed:false,close:function(){},focus:function(){}};
-      }
-    }
-    return _open(url,target,f);
-  };
-  document.addEventListener('click',function(e){
-    let el=e.target;
-    while(el&&el.tagName!=='A')el=el.parentElement;
-    if(!el)return;
-    const t=el.getAttribute('target');
-    if(t&&t!=='_self'&&t!=='_top'&&t!=='_parent'){
-      const h=el.href||el.getAttribute('href');
-      if(h&&(h.startsWith('http://')||h.startsWith('https://'))){
-        e.preventDefault();e.stopImmediatePropagation();
-        window.location.href='http://auralis-open.invalid/?url='+encodeURIComponent(h);
-      }
-    }
-  },true);
-})();`;
-    await invoke<void>('content_eval', { js }).catch(() => {});
+    await listen<{ url: string; title: string }>('content-title', e => {
+      const { url, title } = e.payload;
+      if (this.isShowingNewtab || url !== this.currentUrl()) return;
+      const canBack = this.navIdx > 0, canForward = this.navIdx < this.navHistory.length - 1;
+      this.onNavigate({ url, title, favicon: faviconFor(url), canBack, canForward });
+    });
+
+    await listen<string>('content-open-new-tab', e => {
+      if (e.payload && this.onNewTab) this.onNewTab(e.payload);
+    });
+
+    await listen<string>('content-pw-detected', e => {
+      try {
+        const { u, p } = JSON.parse(atob(decodeURIComponent(e.payload))) as { u: string; p: string };
+        if (p && this.onPwDetected) this.onPwDetected(u || '', p);
+      } catch { /* payload malformé */ }
+    });
+
+    await this.updateBounds(false);
   }
 }
