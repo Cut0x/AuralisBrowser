@@ -31,13 +31,13 @@
 git clone https://github.com/Cut0x/AuralisBrowser
 cd AuralisBrowser
 npm install
-npm run tauri build
+npm run tauri:build
 ```
 
 ## Développement
 
 ```bash
-npm run tauri dev
+npm run tauri:dev
 ```
 
 L'application se lance avec le rechargement à chaud pour le frontend TypeScript.
