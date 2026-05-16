@@ -14,7 +14,7 @@ import { loadSettings, saveSettings,
 import { addBookmark, removeBookmark,
          findBookmarkByUrl, countBookmarkLinks,
          mergeBookmarks, isBookmarked }        from './bookmarks-store.js';
-import { savePassword, extractDomain }         from './passwords.js';
+import { savePassword, extractDomain, findForDomain } from './passwords.js';
 import { parseNetscapeBookmarks, openFileDialog } from './import.js';
 import { applyTheme, toast, setBookmarkActive,
          setFavoritesBarVisible }              from './ui.js';
@@ -26,7 +26,7 @@ import { renderTabStrip, navigate, displayTitle,
 import { renderFavBar, closeFolderPopover }    from './ui-favbar.js';
 import { renderNewtabFavs }                    from './ui-newtab.js';
 import { checkPasswordIndicator,
-         openPwPanel, closePwPanel }           from './ui-passwords.js';
+         openPwPanel, closePwPanel, tryAutofillPassword } from './ui-passwords.js';
 import { renderAuralisContent }                from './ui-settings.js';
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
@@ -71,6 +71,7 @@ const browser = new BrowserEngine(state => {
     updateSettings(addHistoryEntry(settings, state.title, state.url));
     saveSettings(settings);
     checkPasswordIndicator(state.url);
+    void tryAutofillPassword(state.url);
   }
 });
 
@@ -96,7 +97,7 @@ document.getElementById('btn-back')?.addEventListener('click', () => {
   if (isAuralisPageVisible()) {
     hideAuralisPage();
     const ret = getAuralisReturnUrl();
-    if (ret && ret !== 'about:newtab') browser.loadUrl(ret); else browser.showNewtab();
+    if (ret && ret !== 'about:newtab') browser.showTabUrl(ret); else browser.showNewtab();
   } else browser.goBack();
 });
 document.getElementById('btn-forward')?.addEventListener('click', () => { if (!isAuralisPageVisible()) browser.goForward(); });
@@ -137,7 +138,10 @@ document.getElementById('btn-bookmark')?.addEventListener('click', () => {
     saveSettings(settings); setBookmarkActive(false);
     renderFavBar(); renderNewtabFavs(); toast(t('toast.bookmark_removed'));
   } else {
-    const title = tabs.getActive()?.title || url;
+    const defaultTitle = tabs.getActive()?.title || url;
+    const chosenTitle = prompt('Nom du favori :', defaultTitle);
+    if (chosenTitle === null) return;
+    const title = chosenTitle.trim() || defaultTitle;
     updateSettings(addBookmark(settings, title, url));
     saveSettings(settings); setBookmarkActive(true);
     renderFavBar(); renderNewtabFavs(); toast(t('toast.bookmark_added'), 'success');
@@ -163,7 +167,7 @@ document.getElementById('btn-pw-save-confirm')?.addEventListener('click', async 
   const pwPass = document.getElementById('pw-password-input') as HTMLInputElement;
   const domain = extractDomain(browser.currentUrl());
   const username = pwUser.value.trim(), password = pwPass.value;
-  if (!username || !password) return;
+  if (!password) return;
   updateSettings({ ...settings, passwords: await savePassword(settings.passwords, domain, username, password) });
   saveSettings(settings);
   document.getElementById('pw-save-prompt')?.classList.add('hidden');
@@ -180,6 +184,11 @@ document.getElementById('btn-pw-save-cancel')?.addEventListener('click', () => {
 document.getElementById('btn-show-pw-prompt')?.addEventListener('click', () => {
   const url = browser.currentUrl();
   if (!url || url === 'about:newtab') return;
+  const matches = findForDomain(settings.passwords, url);
+  if (matches.length > 0) {
+    const first = matches[0];
+    (document.getElementById('pw-username-input') as HTMLInputElement).value = first.username ?? '';
+  }
   document.getElementById('pw-save-prompt')?.classList.remove('hidden');
   document.getElementById('pw-username-input')?.focus();
 });
@@ -214,7 +223,7 @@ document.addEventListener('keydown', e => {
     switch (e.key.toLowerCase()) {
       case 'l': e.preventDefault(); urlbar.focus(); urlbar.select(); return;
       case 't': e.preventDefault(); hideAuralisPage(); tabs.createTab('about:newtab', true); browser.showNewtab(); return;
-      case 'w': e.preventDefault(); { const a = tabs.getActive(); if (a) { tabs.closeTab(a.id); hideAuralisPage(); const n = tabs.getActive(); if (n) browser.loadUrl(n.url); else browser.showNewtab(); } } return;
+      case 'w': e.preventDefault(); { const a = tabs.getActive(); if (a) { tabs.closeTab(a.id); hideAuralisPage(); const n = tabs.getActive(); if (n) browser.showTabUrl(n.url); else browser.showNewtab(); } } return;
       case 'r': e.preventDefault(); if (!isAuralisPageVisible()) browser.reload(); return;
     }
   }

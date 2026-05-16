@@ -51,6 +51,18 @@ export function displayHostname(url: string): string {
   } catch { return url; }
 }
 
+export function setStatusUrl(url: string | null): void {
+  const el = document.getElementById('status-url');
+  if (!el) return;
+  if (!url) {
+    el.textContent = '';
+    el.classList.add('hidden');
+    return;
+  }
+  el.textContent = url;
+  el.classList.remove('hidden');
+}
+
 /** Show a brief toast notification at the bottom of the screen. */
 export function toast(message: string, type: 'info' | 'success' | 'error' = 'info'): void {
   document.querySelector('.auralis-toast')?.remove();

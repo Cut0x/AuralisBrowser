@@ -3,7 +3,7 @@
  * Affiche les 8 premiers favoris (liens ou dossiers) sous forme de tuiles.
  */
 
-import { truncate, faviconFor }  from './ui.js';
+import { truncate, faviconFor, setStatusUrl } from './ui.js';
 import { settings }              from './state.js';
 import { navigate }              from './ui-nav.js';
 import { showFolderPopover }     from './ui-favbar.js';
@@ -13,9 +13,7 @@ import type { BookmarkFolder }   from './storage.js';
 /** Affiche les tuiles de favoris sur la page Nouvel Onglet. */
 export function renderNewtabFavs(): void {
   const newtabFavsEl = document.getElementById('newtab-favorites')!;
-  const newtabHint   = document.getElementById('newtab-hint')!;
   newtabFavsEl.innerHTML = '';
-  newtabHint.style.display = settings.bookmarks.length === 0 ? '' : 'none';
 
   for (const item of settings.bookmarks.slice(0, 8)) {
     const tile = document.createElement('button');
@@ -41,6 +39,10 @@ export function renderNewtabFavs(): void {
         </span>
         <span class="fav-label">${truncate(item.title, 14)}</span>`;
       tile.addEventListener('click', () => navigate(item.url));
+      tile.addEventListener('mouseenter', () => setStatusUrl(item.url));
+      tile.addEventListener('mouseleave', () => setStatusUrl(null));
+      tile.addEventListener('focus',      () => setStatusUrl(item.url));
+      tile.addEventListener('blur',       () => setStatusUrl(null));
       tile.addEventListener('contextmenu', e => showCtxMenu(e, item.id));
     }
 

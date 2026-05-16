@@ -1,1 +1,0 @@
-import{t as e}from"./rolldown-runtime-lhHHWwHU.js";import{r as t}from"./core-C09Q_N9v.js";var n=e({openUrl:()=>r});async function r(e,n){await t(`plugin:opener|open_url`,{url:e,with:n})}export{r as n,n as t};

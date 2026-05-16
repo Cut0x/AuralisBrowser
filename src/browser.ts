@@ -30,6 +30,8 @@ export class BrowserEngine {
   private _navPending        = false;   // vrai entre un loadUrl et la réception de content-navigated
   private _lastUrl           = '';      // dernière URL émise — sert à dédupliquer
   private _overlayActive     = false;   // vrai quand un panneau masque la webview
+  private _webviewVisible    = false;   // état courant appliqué à content_set_bounds
+  private _contentUrl        = '';      // dernière URL réellement chargée dans la webview
 
   private onNavigate:    NavCallback;
   private onNewTab?:     NewTabCallback;
@@ -46,7 +48,7 @@ export class BrowserEngine {
     });
 
     // Redimensionner la webview à chaque redimensionnement de la fenêtre
-    window.addEventListener('resize', () => { void this.updateBounds(true); });
+    window.addEventListener('resize', () => { void this.updateBounds(this._webviewVisible); });
 
     // ResizeObserver sur le chrome : ajuste automatiquement les bornes si la hauteur
     // du chrome change (bannière de MAJ, barre prompt MDP, barre des favoris…)
@@ -87,6 +89,24 @@ export class BrowserEngine {
   goBack():    void { if (this.navIdx <= 0) return; this.navIdx--; this.loadDirect(this.navHistory[this.navIdx]); }
   goForward(): void { if (this.navIdx >= this.navHistory.length - 1) return; this.navIdx++; this.loadDirect(this.navHistory[this.navIdx]); }
 
+  /**
+   * Affiche l'URL d'un onglet existant sans créer d'entrée d'historique navigateur.
+   * Utilisé lors du switch d'onglet pour éviter un rechargement forcé de logique.
+   */
+  showTabUrl(url: string): void {
+    if (!url || url === 'about:newtab') { this.showNewtab(); return; }
+    if (this._contentUrl === url) {
+      this.isShowingNewtab = false;
+      this._overlayActive  = false;
+      this.newtabPage.classList.remove('active');
+      this.urlbar.value = url;
+      void this.updateBounds(true);
+      return;
+    }
+    if (!this.isShowingNewtab && this.currentUrl() === url) return;
+    this.loadDirect(url);
+  }
+
   reload(): void {
     if (!this.currentUrl() || this.currentUrl() === 'about:newtab') return;
     setNavLoading(true); this._navPending = true; this._lastUrl = '';
@@ -97,23 +117,39 @@ export class BrowserEngine {
     this.isShowingNewtab = true;
     this.newtabPage.classList.add('active');
     void this.updateBounds(false);
-    invoke<void>('content_navigate', { url: 'about:blank' }).catch(() => {});
     this.urlbar.value = '';
     this.onNavigate({ url: 'about:newtab', title: 'Nouvel onglet', favicon: '',
       canBack: this.navIdx > 0, canForward: this.navIdx < this.navHistory.length - 1 });
+  }
+
+  eval(js: string): void {
+    invoke<void>('content_eval', { js }).catch(() => {});
   }
 
   currentUrl():   string  { return this.navHistory[this.navIdx] ?? 'about:newtab'; }
   canGoBack():    boolean { return this.navIdx > 0; }
   canGoForward(): boolean { return this.navIdx < this.navHistory.length - 1; }
 
-  /** Masque la webview pour afficher un panneau HTML sur la zone de contenu. */
+  /** Masque la webview pour afficher un panneau HTML plein-écran (ex: panneau MDP). */
   parkForOverlay(): void {
     this._overlayActive = true;
     void this.updateBounds(false);
   }
 
-  /** Restaure la webview après fermeture d'un panneau. */
+  /**
+   * Pousse le webview sous newTop sans le masquer.
+   * Utilisé par le popover de dossier : la page reste visible sous le popover.
+   * newTop = bas du popover en pixels depuis le haut de la fenêtre.
+   */
+  async shiftBoundsTop(newTop: number): Promise<void> {
+    this._overlayActive = true;
+    const width  = window.innerWidth;
+    const height = Math.max(1, window.innerHeight - newTop);
+    this._webviewVisible = true;
+    await invoke<void>('content_set_bounds', { top: newTop, width, height }).catch(() => {});
+  }
+
+  /** Restaure la webview après fermeture d'un panneau ou d'un popover. */
   restoreFromOverlay(): void {
     this._overlayActive = false;
     if (!this.isShowingNewtab) void this.updateBounds(true);
@@ -122,6 +158,7 @@ export class BrowserEngine {
   async updateBounds(visible: boolean): Promise<void> {
     const chrome = document.getElementById('browser-chrome');
     if (!chrome) return;
+    this._webviewVisible = visible;
     if (!visible) {
       await invoke<void>('content_set_bounds', { top: 9999, width: 0, height: 1 }).catch(() => {});
       return;
@@ -148,7 +185,7 @@ export class BrowserEngine {
       const url = e.payload;
       if (!url || url === 'about:blank' || this.isShowingNewtab) return;
       if (!this._navPending && url === this._lastUrl) return; // déduplique les re-fires WebView2
-      this._navPending = false; this._lastUrl = url;
+      this._navPending = false; this._lastUrl = url; this._contentUrl = url;
       setNavLoading(false);
       const canBack = this.navIdx > 0, canForward = this.navIdx < this.navHistory.length - 1;
       setNavState(canBack, canForward);
@@ -171,7 +208,8 @@ export class BrowserEngine {
 
     await listen<string>('content-pw-detected', e => {
       try {
-        const { u, p } = JSON.parse(atob(decodeURIComponent(e.payload))) as { u: string; p: string };
+        const bytes = Uint8Array.from(atob(e.payload), c => c.charCodeAt(0));
+        const { u, p } = JSON.parse(new TextDecoder().decode(bytes)) as { u: string; p: string };
         if (p && this.onPwDetected) this.onPwDetected(u || '', p);
       } catch { /* payload malformé */ }
     });
