@@ -102,8 +102,26 @@ export function renderPageAPropos(el: HTMLElement): void {
             GitHub
           </a>
         </div>
+        <div style="margin-top:16px;padding:12px 14px;background:var(--bg-2);border-radius:var(--r-md);border:1px solid var(--glass-border);display:flex;align-items:center;gap:10px">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="flex-shrink:0">
+            <path d="M8 1.5l1.75 3.54 3.9.57-2.82 2.75.66 3.88L8 10.27l-3.49 1.97.66-3.88L2.35 5.6l3.9-.57L8 1.5z" stroke="var(--accent-gold,#f0c060)" stroke-width="1.2" stroke-linejoin="round" fill="var(--accent-gold,#f0c060)" fill-opacity=".25"/>
+          </svg>
+          <div style="flex:1;min-width:0">
+            <p style="font-size:12.5px;font-weight:500;color:var(--text-primary)">Vous aimez Auralis ?</p>
+            <p style="font-size:11.5px;color:var(--text-muted);margin-top:3px">Laissez une ⭐ sur GitHub — c'est gratuit et ça aide beaucoup !</p>
+          </div>
+          <a href="#" id="ap-star-link" class="btn-outline" style="flex-shrink:0;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;text-decoration:none;font-size:12px">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5l1.75 3.54 3.9.57-2.82 2.75.66 3.88L8 10.27l-3.49 1.97.66-3.88L2.35 5.6l3.9-.57L8 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            Star
+          </a>
+        </div>
       </div>`;
     el.querySelector('#ap-github-link')!.addEventListener('click', e => {
+      e.preventDefault();
+      import('@tauri-apps/plugin-opener').then(({ openUrl }) =>
+        openUrl('https://github.com/Cut0x/AuralisBrowser').catch(console.error));
+    });
+    el.querySelector('#ap-star-link')!.addEventListener('click', e => {
       e.preventDefault();
       import('@tauri-apps/plugin-opener').then(({ openUrl }) =>
         openUrl('https://github.com/Cut0x/AuralisBrowser').catch(console.error));

@@ -240,6 +240,17 @@ document.getElementById('btn-close')?.addEventListener('click',    () => appWind
 document.getElementById('btn-minimize')?.addEventListener('click', () => appWindow.minimize());
 document.getElementById('btn-maximize')?.addEventListener('click', () => appWindow.toggleMaximize());
 
+// ─── Glissement de la fenêtre ─────────────────────────────────────────────────
+// mousedown sur le chrome → startDragging(), sauf si le clic est sur un élément interactif
+// (bouton, input, lien) — ce qui couvre onglets, favoris, contrôles fenêtre, barre d'adresse.
+
+document.getElementById('browser-chrome')!.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  const t = e.target as HTMLElement;
+  if (t.closest('button, input, a, select, textarea')) return;
+  void appWindow.startDragging();
+});
+
 // ─── Raccourcis clavier ───────────────────────────────────────────────────────
 
 document.addEventListener('keydown', e => {
