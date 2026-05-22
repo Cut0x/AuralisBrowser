@@ -1,4 +1,4 @@
-// Settings panel controller — reads form state, emits a patch on save.
+// Controleur du panneau de parametres: lit le formulaire et emet un patch a la sauvegarde.
 
 import type { BrowserSettings } from './storage.js';
 import type { Lang }            from './i18n.js';
@@ -70,7 +70,7 @@ export class SettingsPanel {
   }
 
   updateTexts(): void {
-    // Update dynamic labels that aren't covered by data-i18n
+    // Met a jour les libelles dynamiques non couverts par data-i18n
     const saveEl  = document.getElementById('btn-save-settings');
     const cancelEl= document.getElementById('btn-cancel-settings');
     if (saveEl)   saveEl.textContent   = t('settings.save');

@@ -1,5 +1,5 @@
-/**
- * storage.ts — Persistence via localStorage.
+﻿/**
+ * storage.ts - Persistence via localStorage.
  * Types, valeurs par défaut, chargement et sauvegarde des paramètres.
  * Les fonctions de manipulation des favoris sont dans bookmarks-store.ts.
  */

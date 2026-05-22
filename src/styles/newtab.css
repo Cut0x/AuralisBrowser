@@ -1,4 +1,4 @@
-/* newtab.css — Page nouvel onglet : fond animé, logo, barre de recherche, tuiles favoris. */
+﻿/* newtab.css - Page nouvel onglet : fond animé, logo, barre de recherche, tuiles favoris. */
 
 .newtab-page { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; }
 .newtab-page.active { display: flex; }

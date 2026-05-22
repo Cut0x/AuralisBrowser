@@ -1,5 +1,5 @@
-/**
- * tabs.ts — Modèle de données des onglets (état pur, sans manipulation du DOM).
+﻿/**
+ * tabs.ts - Modèle de données des onglets (état pur, sans manipulation du DOM).
  * TabManager gère la liste d'onglets, l'onglet actif et notifie les observateurs
  * via un callback onChange à chaque modification.
  */

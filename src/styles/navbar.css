@@ -1,4 +1,4 @@
-/* navbar.css — Barre de navigation : boutons Précédent/Suivant/Recharger, URL bar. */
+﻿/* navbar.css - Barre de navigation : boutons Précédent/Suivant/Recharger, URL bar. */
 
 /* Barre de navigation principale */
 .navbar {
@@ -63,7 +63,7 @@
 .urlbar-action-btn.is-active .bm-stroke { fill: var(--accent-gold); stroke: var(--accent-gold); }
 .urlbar-action-btn.is-active { color: var(--accent-gold); }
 
-/* Point rouge — indique qu'un MDP est enregistré pour ce domaine */
+/* Point rouge - indique qu'un MDP est enregistré pour ce domaine */
 #pw-indicator { position: relative; display: flex; align-items: center; }
 #pw-indicator.has-saved::after {
   content: ''; position: absolute; top: -1px; right: -1px;

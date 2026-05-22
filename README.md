@@ -1,11 +1,11 @@
-# Auralis Browser 1.0.0
+﻿# Auralis Browser 1.0.0
 
-Auralis is a desktop browser built with **Tauri 2 + Rust + TypeScript**.
-This release introduces a rebuilt internal navigation model (`auralis:*`), a first-install onboarding flow, and a hardened WebView loading pipeline.
+Auralis est un navigateur desktop construit avec Tauri 2, Rust et TypeScript.
+Cette version inclut la navigation interne `auralis:*`, le demarrage de bienvenue et un moteur WebView stabilise.
 
-## Highlights
+## Fonctionnalites principales
 
-- Internal pages now use a unified scheme:
+- Routes internes unifiees:
   - `auralis:home`
   - `auralis:settings`
   - `auralis:settings/apparence`
@@ -16,62 +16,48 @@ This release introduces a rebuilt internal navigation model (`auralis:*`), a fir
   - `auralis:settings/securite`
   - `auralis:settings/cache`
   - `auralis:settings/a-propos`
-- New `auralis:home` page with a built-in product presentation.
-- First installation behavior:
-  - opens `http://localhost:3000/welcome.php` once,
-  - then persists onboarding state locally.
-- Better load reliability:
-  - navigation state can now be resolved on both `content-navigated` and `content-loaded`,
-  - avoids infinite spinner when start-navigation events are missed by platform WebView callbacks.
-- Dedicated app console window with structured runtime logs.
+- Page d'accueil interne `auralis:home`.
+- Premiere ouverture redirigee vers `https://auralisbrowser.fr/welcome`.
+- Console Auralis disponible au clic droit via l'entree `Console Auralis`.
+- Fenetre console cachee par defaut au lancement.
 
-## Project Structure
+## Architecture
 
 - `src/`
-  - `main.ts`: app bootstrap, first-run flow, keyboard and UI bindings
-  - `browser.ts`: tab/webview runtime orchestration
-  - `browser-events.ts`: Tauri event bridge and navigation state updates
-  - `search.ts`: smart URL/search resolution
-  - `internal-pages.ts`: internal route parsing/normalization (`auralis:*`)
-  - `ui-nav.ts`: internal/external navigation dispatcher
-  - `ui-settings.ts`: internal pages rendering including `auralis:home`
-  - `storage.ts`: persisted settings/history
+  - `main.ts`: bootstrap, evenements UI, menu contextuel
+  - `browser.ts`: orchestration WebView et navigation
+  - `browser-events.ts`: ecoute des evenements Tauri
+  - `internal-pages.ts`: parsing/normalisation des routes `auralis:*`
+  - `ui-settings.ts`: rendu des pages internes
 - `src-tauri/`
-  - `src/lib.rs`: Tauri bootstrap and command registration
-  - `src/webview.rs`: child WebView lifecycle and navigation events
-  - `src/console.rs`: in-app log buffer and console event streaming
-  - `tauri.conf.json`: bundle/app metadata
+  - `src/lib.rs`: initialisation Tauri et commandes Rust
+  - `src/webview.rs`: WebView de contenu unique et events de navigation
+  - `src/console.rs`: buffer de logs applicatifs
+  - `tauri.conf.json`: metadata et bundle Windows
 - `public/`
-  - `console.html`: dedicated log viewer window
+  - `console.html`: interface de consultation des logs
 
-## Requirements
+## Prerequis
 
 - Node.js 20+
-- Rust stable toolchain
-- Tauri prerequisites for your OS
+- Rust stable
+- Prerequis Tauri pour votre OS
 
-Windows installer metadata uses the app version from:
-- `package.json`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
+## Developpement
 
-All are set to `1.0.0`.
-
-## Development
-
-Install dependencies:
+Installer les dependances:
 
 ```bash
 npm install
 ```
 
-Run frontend dev server only:
+Lancer le frontend en dev:
 
 ```bash
 npm run dev
 ```
 
-Run full Tauri app in dev mode:
+Lancer l'application Tauri en dev:
 
 ```bash
 npm run tauri:dev
@@ -83,64 +69,37 @@ Build frontend:
 npm run build
 ```
 
-Build the Windows installer (`setup.exe`):
+Build installateur Windows:
 
 ```bash
 npm run tauri:build
 ```
 
-Output:
+Sortie:
 
 ```text
 src-tauri\target\release\bundle\nsis\Auralis_1.0.0_x64-setup.exe
 ```
 
-The project is configured to bundle **NSIS setup.exe only** and includes WebView2 runtime installation during setup (`offlineInstaller` mode).
+## Installation Windows
 
-## First-Install Welcome Page
+Utiliser le `setup.exe` genere.
+L'installateur NSIS gere l'installation de WebView2 en mode `offlineInstaller`.
 
-On first launch, Auralis opens:
+## Liens officiels
 
-```text
-http://localhost:3000/welcome.php
-```
+- Site: `https://auralisbrowser.fr`
+- Welcome: `https://auralisbrowser.fr/welcome`
+- GitHub: `https://github.com/Cut0x/AuralisBrowser`
 
-The page file is expected at:
+## Depannage
 
-```text
-C:\Users\Loïc\Documents\Projets\AuralisWebsite\welcome.php
-```
+Si la navigation ne charge pas:
 
-If your local PHP server is not running on port `3000`, the page will not load.
+1. Ouvrir le menu clic droit dans l'interface.
+2. Cliquer `Console Auralis`.
+3. Verifier les erreurs de navigation/webview dans la console.
 
-## Internal Navigation Rules
-
-- Inputs starting with legacy `auralis::` are normalized to `auralis:*`.
-- `auralis:settings` resolves to `auralis:settings/apparence`.
-- Internal pages are excluded from history entries.
-
-## Troubleshooting
-
-### Infinite loading indicator
-
-If a page appears stuck loading:
-
-1. Open the Auralis console window.
-2. Check `content-navigated` / `content-loaded` events.
-3. Confirm the target URL is reachable.
-
-The runtime now applies a fallback from `content-loaded` to avoid spinner lock when the start event is skipped.
-
-### App opens but no site can load
-
-If navigation fails with no visible page, install Auralis using the generated `setup.exe` (not the raw `auralis.exe`).
-The setup installer installs required WebView2 runtime automatically.
-
-### MSI bundling errors on version format
-
-MSI rejects non-numeric prerelease tags.
-Use stable versions like `1.0.0` (current default) for Windows bundles.
-
-## License
+## Licence
 
 MIT

@@ -1,4 +1,4 @@
-// Prevents the extra console window from appearing on Windows in release builds.
+// Cache la fenetre console Windows supplementaire en mode release.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {

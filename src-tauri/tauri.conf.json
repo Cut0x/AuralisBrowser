@@ -47,7 +47,7 @@
     "copyright": "© 2025 Loïc V. (Cut0x)",
     "category": "Productivity",
     "shortDescription": "A beautiful, lightweight browser.",
-    "longDescription": "Auralis — navigateur web léger, rapide et magnifique.",
+    "longDescription": "Auralis - navigateur web léger, rapide et magnifique.",
     "windows": {
       "digestAlgorithm": "sha256",
       "certificateThumbprint": null,

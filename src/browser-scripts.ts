@@ -1,5 +1,5 @@
-/**
- * browser-scripts.ts — Scripts JS injectés dans la webview de contenu.
+﻿/**
+ * browser-scripts.ts - Scripts JS injectés dans la webview de contenu.
  * Chaque script est protégé par un flag pour n'être exécuté qu'une fois par page.
  */
 

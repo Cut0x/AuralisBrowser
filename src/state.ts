@@ -1,5 +1,5 @@
-/**
- * state.ts — État global partagé entre tous les modules UI.
+﻿/**
+ * state.ts - État global partagé entre tous les modules UI.
  * Utilise des liaisons vivantes ES modules : les importeurs voient toujours
  * la valeur courante sans avoir besoin de re-importer.
  */

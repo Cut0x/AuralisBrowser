@@ -1,9 +1,9 @@
-export type Lang = 'fr' | 'en';
+﻿export type Lang = 'fr' | 'en';
 
 export const STRINGS: Record<Lang, Record<string, string>> = {
   fr: {
     'newtab.search':          'Rechercher sur le web…',
-    'newtab.no_bookmarks':    'Pas encore de favoris — naviguez vers une page et cliquez sur ☆.',
+    'newtab.no_bookmarks':    'Pas encore de favoris - naviguez vers une page et cliquez sur ☆.',
     'tab.new':                'Nouvel onglet',
     'tab.new_title':          'Nouvel onglet (Ctrl+T)',
     'nav.back':               'Précédent (Alt+←)',
@@ -26,8 +26,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     'settings.cache':         'Cache & Données',
     'settings.a_propos':      'À propos',
     'settings.theme':         'Thème',
-    'settings.theme_dark':    'Sombre — Aurora',
-    'settings.theme_light':   'Clair — Brume',
+    'settings.theme_dark':    'Sombre - Aurora',
+    'settings.theme_light':   'Clair - Brume',
     'settings.theme_midnight':'Minuit',
     'settings.language':      'Langue',
     'settings.engine':        'Moteur par défaut',
@@ -65,7 +65,7 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
   },
   en: {
     'newtab.search':          'Search the web…',
-    'newtab.no_bookmarks':    'No bookmarks yet — browse to a page and click ☆ to save.',
+    'newtab.no_bookmarks':    'No bookmarks yet - browse to a page and click ☆ to save.',
     'tab.new':                'New Tab',
     'tab.new_title':          'New Tab (Ctrl+T)',
     'nav.back':               'Back (Alt+←)',
@@ -88,8 +88,8 @@ export const STRINGS: Record<Lang, Record<string, string>> = {
     'settings.cache':         'Cache & Data',
     'settings.a_propos':      'About',
     'settings.theme':         'Theme',
-    'settings.theme_dark':    'Dark — Aurora',
-    'settings.theme_light':   'Light — Mist',
+    'settings.theme_dark':    'Dark - Aurora',
+    'settings.theme_light':   'Light - Mist',
     'settings.theme_midnight':'Midnight',
     'settings.language':      'Language',
     'settings.engine':        'Default engine',

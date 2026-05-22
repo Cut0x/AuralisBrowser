@@ -1,4 +1,4 @@
-/* layout.css — Structure racine : reset, app, chrome, zone de contenu. */
+﻿/* layout.css - Structure racine : reset, app, chrome, zone de contenu. */
 
 /* ─── Reset universel ────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,7 +17,7 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 /* ─── App root ───────────────────────────────────────────────────────── */
 #app { display: flex; flex-direction: column; width: 100vw; height: 100vh; background: var(--bg-base); }
 
-/* Chrome principal — topbar + navbar + favbar + barres inline (prompt MDP, bandeau MAJ).
+/* Chrome principal - topbar + navbar + favbar + barres inline (prompt MDP, bandeau MAJ).
    Sa hauteur est observée par ResizeObserver dans browser.ts : toute variation
    déclenche updateBounds() pour repositionner le webview natif. */
 .browser-chrome {
@@ -29,7 +29,7 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
   z-index: 100;
 }
 
-/* Zone de contenu — le webview natif est positionné ici par Rust (lib.rs). */
+/* Zone de contenu - le webview natif est positionné ici par Rust (lib.rs). */
 .content-area { flex: 1; position: relative; overflow: hidden; }
 
 .status-url {

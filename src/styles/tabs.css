@@ -1,4 +1,4 @@
-/* tabs.css — Barre d'onglets (topbar) et boutons de contrôle de fenêtre. */
+﻿/* tabs.css - Barre d'onglets (topbar) et boutons de contrôle de fenêtre. */
 
 /* ─── TOPBAR ─────────────────────────────────────────────────────────── */
 .topbar {
@@ -6,7 +6,7 @@
   height: 38px; padding: 0 0 0 6px; gap: 0;
 }
 
-/* Bandeau d'onglets — défilement horizontal, scrollbar masquée */
+/* Bandeau d'onglets - défilement horizontal, scrollbar masquée */
 .tab-strip {
   display: flex; align-items: center;
   flex: 1; min-width: 0; height: 100%;
@@ -45,7 +45,7 @@
 
 .tab-title { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
 
-/* Bouton × de fermeture — visible au survol */
+/* Bouton × de fermeture - visible au survol */
 .tab-close {
   flex-shrink: 0; width: 18px; height: 18px; border-radius: var(--r-sm);
   display: flex; align-items: center; justify-content: center;
@@ -55,7 +55,7 @@
 .tab:hover .tab-close, .tab.is-active .tab-close { opacity: 1; }
 .tab-close:hover { background: var(--btn-bg-hover); color: var(--accent-rose); }
 
-/* Bouton + nouvel onglet — à droite du dernier onglet */
+/* Bouton + nouvel onglet - à droite du dernier onglet */
 .btn-new-tab {
   flex-shrink: 0; width: 26px; height: 26px; border-radius: var(--r-md);
   display: flex; align-items: center; justify-content: center;
@@ -70,7 +70,7 @@
 /* Espaceur flexible entre onglets et contrôles fenêtre */
 .topbar-spacer { flex: 1; min-width: 8px; max-width: 40px; }
 
-/* Contrôles fenêtre Windows — pleine hauteur, sans cercles (style moderne) */
+/* Contrôles fenêtre Windows - pleine hauteur, sans cercles (style moderne) */
 .window-controls { display: flex; align-items: stretch; height: 100%; flex-shrink: 0; }
 
 .win-btn {

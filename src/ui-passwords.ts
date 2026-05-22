@@ -1,5 +1,5 @@
-/**
- * ui-passwords.ts — Panneau de gestion des mots de passe et prompt de sauvegarde.
+﻿/**
+ * ui-passwords.ts - Panneau de gestion des mots de passe et prompt de sauvegarde.
  *
  * Le panneau MDP utilise browser.parkForOverlay() / restoreFromOverlay() pour
  * masquer la webview native pendant son affichage.

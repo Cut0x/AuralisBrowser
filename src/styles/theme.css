@@ -1,10 +1,10 @@
-/* ═══════════════════════════════════════════════════════════════
-   theme.css — Variables de design (tokens) pour chaque thème.
+﻿/* ═══════════════════════════════════════════════════════════════
+   theme.css - Variables de design (tokens) pour chaque thème.
    L'attribut [data-theme] sur <html> active le jeu de variables.
    Trois thèmes : dark (Aurora), light (Brume), midnight.
    ═══════════════════════════════════════════════════════════════ */
 
-/* ─── Sombre (Aurora) — thème par défaut ────────────────────── */
+/* ─── Sombre (Aurora) - thème par défaut ────────────────────── */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
@@ -86,11 +86,11 @@
   --r-full:9999px;
 }
 
-/* ─── Clair (Brume — beige chaud) ───────────────────────────── */
+/* ─── Clair (Brume - beige chaud) ───────────────────────────── */
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Backgrounds — nuances de beige chaud */
+  /* Backgrounds - nuances de beige chaud */
   --bg-base:    #f5f0e8;
   --bg-1:       #ede5d8;
   --bg-2:       #e3d8c8;
