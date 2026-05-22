@@ -114,7 +114,7 @@ document.addEventListener('keydown', e => {
   if (ctrl) {
     switch (e.key.toLowerCase()) {
       case 'l': e.preventDefault(); urlbar.focus(); urlbar.select(); return;
-      case 't': e.preventDefault(); hideAuralisPage(); tabs.createTab('about:newtab', true); browser.showNewtab(); return;
+      case 't': e.preventDefault(); hideAuralisPage(); { const nt = tabs.createTab('about:newtab', true); browser.setActiveTabId(nt.id); } browser.showNewtab(); return;
       case 'w': e.preventDefault(); { const a = tabs.getActive(); if (a) { tabs.closeTab(a.id); hideAuralisPage(); const n = tabs.getActive(); if (n) browser.showTabUrl(n.id, n.url); else browser.showNewtab(); } } return;
       case 'r': e.preventDefault(); if (!isAuralisPageVisible()) browser.reload(); return;
     }
