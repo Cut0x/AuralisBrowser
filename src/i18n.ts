@@ -1,159 +1,15 @@
-/**
- * i18n.ts — Internationalisation (FR / EN).
- * Expose t(key) pour obtenir une chaîne traduite, setLang() pour changer
- * la langue active, et applyAll() pour mettre à jour les éléments HTML
- * portant les attributs data-i18n, data-i18n-ph et data-i18n-title.
- */
+import { STRINGS } from './i18n-strings.js';
+export type { Lang } from './i18n-strings.js';
+import type { Lang } from './i18n-strings.js';
 
-export type Lang = 'fr' | 'en';
-
-const STRINGS: Record<Lang, Record<string, string>> = {
-  fr: {
-    /* New tab */
-    'newtab.search':          'Rechercher sur le web…',
-    'newtab.no_bookmarks':    'Pas encore de favoris — naviguez vers une page et cliquez sur ☆.',
-    /* Topbar */
-    'tab.new':                'Nouvel onglet',
-    'tab.new_title':          'Nouvel onglet (Ctrl+T)',
-    /* Navbar */
-    'nav.back':               'Précédent (Alt+←)',
-    'nav.forward':            'Suivant (Alt+→)',
-    'nav.reload':             'Recharger (Ctrl+R)',
-    'nav.urlbar':             'Rechercher ou entrer une adresse…',
-    'nav.bookmark_add':       'Ajouter aux favoris',
-    'nav.bookmark_remove':    'Retirer des favoris',
-    'nav.settings':           'Paramètres',
-    'nav.passwords':          'Mots de passe',
-    /* Favorites bar */
-    'favbar.import':          'Importer',
-    'favbar.import_title':    'Importer les favoris (Chrome/Firefox HTML)',
-    /* Settings pages */
-    'settings.title':         'Paramètres',
-    'settings.apparence':     'Apparence',
-    'settings.moteur':        'Moteur de recherche',
-    'settings.demarrage':     'Démarrage',
-    'settings.favoris':       'Favoris',
-    'settings.historique':    'Historique',
-    'settings.securite':      'Sécurité',
-    'settings.cache':         'Cache & Données',
-    'settings.a_propos':      'À propos',
-    /* Settings fields */
-    'settings.theme':         'Thème',
-    'settings.theme_dark':    'Sombre — Aurora',
-    'settings.theme_light':   'Clair — Brume',
-    'settings.theme_midnight':'Minuit',
-    'settings.language':      'Langue',
-    'settings.engine':        'Moteur par défaut',
-    'settings.homepage_url':  'URL de démarrage',
-    'settings.favbar':        'Afficher la barre des favoris',
-    'settings.import_btn':    'Importer (HTML Chrome/Firefox)',
-    'settings.export_btn':    'Exporter',
-    'settings.new_folder':    'Nouveau dossier',
-    'settings.clear_history': 'Effacer l\'historique',
-    'settings.clear_confirm': 'Tout l\'historique sera supprimé définitivement.',
-    'settings.passwords_hint':'Les mots de passe sont chiffrés localement (AES-GCM).',
-    'settings.shortcuts':     'Raccourcis clavier',
-    'settings.save':          'Enregistrer',
-    'settings.cancel':        'Annuler',
-    /* Passwords */
-    'bm.prompt_title':        'Nom du favori :',
-    'bm.title_ph':           'Titre du favori',
-    'pw.save_prompt':         'Enregistrer le mot de passe pour ce site ?',
-    'pw.username':            'Identifiant',
-    'pw.password':            'Mot de passe',
-    'pw.save':                'Enregistrer',
-    'pw.fill':                'Copier',
-    'pw.delete':              'Supprimer',
-    'pw.no_saved':            'Aucun mot de passe enregistré.',
-    /* Toasts */
-    'toast.bookmark_added':   'Favori ajouté',
-    'toast.bookmark_removed': 'Favori supprimé',
-    'toast.settings_saved':   'Paramètres enregistrés',
-    'toast.pw_saved':         'Mot de passe enregistré',
-    'toast.pw_deleted':       'Mot de passe supprimé',
-    'toast.copied':           'Copié dans le presse-papiers',
-    'toast.imported':         'Favoris importés',
-    'toast.history_cleared':  'Historique effacé',
-    'toast.folder_created':   'Dossier créé',
-    /* About */
-    'about.stack':            'Tauri · Rust · TypeScript',
-    'about.license':          'Licence MIT © 2026',
-  },
-
-  en: {
-    'newtab.search':          'Search the web…',
-    'newtab.no_bookmarks':    'No bookmarks yet — browse to a page and click ☆ to save.',
-    'tab.new':                'New Tab',
-    'tab.new_title':          'New Tab (Ctrl+T)',
-    'nav.back':               'Back (Alt+←)',
-    'nav.forward':            'Forward (Alt+→)',
-    'nav.reload':             'Reload (Ctrl+R)',
-    'nav.urlbar':             'Search or enter address…',
-    'nav.bookmark_add':       'Add to bookmarks',
-    'nav.bookmark_remove':    'Remove bookmark',
-    'nav.settings':           'Settings',
-    'nav.passwords':          'Passwords',
-    'favbar.import':          'Import',
-    'favbar.import_title':    'Import bookmarks (Chrome/Firefox HTML)',
-    'settings.title':         'Settings',
-    'settings.apparence':     'Appearance',
-    'settings.moteur':        'Search Engine',
-    'settings.demarrage':     'Startup',
-    'settings.favoris':       'Bookmarks',
-    'settings.historique':    'History',
-    'settings.securite':      'Security',
-    'settings.cache':         'Cache & Data',
-    'settings.a_propos':      'About',
-    'settings.theme':         'Theme',
-    'settings.theme_dark':    'Dark — Aurora',
-    'settings.theme_light':   'Light — Mist',
-    'settings.theme_midnight':'Midnight',
-    'settings.language':      'Language',
-    'settings.engine':        'Default engine',
-    'settings.homepage_url':  'Startup URL',
-    'settings.favbar':        'Show favorites bar',
-    'settings.import_btn':    'Import (Chrome/Firefox HTML)',
-    'settings.export_btn':    'Export',
-    'settings.new_folder':    'New folder',
-    'settings.clear_history': 'Clear history',
-    'settings.clear_confirm': 'All browsing history will be permanently deleted.',
-    'settings.passwords_hint':'Passwords are encrypted locally (AES-GCM).',
-    'settings.shortcuts':     'Keyboard shortcuts',
-    'settings.save':          'Save',
-    'settings.cancel':        'Cancel',
-    'bm.prompt_title':        'Bookmark name:',
-    'bm.title_ph':           'Bookmark title',
-    'pw.save_prompt':         'Save password for this site?',
-    'pw.username':            'Username',
-    'pw.password':            'Password',
-    'pw.save':                'Save',
-    'pw.fill':                'Copy',
-    'pw.delete':              'Delete',
-    'pw.no_saved':            'No saved passwords.',
-    'toast.bookmark_added':   'Bookmark added',
-    'toast.bookmark_removed': 'Bookmark removed',
-    'toast.settings_saved':   'Settings saved',
-    'toast.pw_saved':         'Password saved',
-    'toast.pw_deleted':       'Password deleted',
-    'toast.copied':           'Copied to clipboard',
-    'toast.imported':         'Bookmarks imported',
-    'toast.history_cleared':  'History cleared',
-    'toast.folder_created':   'Folder created',
-    'about.stack':            'Tauri · Rust · TypeScript',
-    'about.license':          'MIT License © 2026',
-  },
-};
-
-let _lang: Lang = 'en';
+let _lang: Lang = 'fr';
 
 export function setLang(lang: Lang): void {
   _lang = lang;
   applyAll();
 }
 
-export function getLang(): Lang {
-  return _lang;
-}
+export function getLang(): Lang { return _lang; }
 
 export function t(key: string): string {
   return STRINGS[_lang][key] ?? STRINGS['en'][key] ?? key;
@@ -161,8 +17,7 @@ export function t(key: string): string {
 
 export function applyAll(): void {
   document.querySelectorAll<HTMLElement>('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n!;
-    el.textContent = t(key);
+    el.textContent = t(el.dataset.i18n!);
   });
   document.querySelectorAll<HTMLInputElement>('[data-i18n-ph]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPh!);
