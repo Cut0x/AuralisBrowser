@@ -20,17 +20,36 @@ import { checkPasswordIndicator, tryAutofillPassword } from './ui-passwords.js';
 import { renderAuralisContent }            from './ui-settings.js';
 import { initBookmarkHandlers }            from './main-bm.js';
 import { initPasswordHandlers }            from './main-pw.js';
+import { logError }                        from './logger.js';
 
 const appWindow = getCurrentWindow();
 const initialSettings = loadSettings();
 applyTheme(initialSettings.theme); setLang(initialSettings.language); applyAll();
+
+window.addEventListener('error', ev => {
+  logError('main.window.error', ev.message || 'Erreur JavaScript non interceptée', {
+    file: ev.filename,
+    line: ev.lineno,
+    column: ev.colno,
+  });
+});
+
+window.addEventListener('unhandledrejection', ev => {
+  logError('main.window.unhandledRejection', 'Promesse rejetée sans catch', {
+    reason: String(ev.reason),
+  });
+});
 
 const tabs = new TabManager((allTabs, activeId) => {
   renderTabStrip(allTabs, activeId);
   const active = allTabs.find(tb => tb.id === activeId); if (!active) return;
   const urlbar = document.getElementById('urlbar') as HTMLInputElement;
   urlbar.value = active.url === 'about:newtab' ? '' : active.url;
-  import('./ui.js').then(({ setNavState }) => setNavState(active.canGoBack, active.canGoForward));
+  import('./ui.js')
+    .then(({ setNavState }) => setNavState(active.canGoBack, active.canGoForward))
+    .catch(err => {
+      logError('main.tabs.importUi', 'Chargement de setNavState impossible', { err: String(err) });
+    });
   setBookmarkActive(isBookmarked(settings, active.url));
 });
 
@@ -67,25 +86,56 @@ renderFavBar(); renderNewtabFavs();
 initBookmarkHandlers(); initPasswordHandlers();
 
 document.getElementById('btn-back')?.addEventListener('click', () => {
-  if (isAuralisPageVisible()) {
-    hideAuralisPage();
-    const ret = getAuralisReturnUrl();
-    if (ret && ret !== 'about:newtab') { const a = tabs.getActive(); if (a) browser.showTabUrl(a.id, ret); } else browser.showNewtab();
-  } else browser.goBack();
+  try {
+    if (isAuralisPageVisible()) {
+      hideAuralisPage();
+      const ret = getAuralisReturnUrl();
+      if (ret && ret !== 'about:newtab') { const a = tabs.getActive(); if (a) browser.showTabUrl(a.id, ret); } else browser.showNewtab();
+    } else browser.goBack();
+  } catch (err) {
+    logError('main.btnBack', 'Erreur pendant action retour', { err: String(err) });
+  }
 });
-document.getElementById('btn-forward')?.addEventListener('click', () => { if (!isAuralisPageVisible()) browser.goForward(); });
-document.getElementById('btn-reload')?.addEventListener('click',  () => { if (!isAuralisPageVisible()) browser.reload(); });
-document.getElementById('btn-new-tab')?.addEventListener('click', () => { hideAuralisPage(); const nt = tabs.createTab('about:newtab', true); browser.setActiveTabId(nt.id); browser.showNewtab(); });
+document.getElementById('btn-forward')?.addEventListener('click', () => {
+  try { if (!isAuralisPageVisible()) browser.goForward(); }
+  catch (err) { logError('main.btnForward', 'Erreur pendant action avant', { err: String(err) }); }
+});
+document.getElementById('btn-reload')?.addEventListener('click',  () => {
+  try { if (!isAuralisPageVisible()) browser.reload(); }
+  catch (err) { logError('main.btnReload', 'Erreur pendant action recharger', { err: String(err) }); }
+});
+document.getElementById('btn-new-tab')?.addEventListener('click', () => {
+  try {
+    hideAuralisPage();
+    const nt = tabs.createTab('about:newtab', true);
+    browser.setActiveTabId(nt.id);
+    browser.showNewtab();
+  } catch (err) {
+    logError('main.btnNewTab', 'Erreur pendant ouverture nouvel onglet', { err: String(err) });
+  }
+});
 
 const urlbar = document.getElementById('urlbar') as HTMLInputElement;
 urlbar.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { navigate(urlbar.value); urlbar.blur(); }
-  else if (e.key === 'Escape') { const a = tabs.getActive(); urlbar.value = (a && a.url !== 'about:newtab') ? a.url : ''; urlbar.blur(); }
+  try {
+    if (e.key === 'Enter') { navigate(urlbar.value); urlbar.blur(); }
+    else if (e.key === 'Escape') { const a = tabs.getActive(); urlbar.value = (a && a.url !== 'about:newtab') ? a.url : ''; urlbar.blur(); }
+  } catch (err) {
+    logError('main.urlbar.keydown', 'Erreur pendant traitement clavier URL bar', {
+      key: e.key,
+      value: urlbar.value,
+      err: String(err),
+    });
+  }
 });
 urlbar.addEventListener('focus', () => urlbar.select());
 document.getElementById('newtab-searchbar')?.addEventListener('keydown', (e: Event) => {
-  const ev = e as KeyboardEvent; const input = ev.target as HTMLInputElement;
-  if (ev.key === 'Enter' && input.value.trim()) { navigate(input.value.trim()); input.value = ''; }
+  try {
+    const ev = e as KeyboardEvent; const input = ev.target as HTMLInputElement;
+    if (ev.key === 'Enter' && input.value.trim()) { navigate(input.value.trim()); input.value = ''; }
+  } catch (err) {
+    logError('main.newtabSearch.keydown', 'Erreur pendant recherche nouvel onglet', { err: String(err) });
+  }
 });
 
 document.getElementById('btn-settings')?.addEventListener('click', () => showAuralisPage('auralis::settings/apparence'));
@@ -133,7 +183,9 @@ async function checkForUpdates(): Promise<void> {
     const latest = (data.tag_name ?? '').replace(/^v/, '');
     const current = await invoke<string>('get_version');
     if (latest && latest !== current && latest > current) showUpdateBanner(latest);
-  } catch { /* pas de réseau */ }
+  } catch (err) {
+    logError('main.checkForUpdates', 'Vérification des mises à jour impossible', { err: String(err) });
+  }
 }
 
 function showUpdateBanner(version: string): void {
@@ -142,7 +194,16 @@ function showUpdateBanner(version: string): void {
   banner.id = 'update-banner'; banner.className = 'update-banner';
   banner.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3" stroke="var(--accent-violet)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="var(--accent-violet)" stroke-width="1.3" stroke-linecap="round"/></svg><span>Auralis <strong>v${version}</strong> est disponible —</span><a href="#" class="update-banner-link" id="update-go-github">Voir sur GitHub</a><button class="update-banner-close" id="update-dismiss" title="Ignorer">×</button>`;
   document.getElementById('browser-chrome')?.appendChild(banner);
-  document.getElementById('update-go-github')?.addEventListener('click', e => { e.preventDefault(); import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl('https://github.com/Cut0x/AuralisBrowser/releases').catch(console.error)); });
+  document.getElementById('update-go-github')?.addEventListener('click', e => {
+    e.preventDefault();
+    import('@tauri-apps/plugin-opener')
+      .then(({ openUrl }) => openUrl('https://github.com/Cut0x/AuralisBrowser/releases').catch(err => {
+        logError('main.updateBanner.openRelease', 'Ouverture de la page releases impossible', { err: String(err) });
+      }))
+      .catch(err => {
+        logError('main.updateBanner.importOpener', 'Chargement du plugin opener impossible', { err: String(err) });
+      });
+  });
   document.getElementById('update-dismiss')?.addEventListener('click', () => banner.remove());
 }
 

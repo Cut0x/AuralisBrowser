@@ -1,6 +1,6 @@
 [package]
 name = "auralis"
-version = "0.3.2"
+version = "0.3.3-dev-beta"
 description = "A beautiful, lightweight and fully customizable browser."
 authors = ["Loïc V. (Cut0x)"]
 license = "MIT"

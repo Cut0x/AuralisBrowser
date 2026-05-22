@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auralis Console</title>
+    <style>
+      :root {
+        --bg: #12151b;
+        --panel: #171b24;
+        --line: #252b38;
+        --text: #e8edf8;
+        --muted: #95a1bb;
+        --ok: #80e1a7;
+        --warn: #ffcc78;
+        --error: #ff8b8b;
+        --debug: #8bc7ff;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: "Consolas", "Cascadia Mono", "SFMono-Regular", monospace; }
+      .top {
+        display: flex; gap: 8px; align-items: center; padding: 10px 12px;
+        background: linear-gradient(180deg, #1a1f2b 0%, #151923 100%);
+        border-bottom: 1px solid var(--line);
+      }
+      .title { font-size: 12px; letter-spacing: .02em; color: var(--muted); margin-right: auto; }
+      .btn {
+        border: 1px solid var(--line); background: var(--panel); color: var(--text);
+        font-size: 12px; padding: 5px 8px; border-radius: 6px; cursor: pointer;
+      }
+      .btn:hover { background: #1e2431; }
+      .count { font-size: 12px; color: var(--muted); min-width: 56px; text-align: right; }
+      #logs { height: calc(100vh - 47px); overflow: auto; padding: 10px 12px 20px; }
+      .row {
+        border-left: 2px solid var(--line); padding: 8px 10px; margin-bottom: 8px;
+        background: rgba(255,255,255,0.01); border-radius: 0 6px 6px 0;
+      }
+      .row.error { border-left-color: var(--error); }
+      .row.warn  { border-left-color: var(--warn); }
+      .row.info  { border-left-color: var(--ok); }
+      .row.debug { border-left-color: var(--debug); }
+      .meta { display: flex; gap: 8px; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+      .lvl { text-transform: uppercase; font-weight: 700; }
+      .msg { font-size: 12px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+      .details {
+        margin-top: 6px; padding: 8px; border: 1px solid var(--line);
+        background: #10141d; border-radius: 6px; white-space: pre-wrap;
+        word-break: break-word; font-size: 11px; color: #c9d4ef;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <div class="title">Auralis • Journal applicatif détaillé</div>
+      <button class="btn" id="clear-btn">Vider</button>
+      <button class="btn" id="export-btn">Exporter JSON</button>
+      <div class="count" id="count">0 entrées</div>
+    </div>
+    <div id="logs"></div>
+    <script>
+      const logsEl = document.getElementById('logs');
+      const countEl = document.getElementById('count');
+      const entries = [];
+
+      function levelClass(level) {
+        if (level === 'error') return 'error';
+        if (level === 'warn') return 'warn';
+        if (level === 'debug') return 'debug';
+        return 'info';
+      }
+
+      function formatDate(ts) {
+        const d = new Date(Number(ts) || Date.now());
+        return d.toLocaleTimeString([], { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      function setCount() {
+        countEl.textContent = `${entries.length} entr${entries.length > 1 ? 'ées' : 'ée'}`;
+      }
+
+      function append(entry) {
+        entries.push(entry);
+        const row = document.createElement('div');
+        const cls = levelClass(entry.level || 'info');
+        row.className = `row ${cls}`;
+        const details = entry.details ? `<div class="details">${escapeHtml(entry.details)}</div>` : '';
+        row.innerHTML =
+          `<div class="meta"><span>${formatDate(entry.timestampMs)}</span><span class="lvl">${escapeHtml(entry.level || 'info')}</span><span>${escapeHtml(entry.source || 'frontend')}</span></div>` +
+          `<div class="msg">${escapeHtml(entry.message || '')}</div>${details}`;
+        logsEl.appendChild(row);
+        logsEl.scrollTop = logsEl.scrollHeight;
+        setCount();
+      }
+
+      async function boot() {
+        const invoke = window.__TAURI__?.core?.invoke;
+        const listen = window.__TAURI__?.event?.listen;
+        if (!invoke || !listen) {
+          append({ level: 'error', source: 'console.init', message: 'API Tauri indisponible dans cette fenêtre.' });
+          return;
+        }
+        try {
+          const initial = await invoke('console_get_logs');
+          if (Array.isArray(initial)) initial.forEach(append);
+        } catch (err) {
+          append({ level: 'error', source: 'console.init', message: 'Impossible de récupérer l’historique des logs', details: String(err) });
+        }
+        await listen('app-log', event => append(event.payload || {}));
+      }
+
+      document.getElementById('clear-btn').addEventListener('click', () => {
+        entries.length = 0;
+        logsEl.innerHTML = '';
+        setCount();
+      });
+
+      document.getElementById('export-btn').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const now = new Date();
+        const name = `auralis-console-${now.toISOString().replaceAll(':', '-')}.json`;
+        a.href = url;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      boot();
+    </script>
+  </body>
+</html>
