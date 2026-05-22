@@ -2,6 +2,7 @@ import { truncate } from './ui.js';
 import { browser, tabs }        from './state.js';
 import { t }                    from './i18n.js';
 import type { Tab }             from './tabs.js';
+import { isInternalUrl, normalizeInternalUrl } from './internal-pages.js';
 
 let _hideAuralis: (() => void) | null = null;
 export function setHideAuralisRef(fn: () => void): void { _hideAuralis = fn; }
@@ -36,13 +37,33 @@ export function renderTabStrip(allTabs: Tab[], activeId: string | null): void {
       e.stopPropagation();
       const wasActive = tab.id === activeId;
       browser.closeTabWebview(tab.id); tabs.closeTab(tab.id);
-      if (wasActive) { const n = tabs.getActive(); if (n) browser.showTabUrl(n.id, n.url); else browser.showNewtab(); }
+      if (wasActive) {
+        const n = tabs.getActive();
+        if (!n) {
+          browser.showNewtab();
+          return;
+        }
+        if (isInternalUrl(n.url) || n.url.startsWith('auralis::')) {
+          import('./ui-nav.js')
+            .then(({ showAuralisPage }) => showAuralisPage(normalizeInternalUrl(n.url)))
+            .catch(() => browser.showNewtab());
+          return;
+        }
+        browser.showTabUrl(n.id, n.url);
+      }
     });
 
     el.appendChild(fav); el.appendChild(title); el.appendChild(close);
     el.addEventListener('click', () => {
+      tabs.setActive(tab.id);
+      if (isInternalUrl(tab.url) || tab.url.startsWith('auralis::')) {
+        import('./ui-nav.js')
+          .then(({ showAuralisPage }) => showAuralisPage(normalizeInternalUrl(tab.url)))
+          .catch(() => browser.showNewtab());
+        return;
+      }
       _hideAuralis?.();
-      tabs.setActive(tab.id); browser.showTabUrl(tab.id, tab.url);
+      browser.showTabUrl(tab.id, tab.url);
     });
     attachTabDrag(el, tab.id);
     tabStrip.insertBefore(el, btn);

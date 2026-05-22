@@ -1,9 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════════
-   Auralis — main.css v2
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Auralis â€” main.css v2
    Layout complet du navigateur.
-   ═══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ─── Reset ──────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -17,12 +17,12 @@ html, body {
 button { font-family: inherit; font-size: inherit; cursor: pointer; border: none; outline: none; background: none; -webkit-tap-highlight-color: transparent; }
 input  { font-family: inherit; font-size: inherit; outline: none; border: none; background: none; color: var(--text-primary); }
 
-/* ─── Root ──────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Root â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 #app { display: flex; flex-direction: column; width: 100vw; height: 100vh; background: var(--bg-base); }
 
-/* ═══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    BROWSER CHROME (topbar + navbar + favbar)
-   ═══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .browser-chrome {
   flex-shrink: 0;
@@ -33,14 +33,14 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
   z-index: 100;
 }
 
-/* ─── TOPBAR ─────────────────────────────────────────────────────── */
+/* â”€â”€â”€ TOPBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .topbar {
   display: flex; align-items: center;
   height: 38px; padding: 0 0 0 6px;
   gap: 0;
 }
 
-/* Tab strip — takes available space, scrolls horizontally */
+/* Tab strip â€” takes available space, scrolls horizontally */
 .tab-strip {
   display: flex; align-items: center;
   flex: 1; min-width: 0;
@@ -89,7 +89,7 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 .tab:hover .tab-close, .tab.is-active .tab-close { opacity: 1; }
 .tab-close:hover { background: var(--btn-bg-hover); color: var(--accent-rose); }
 
-/* + New tab button — inside the strip, appears right after the last tab */
+/* + New tab button â€” inside the strip, appears right after the last tab */
 .btn-new-tab {
   flex-shrink: 0;
   width: 26px; height: 26px; border-radius: var(--r-md);
@@ -102,7 +102,7 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 /* Flexible spacer pushes controls to the right */
 .topbar-spacer { flex: 1; min-width: 8px; max-width: 40px; }
 
-/* Window controls — RIGHT side, no background circles (modern style) */
+/* Window controls â€” RIGHT side, no background circles (modern style) */
 .window-controls {
   display: flex; align-items: stretch;
   height: 100%; flex-shrink: 0;
@@ -119,7 +119,7 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 .win-btn:active { background: var(--btn-bg-press); }
 .win-close:active { background: #c50f1f; }
 
-/* ─── NAVBAR ─────────────────────────────────────────────────────── */
+/* â”€â”€â”€ NAVBAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .navbar {
   display: flex; align-items: center;
   height: 44px; padding: 0 8px; gap: 5px;
@@ -190,7 +190,7 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 
 .navbar-right { display: flex; align-items: center; gap: 1px; }
 
-/* ─── BARRE DES FAVORIS ───────────────────────────────────────────── */
+/* â”€â”€â”€ BARRE DES FAVORIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .favorites-bar {
   display: flex; align-items: center;
   height: 30px; padding: 0 8px; gap: 2px;
@@ -221,12 +221,12 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 }
 .favbar-import-btn:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
 
-/* ═══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ZONE DE CONTENU
-   ═══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .content-area { flex: 1; position: relative; overflow: hidden; }
 
-/* ─── PAGE NOUVEL ONGLET ──────────────────────────────────────────── */
+/* â”€â”€â”€ PAGE NOUVEL ONGLET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .newtab-page { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; }
 .newtab-page.active { display: flex; }
 
@@ -289,7 +289,7 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 
 .newtab-hint { font-size: 12px; color: var(--text-muted); text-align: center; max-width: 300px; }
 
-/* ─── WEBVIEW CONTAINER ───────────────────────────────────────────── */
+/* â”€â”€â”€ WEBVIEW CONTAINER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .webview-container { position: absolute; inset: 0; display: none; }
 .webview-container.active { display: block; }
 .webview-frame { width: 100%; height: 100%; border: none; display: block; background: #fff; }
@@ -301,9 +301,9 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 .blocked-card h3 { font-size: 16px; font-weight: 600; }
 .blocked-card p  { font-size: 13px; color: var(--text-secondary); }
 
-/* ═══════════════════════════════════════════════════════════════════
-   BOUTONS PARTAGÉS
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   BOUTONS PARTAGÃ‰S
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .btn-primary {
   height: 34px; padding: 0 18px; border-radius: var(--r-full);
   font-size: 13px; font-weight: 500; color: #fff;
@@ -338,9 +338,9 @@ input  { font-family: inherit; font-size: inherit; outline: none; border: none; 
 }
 .icon-btn:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
 
-/* ═══════════════════════════════════════════════════════════════════
-   PANNEAU PARAMÈTRES
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PANNEAU PARAMÃˆTRES
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .settings-panel {
   position: absolute; inset: 0; z-index: 200;
   display: flex; align-items: flex-start; justify-content: flex-end; padding: 8px;
@@ -440,9 +440,9 @@ kbd {
   padding: 14px 20px; border-top: 1px solid var(--glass-border); flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PANNEAU MOTS DE PASSE
-   ═══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .pw-panel {
   position: absolute; inset: 0; z-index: 200;
   display: flex; align-items: flex-start; justify-content: flex-end; padding: 8px;
@@ -488,7 +488,7 @@ kbd {
 .pw-btn-copy:hover   { color: var(--accent-violet); }
 .pw-btn-delete:hover { color: var(--accent-rose); }
 
-/* ─── Prompt enregistrement MDP ─────────────────────────────────── */
+/* â”€â”€â”€ Prompt enregistrement MDP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pw-save-prompt {
   position: absolute; bottom: 20px; right: 20px; z-index: 300;
   width: 280px; padding: 14px 16px;
@@ -502,9 +502,9 @@ kbd {
 .pw-save-actions .btn-primary   { height: 28px; padding: 0 12px; font-size: 12px; }
 .pw-save-actions .btn-secondary { height: 28px; padding: 0 12px; font-size: 12px; }
 
-/* ═══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    TOASTS
-   ═══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .auralis-toast {
   position: fixed; bottom: 22px; left: 50%;
   transform: translateX(-50%) translateY(8px);
@@ -521,9 +521,9 @@ kbd {
 .auralis-toast--success { border-color: rgba(40,200,120,.4); }
 .auralis-toast--error   { border-color: rgba(232,88,122,.4); }
 
-/* ═══════════════════════════════════════════════════════════════════
-   AURALIS PAGES (auralis::settings/...)
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   AURALIS PAGES (auralis:home, auralis:settings/*)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .auralis-page {
   position: absolute; inset: 0; z-index: 50;
   display: flex; overflow: hidden;
@@ -533,7 +533,7 @@ kbd {
 .auralis-page.hidden { display: none; }
 @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* ─── Sidebar ─────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .ap-sidebar {
   width: 210px; flex-shrink: 0;
   background: var(--chrome-bg);
@@ -568,7 +568,7 @@ kbd {
 }
 .ap-nav-item svg { flex-shrink: 0; opacity: .7; }
 
-/* ─── Content ─────────────────────────────────────────────────────── */
+/* â”€â”€â”€ Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .ap-content {
   flex: 1; overflow-y: auto;
   padding: 32px 48px 48px;
@@ -622,7 +622,7 @@ kbd {
 .ap-about-ver  { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
 .ap-about-line { font-size: 12px; color: var(--text-secondary); margin-bottom: 3px; }
 
-/* ─── History list ────────────────────────────────────────────────── */
+/* â”€â”€â”€ History list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .history-group-date {
   font-size: 10px; font-weight: 600; text-transform: uppercase;
   letter-spacing: .08em; color: var(--text-muted);
@@ -650,7 +650,7 @@ kbd {
 .history-item:hover .history-item-del { opacity: 1; }
 .history-item-del:hover { color: var(--accent-rose); background: var(--btn-bg-hover); }
 
-/* ─── Bookmark tree ───────────────────────────────────────────────── */
+/* â”€â”€â”€ Bookmark tree â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .bm-tree { display: flex; flex-direction: column; gap: 2px; max-width: 600px; }
 
 .bm-item {
@@ -697,7 +697,7 @@ kbd {
   color: var(--text-primary); font-size: 12.5px;
 }
 
-/* ─── Favorites bar folder + popover ─────────────────────────────── */
+/* â”€â”€â”€ Favorites bar folder + popover â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .favbar-folder {
   display: flex; align-items: center; gap: 4px;
   height: 22px; padding: 0 8px; border-radius: var(--r-sm);
@@ -733,7 +733,7 @@ kbd {
 /* folder tile on new tab */
 .fav-tile-folder .fav-icon { background: var(--accent-violet-glow); }
 
-/* ─── Context menu ────────────────────────────────────────────────── */
+/* â”€â”€â”€ Context menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .bm-ctx-menu {
   position: fixed; z-index: 9999;
   background: var(--bg-1); border: 1px solid var(--glass-border);
@@ -757,13 +757,13 @@ kbd {
 .bm-ctx-danger:hover { background: rgba(232,88,122,.12) !important; }
 .bm-ctx-sep { height: 1px; background: var(--glass-border); margin: 3px 8px; }
 
-/* ─── Drag-and-drop indicators ───────────────────────────────────── */
+/* â”€â”€â”€ Drag-and-drop indicators â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .bm-dragging { opacity: .4; }
 .bm-drop-before { box-shadow: inset 0 2px 0 var(--accent-violet) !important; }
 .bm-drop-after  { box-shadow: inset 0 -2px 0 var(--accent-violet) !important; }
 .bm-drop-inside { background: var(--accent-violet-glow) !important; border-radius: var(--r-sm); }
 
-/* ─── Move picker modal ──────────────────────────────────────────── */
+/* â”€â”€â”€ Move picker modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .bm-move-backdrop {
   position: fixed; inset: 0; z-index: 9990;
   background: rgba(0,0,0,.45);
@@ -801,7 +801,7 @@ kbd {
 }
 .bm-move-cancel:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
 
-/* ─── Storage bar ────────────────────────────────────────────────── */
+/* â”€â”€â”€ Storage bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .storage-bar-wrap { padding: 12px 0 4px; }
 .storage-bar-labels {
   display: flex; justify-content: space-between;
@@ -822,14 +822,14 @@ kbd {
 }
 .sbi-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-/* ─── Bookmark item count badge ──────────────────────────────────── */
+/* â”€â”€â”€ Bookmark item count badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .bm-item-count {
   font-size: 10px; color: var(--text-muted);
   background: var(--btn-bg); border-radius: var(--r-full);
   padding: 1px 5px; margin-left: 4px; flex-shrink: 0;
 }
 
-/* ─── Clear categories ───────────────────────────────────────────── */
+/* â”€â”€â”€ Clear categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .clear-cat-list { display: flex; flex-direction: column; gap: 4px; }
 .clear-cat-item {
   display: flex; align-items: center; gap: 10px;
@@ -842,14 +842,14 @@ kbd {
 .clear-cat-label { display: flex; align-items: center; gap: 7px; flex: 1; font-size: 12.5px; color: var(--text-primary); }
 .clear-cat-count { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 
-/* ─── Favbar drag indicator ──────────────────────────────────────── */
+/* â”€â”€â”€ Favbar drag indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .favbar-drag-over {
   outline: 2px solid var(--accent-violet);
   outline-offset: -2px;
   border-radius: var(--r-sm);
 }
 
-/* ─── Manual password add form ──────────────────────────────────── */
+/* â”€â”€â”€ Manual password add form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .pw-add-form {
   background: var(--bg-2);
   border: 1px solid var(--border);
@@ -866,7 +866,7 @@ kbd {
   box-sizing: border-box;
 }
 
-/* ─── Update banner ──────────────────────────────────────────────── */
+/* â”€â”€â”€ Update banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .update-banner {
   display: flex; align-items: center; gap: 8px;
   padding: 5px 14px;
@@ -883,12 +883,13 @@ kbd {
 }
 .update-banner-close:hover { color: var(--text-primary); }
 
-/* ─── Focus visible ──────────────────────────────────────────────── */
+/* â”€â”€â”€ Focus visible â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :focus-visible { outline: 2px solid var(--accent-violet); outline-offset: 2px; }
 
-/* ─── Scrollbar ──────────────────────────────────────────────────── */
+/* â”€â”€â”€ Scrollbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 * { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: var(--r-full); }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: var(--r-full); }
 ::-webkit-scrollbar-thumb:hover { background: var(--glass-border-strong); }
+

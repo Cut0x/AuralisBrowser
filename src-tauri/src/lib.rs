@@ -5,10 +5,6 @@ pub mod webview;
 
 use tauri::Manager;
 
-pub fn tab_label(tab_id: &str) -> String {
-    format!("tab-{tab_id}")
-}
-
 // ─── Misc commands ────────────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -38,19 +34,17 @@ pub fn run() {
             open_external,
             console::console_log,
             console::console_get_logs,
-            webview::tab_webview_create,
-            webview::tab_webview_show,
-            webview::tab_webview_hide,
-            webview::tab_webview_close,
-            webview::tab_webview_navigate,
-            webview::tab_webview_eval,
-            webview::tab_webview_reload,
+            webview::content_navigate,
+            webview::content_eval,
+            webview::content_reload,
+            webview::content_set_bounds,
         ])
         .setup(|app| {
             let window = app
                 .get_webview_window("main")
                 .expect("main window introuvable");
             window.set_decorations(false)?;
+            webview::init_content_webview(&app.handle()).map_err(|e| e.to_string())?;
             if app.get_webview_window("console").is_none() {
                 tauri::WebviewWindowBuilder::new(
                     app,

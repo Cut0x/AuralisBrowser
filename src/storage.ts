@@ -40,7 +40,7 @@ export interface BrowserSettings {
 const KEY = 'auralis_v2';
 
 const DEFAULTS: BrowserSettings = {
-  theme: 'dark', searchEngine: 'duckduckgo', homepage: 'about:newtab',
+  theme: 'dark', searchEngine: 'duckduckgo', homepage: 'auralis:home',
   language: 'fr', showFavoritesBar: true,
   bookmarks: [], history: [], passwords: [],
 };
@@ -67,7 +67,12 @@ export function loadSettings(): BrowserSettings {
     if (!raw) return structuredClone(DEFAULTS);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const p = JSON.parse(raw) as any;
+    const homepage = typeof p.homepage === 'string' ? p.homepage : DEFAULTS.homepage;
+    const normalizedHomepage = homepage.startsWith('auralis::')
+      ? homepage.replace(/^auralis::/, 'auralis:')
+      : homepage;
     return { ...DEFAULTS, ...p,
+      homepage: normalizedHomepage,
       bookmarks: migrateBookmarks(Array.isArray(p.bookmarks) ? p.bookmarks : []),
       history:   Array.isArray(p.history)   ? p.history   : [],
       passwords: Array.isArray(p.passwords) ? p.passwords : [],
@@ -84,6 +89,7 @@ export function saveSettings(s: BrowserSettings): void {
 /** Ajoute une entrée en tête d'historique (max 1000). */
 export function addHistoryEntry(s: BrowserSettings, title: string, url: string): BrowserSettings {
   if (!url || url === 'about:newtab') return s;
+  if (url.startsWith('auralis:')) return s;
   const e: HistoryEntry = { id: crypto.randomUUID(), title, url, visitedAt: Date.now() };
   return { ...s, history: [e, ...s.history].slice(0, 1000) };
 }
