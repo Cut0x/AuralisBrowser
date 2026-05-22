@@ -50,11 +50,17 @@ export function normalizeUrl(input: string): string {
  * - Domain    → prepend https://
  * - Anything else → search
  */
+const INTERNAL_INVALID_PAGES: Record<string, string> = {
+  'auralis-pw.invalid': 'auralis::settings/securite',
+};
+
 export function resolveInput(input: string, engine: SearchEngine): string {
   const trimmed = input.trim();
   if (!trimmed) return 'about:newtab';
   if (trimmed === 'about:newtab' || trimmed === 'about:blank') return trimmed;
   if (trimmed.startsWith('auralis::')) return trimmed; // internal pages
+  const bare = trimmed.replace(/^https?:\/\//, '');
+  if (bare in INTERNAL_INVALID_PAGES) return INTERNAL_INVALID_PAGES[bare]!;
   if (isUrl(trimmed)) return normalizeUrl(trimmed);
   if (isDomain(trimmed)) return normalizeUrl(trimmed);
   return buildSearchUrl(trimmed, engine);
