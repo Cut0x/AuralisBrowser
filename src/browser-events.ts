@@ -11,6 +11,7 @@ export async function initBrowserEvents(e: BrowserEngine): Promise<void> {
     if (!e._navPending && url === e._lastUrl) return;
     e._navPending = false; e._lastUrl = url;
     setNavLoading(false);
+    if (!e._overlayActive) void e.updateBounds(true);
     const hist = e.hist.getOrCreate(tabId);
     const canBack = hist.navIdx > 0, canForward = hist.navIdx < hist.navHistory.length - 1;
     setNavState(canBack, canForward);
