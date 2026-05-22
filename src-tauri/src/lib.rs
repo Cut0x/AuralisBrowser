@@ -1,18 +1,25 @@
-mod title;
+mod console;
 mod sentinel;
+mod title;
 pub mod webview;
 
 use tauri::Manager;
 
-pub fn tab_label(tab_id: &str) -> String { format!("tab-{tab_id}") }
+pub fn tab_label(tab_id: &str) -> String {
+    format!("tab-{tab_id}")
+}
 
 // ─── Misc commands ────────────────────────────────────────────────────────────
 
 #[tauri::command]
-fn get_version() -> &'static str { env!("CARGO_PKG_VERSION") }
+fn get_version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
 
 #[tauri::command]
-async fn fetch_page_title(url: String) -> String { title::fetch_title_inner(&url).await }
+async fn fetch_page_title(url: String) -> String {
+    title::fetch_title_inner(&url).await
+}
 
 #[tauri::command]
 async fn open_external(url: String) -> Result<(), String> {
@@ -29,6 +36,8 @@ pub fn run() {
             get_version,
             fetch_page_title,
             open_external,
+            console::console_log,
+            console::console_get_logs,
             webview::tab_webview_create,
             webview::tab_webview_show,
             webview::tab_webview_hide,
@@ -38,8 +47,32 @@ pub fn run() {
             webview::tab_webview_reload,
         ])
         .setup(|app| {
-            let window = app.get_webview_window("main").expect("main window introuvable");
+            let window = app
+                .get_webview_window("main")
+                .expect("main window introuvable");
             window.set_decorations(false)?;
+            if app.get_webview_window("console").is_none() {
+                tauri::WebviewWindowBuilder::new(
+                    app,
+                    "console",
+                    tauri::WebviewUrl::App("console.html".into()),
+                )
+                .title("Auralis Console")
+                .inner_size(820.0, 520.0)
+                .min_inner_size(620.0, 320.0)
+                .decorations(true)
+                .resizable(true)
+                .visible(true)
+                .build()
+                .map_err(|e| e.to_string())?;
+            }
+            console::push_app_log(
+                &app.handle(),
+                "info",
+                "app.setup",
+                "Fenêtre console initialisée",
+                None,
+            );
             #[cfg(debug_assertions)]
             window.open_devtools();
             Ok(())

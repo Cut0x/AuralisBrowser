@@ -2,7 +2,8 @@ use tauri::{AppHandle, Emitter};
 
 pub fn query_param(url_str: &str, key: &str) -> Option<String> {
     let parsed = tauri::Url::parse(url_str).ok()?;
-    parsed.query_pairs()
+    parsed
+        .query_pairs()
         .find(|(k, _)| k == key)
         .map(|(_, v)| v.into_owned())
 }
