@@ -8,16 +8,17 @@
 import { truncate, faviconFor, setStatusUrl } from './ui.js';
 import { saveSettings }                      from './storage.js';
 import { moveBookmark }                      from './bookmarks-store.js';
-import { settings, updateSettings } from './state.js';
+import { browser, settings, updateSettings } from './state.js';
 import { navigate }                          from './ui-nav.js';
 import { renderNewtabFavs }                  from './ui-newtab.js';
 import { showCtxMenu }                       from './ui-ctx-menu.js';
 import type { BookmarkItem, BookmarkFolder } from './storage.js';
 
-let currentPopover: HTMLElement | null = null;
-let currentAnchor:  HTMLElement | null = null;
-let favDragId:      string | null      = null;
-let favDragGhost:   HTMLElement | null = null;
+let currentPopover:  HTMLElement | null = null;
+let currentAnchor:   HTMLElement | null = null;
+let favDragId:       string | null      = null;
+let favDragGhost:    HTMLElement | null = null;
+let didShiftWebview: boolean            = false;
 
 function onGlobalPointerDown(e: PointerEvent): void {
   if (!currentPopover) return;
@@ -134,7 +135,7 @@ export function showFolderPopover(folder: BookmarkFolder, anchor: HTMLElement): 
   }
   closeFolderPopover();
 
-  const pop  = document.createElement('div');
+  const pop = document.createElement('div');
   pop.className = 'favbar-popover';
   pop.style.left = `0px`;
   pop.style.top  = `0px`;
@@ -146,13 +147,22 @@ export function showFolderPopover(folder: BookmarkFolder, anchor: HTMLElement): 
   const pr   = pop.getBoundingClientRect();
   const pad  = 8;
   let left   = rect.left;
-  let top    = rect.top - pr.height - 2;
+  const top  = rect.bottom + 2; // sous la barre des favoris
+
   if (left + pr.width > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - pr.width - pad);
   if (left < pad) left = pad;
-  if (top < pad) top = pad;
-  pop.style.left = `${left}px`;
-  pop.style.top  = `${top}px`;
-  pop.style.maxHeight = `${Math.max(120, top - pad + pr.height)}px`;
+
+  const available = Math.max(80, window.innerHeight - top - pad);
+  pop.style.left      = `${left}px`;
+  pop.style.top       = `${top}px`;
+  pop.style.maxHeight = `${available}px`;
+
+  // Pousse la WebView sous le popover si une page est visible
+  didShiftWebview = browser.canShiftForOverlay;
+  if (didShiftWebview) {
+    const popBottom = top + Math.min(pr.height, available);
+    void browser.shiftBoundsTop(popBottom + 4);
+  }
 
   document.addEventListener('pointerdown', onGlobalPointerDown, true);
   document.addEventListener('keydown', onGlobalKeyDown, true);
@@ -187,6 +197,10 @@ export function closeFolderPopover(): void {
   currentAnchor = null;
   document.removeEventListener('pointerdown', onGlobalPointerDown, true);
   document.removeEventListener('keydown', onGlobalKeyDown, true);
+  if (didShiftWebview) {
+    didShiftWebview = false;
+    browser.restoreFromOverlay();
+  }
 }
 
 function esc(s: string): string {

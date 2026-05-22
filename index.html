@@ -145,6 +145,21 @@
       </button>
     </div>
 
+    <!-- PROMPT AJOUT FAVORI — barre inline dans le chrome.
+         La hauteur du chrome augmente quand visible → ResizeObserver → updateBounds(). -->
+    <div id="bm-save-prompt" class="bm-save-prompt hidden" role="dialog" aria-label="Ajouter un favori">
+      <p class="pw-save-title" data-i18n="bm.prompt_title">Nom du favori :</p>
+      <div class="bm-save-fields">
+        <input type="text" id="bm-title-input" class="setting-input"
+               data-i18n-ph="bm.title_ph" placeholder="Titre du favori"
+               autocomplete="off" autocorrect="off" spellcheck="false"/>
+      </div>
+      <div class="pw-save-actions">
+        <button class="btn-secondary" id="btn-bm-save-cancel" data-i18n="settings.cancel">Annuler</button>
+        <button class="btn-primary"   id="btn-bm-save-confirm" data-i18n="settings.save">Enregistrer</button>
+      </div>
+    </div>
+
     <!-- PROMPT ENREGISTREMENT MDP — barre inline dans le chrome.
          En devenant visible (retrait de .hidden), elle augmente la hauteur du
          chrome → le ResizeObserver dans browser.ts appelle updateBounds()

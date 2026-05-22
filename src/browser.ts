@@ -130,6 +130,11 @@ export class BrowserEngine {
   canGoBack():    boolean { return this.navIdx > 0; }
   canGoForward(): boolean { return this.navIdx < this.navHistory.length - 1; }
 
+  /** True si le WebView est actuellement visible et qu'il faut le décaler pour un popover. */
+  get canShiftForOverlay(): boolean {
+    return this._webviewVisible && !this.isShowingNewtab;
+  }
+
   /** Masque la webview pour afficher un panneau HTML plein-écran (ex: panneau MDP). */
   parkForOverlay(): void {
     this._overlayActive = true;

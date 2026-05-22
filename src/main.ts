@@ -26,7 +26,7 @@ import { renderTabStrip, navigate, displayTitle,
 import { renderFavBar, closeFolderPopover }    from './ui-favbar.js';
 import { renderNewtabFavs }                    from './ui-newtab.js';
 import { checkPasswordIndicator,
-         openPwPanel, closePwPanel, tryAutofillPassword } from './ui-passwords.js';
+         closePwPanel, tryAutofillPassword } from './ui-passwords.js';
 import { renderAuralisContent }                from './ui-settings.js';
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
@@ -52,10 +52,11 @@ const tabs = new TabManager((allTabs, activeId) => {
 // ─── BrowserEngine ────────────────────────────────────────────────────────────
 
 const browser = new BrowserEngine(state => {
-  // Ferme la page Auralis et le prompt MDP après chaque navigation réelle
+  // Ferme la page Auralis, le prompt MDP et le prompt favori après chaque navigation réelle
   if (state.url !== 'about:newtab') {
     hideAuralisPage();
     document.getElementById('pw-save-prompt')?.classList.add('hidden');
+    document.getElementById('bm-save-prompt')?.classList.add('hidden');
   }
   const active = tabs.getActive();
   if (!active) return;
@@ -129,6 +130,9 @@ document.getElementById('newtab-searchbar')?.addEventListener('keydown', (e: Eve
 
 // ─── Favoris (étoile + import favbar) ────────────────────────────────────────
 
+let _pendingBmUrl   = '';
+let _pendingBmTitle = '';
+
 document.getElementById('btn-bookmark')?.addEventListener('click', () => {
   const url = browser.currentUrl();
   if (!url || url === 'about:newtab') return;
@@ -138,14 +142,35 @@ document.getElementById('btn-bookmark')?.addEventListener('click', () => {
     saveSettings(settings); setBookmarkActive(false);
     renderFavBar(); renderNewtabFavs(); toast(t('toast.bookmark_removed'));
   } else {
-    const defaultTitle = tabs.getActive()?.title || url;
-    const chosenTitle = prompt('Nom du favori :', defaultTitle);
-    if (chosenTitle === null) return;
-    const title = chosenTitle.trim() || defaultTitle;
-    updateSettings(addBookmark(settings, title, url));
+    _pendingBmUrl   = url;
+    _pendingBmTitle = tabs.getActive()?.title || url;
+    const input = document.getElementById('bm-title-input') as HTMLInputElement;
+    input.value = _pendingBmTitle;
+    document.getElementById('bm-save-prompt')?.classList.remove('hidden');
+    input.focus(); input.select();
+  }
+});
+
+document.getElementById('bm-title-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter')  document.getElementById('btn-bm-save-confirm')?.click();
+  if (e.key === 'Escape') document.getElementById('btn-bm-save-cancel')?.click();
+});
+
+document.getElementById('btn-bm-save-confirm')?.addEventListener('click', () => {
+  const input = document.getElementById('bm-title-input') as HTMLInputElement;
+  const title = input.value.trim() || _pendingBmTitle;
+  if (_pendingBmUrl) {
+    updateSettings(addBookmark(settings, title, _pendingBmUrl));
     saveSettings(settings); setBookmarkActive(true);
     renderFavBar(); renderNewtabFavs(); toast(t('toast.bookmark_added'), 'success');
   }
+  document.getElementById('bm-save-prompt')?.classList.add('hidden');
+  _pendingBmUrl = ''; _pendingBmTitle = '';
+});
+
+document.getElementById('btn-bm-save-cancel')?.addEventListener('click', () => {
+  document.getElementById('bm-save-prompt')?.classList.add('hidden');
+  _pendingBmUrl = ''; _pendingBmTitle = '';
 });
 
 document.getElementById('btn-favbar-import')?.addEventListener('click', async () => {
@@ -158,7 +183,8 @@ document.getElementById('btn-favbar-import')?.addEventListener('click', async ()
 
 // ─── Panneau mots de passe ────────────────────────────────────────────────────
 
-document.getElementById('btn-passwords')?.addEventListener('click', openPwPanel);
+// Le bouton cadenas ouvre directement la page Sécurité (pas de zone noire avec parkForOverlay)
+document.getElementById('btn-passwords')?.addEventListener('click', () => showAuralisPage('auralis::settings/securite'));
 document.getElementById('btn-close-pw')?.addEventListener('click', closePwPanel);
 document.getElementById('pw-backdrop')?.addEventListener('click', closePwPanel);
 

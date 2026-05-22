@@ -56,6 +56,8 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     'settings.save':          'Enregistrer',
     'settings.cancel':        'Annuler',
     /* Passwords */
+    'bm.prompt_title':        'Nom du favori :',
+    'bm.title_ph':           'Titre du favori',
     'pw.save_prompt':         'Enregistrer le mot de passe pour ce site ?',
     'pw.username':            'Identifiant',
     'pw.password':            'Mot de passe',
@@ -119,6 +121,8 @@ const STRINGS: Record<Lang, Record<string, string>> = {
     'settings.shortcuts':     'Keyboard shortcuts',
     'settings.save':          'Save',
     'settings.cancel':        'Cancel',
+    'bm.prompt_title':        'Bookmark name:',
+    'bm.title_ph':           'Bookmark title',
     'pw.save_prompt':         'Save password for this site?',
     'pw.username':            'Username',
     'pw.password':            'Password',

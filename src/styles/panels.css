@@ -36,6 +36,17 @@
 .pw-btn-copy:hover   { color: var(--accent-violet); }
 .pw-btn-delete:hover { color: var(--accent-rose); }
 
+/* ─── Barre inline d'ajout de favori — dans le browser-chrome ───────── */
+.bm-save-prompt { display: none; }
+.bm-save-prompt:not(.hidden) {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 5px 12px;
+  background: rgba(155,111,224,.08); border-top: 1px solid rgba(155,111,224,.25);
+  font-size: 12px; color: var(--text-secondary);
+}
+.bm-save-fields { display: flex; gap: 6px; flex: 1; }
+.bm-save-fields .setting-input { height: 26px; font-size: 12px; }
+
 /* ─── Barre inline de sauvegarde MDP — dans le browser-chrome ───────── */
 /* Placée dans #browser-chrome, cette barre augmente la hauteur du chrome
    quand elle est visible. Le ResizeObserver dans browser.ts détecte le
