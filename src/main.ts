@@ -27,7 +27,7 @@ import { logError } from './logger.js';
 import { isInternalUrl, normalizeInternalUrl } from './internal-pages.js';
 
 const FIRST_RUN_KEY = 'auralis_first_install_done_v1';
-const FIRST_RUN_WELCOME_URL = 'http://localhost:3000/welcome.php';
+const FIRST_RUN_WELCOME_URL = 'https://auralisbrowser.fr/welcome';
 
 const appWindow = getCurrentWindow();
 const initialSettings = loadSettings();
@@ -107,6 +107,7 @@ renderFavBar();
 renderNewtabFavs();
 initBookmarkHandlers();
 initPasswordHandlers();
+initAppContextMenu();
 
 void browser.ensureEventsReady()
   .then(() => {
@@ -345,6 +346,47 @@ function openUrlInActiveTab(url: string): void {
 
   hideAuralisPage();
   browser.loadUrl(normalized);
+}
+
+function initAppContextMenu(): void {
+  const menu = document.createElement('div');
+  menu.id = 'app-ctx-menu';
+  menu.className = 'bm-ctx-menu';
+  menu.style.display = 'none';
+  menu.innerHTML = '<button class="bm-ctx-item" id="app-ctx-console">Console Auralis</button>';
+  document.body.appendChild(menu);
+
+  const hideMenu = (): void => { menu.style.display = 'none'; };
+
+  document.addEventListener('contextmenu', ev => {
+    const target = ev.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest('#bm-ctx-menu') || target.closest('.bm-move-modal')) return;
+    if (target.matches('input, textarea, [contenteditable="true"]')) return;
+    if (target.closest('input, textarea, [contenteditable="true"]')) return;
+
+    ev.preventDefault();
+    const maxX = window.innerWidth - 190;
+    const maxY = window.innerHeight - 80;
+    menu.style.left = `${Math.max(8, Math.min(ev.clientX, maxX))}px`;
+    menu.style.top = `${Math.max(8, Math.min(ev.clientY, maxY))}px`;
+    menu.style.display = 'block';
+  });
+
+  document.addEventListener('pointerdown', ev => {
+    if (!menu.contains(ev.target as Node)) hideMenu();
+  });
+
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape') hideMenu();
+  });
+
+  document.getElementById('app-ctx-console')?.addEventListener('click', () => {
+    hideMenu();
+    invoke<void>('console_show').catch(err => {
+      logError('main.contextMenu.console', 'Impossible d ouvrir la Console Auralis', { err: String(err) });
+    });
+  });
 }
 
 setTimeout(() => void checkForUpdates(), 4000);

@@ -1,6 +1,6 @@
-/* favbar.css — Barre des favoris, popover de dossier, indicateur de glisser-déposer. */
+﻿/* favbar.css - Barre des favoris, popover de dossier, indicateur de glisser-déposer. */
 
-/* Barre des favoris — défilement horizontal invisible */
+/* Barre des favoris - défilement horizontal invisible */
 .favorites-bar {
   display: flex; align-items: center;
   height: 30px; padding: 0 8px; gap: 2px;
@@ -21,7 +21,7 @@
 .favbar-favicon    { display: block; width: 14px; height: 14px; object-fit: contain; }
 .favbar-label      { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
 
-/* Bouton d'import — toujours à l'extrémité droite */
+/* Bouton d'import - toujours à l'extrémité droite */
 .favbar-import-btn {
   display: flex; align-items: center; gap: 4px;
   height: 22px; padding: 0 8px; border-radius: var(--r-sm);
@@ -41,7 +41,7 @@
 .favbar-folder:hover      { background: var(--btn-bg-hover); color: var(--text-primary); }
 .favbar-folder-chevron    { opacity: .5; }
 
-/* Popover de dossier — positionné via JS au-dessus du chrome (z-index 5000).
+/* Popover de dossier - positionné via JS au-dessus du chrome (z-index 5000).
    La webview est poussée sous le popover (shiftBoundsTop) pour garder la page visible. */
 .favbar-popover {
   position: fixed; z-index: 5000;
@@ -69,5 +69,5 @@
 /* Indicateur de survol lors du glisser-déposer dans la barre des favoris */
 .favbar-drag-over { outline: 2px solid var(--accent-violet); outline-offset: -2px; border-radius: var(--r-sm); }
 
-/* Tuile dossier sur la page nouvel onglet — fond violet translucide */
+/* Tuile dossier sur la page nouvel onglet - fond violet translucide */
 .fav-tile-folder .fav-icon { background: var(--accent-violet-glow); }

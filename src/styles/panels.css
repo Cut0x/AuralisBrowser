@@ -1,4 +1,4 @@
-/* panels.css — Panneaux superposés : MDP, prompt enregistrement MDP inline, toasts, bandeau MAJ. */
+﻿/* panels.css - Panneaux superposés : MDP, prompt enregistrement MDP inline, toasts, bandeau MAJ. */
 
 /* ─── Panneau mots de passe (slide-in depuis la droite) ─────────────── */
 /* parkForOverlay() masque la webview avant l'ouverture pour que le panneau
@@ -36,7 +36,7 @@
 .pw-btn-copy:hover   { color: var(--accent-violet); }
 .pw-btn-delete:hover { color: var(--accent-rose); }
 
-/* ─── Barre inline d'ajout de favori — dans le browser-chrome ───────── */
+/* ─── Barre inline d'ajout de favori - dans le browser-chrome ───────── */
 .bm-save-prompt { display: none; }
 .bm-save-prompt:not(.hidden) {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -47,7 +47,7 @@
 .bm-save-fields { display: flex; gap: 6px; flex: 1; }
 .bm-save-fields .setting-input { height: 26px; font-size: 12px; }
 
-/* ─── Barre inline de sauvegarde MDP — dans le browser-chrome ───────── */
+/* ─── Barre inline de sauvegarde MDP - dans le browser-chrome ───────── */
 /* Placée dans #browser-chrome, cette barre augmente la hauteur du chrome
    quand elle est visible. Le ResizeObserver dans browser.ts détecte le
    changement et appelle updateBounds() pour repositionner le webview. */

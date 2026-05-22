@@ -1,4 +1,4 @@
-/* data.css — Listes de données : historique, arbre de favoris, menus contextuels, stockage. */
+﻿/* data.css - Listes de données : historique, arbre de favoris, menus contextuels, stockage. */
 
 /* ─── Liste d'historique ─────────────────────────────────────────────── */
 .history-group-date { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); padding: 12px 0 6px; max-width: 600px; }

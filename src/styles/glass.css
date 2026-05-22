@@ -1,5 +1,5 @@
-/* ═══════════════════════════════════════════════════════════════
-   glass.css — Classes utilitaires de glassmorphisme.
+﻿/* ═══════════════════════════════════════════════════════════════
+   glass.css - Classes utilitaires de glassmorphisme.
    Appliquer .glass-card, .glass-panel, etc. pour obtenir l'effet
    de verre dépoli avec flou d'arrière-plan (backdrop-filter).
    ═══════════════════════════════════════════════════════════════ */
@@ -31,7 +31,7 @@
   box-shadow:    var(--shadow-sm);
 }
 
-/* Grand panneau dépoli — panneau MDP, tiroirs */
+/* Grand panneau dépoli - panneau MDP, tiroirs */
 .glass-panel {
   background:    rgba(var(--bg-2-raw, 17, 14, 34), 0.82);
   border:        1px solid var(--glass-border);

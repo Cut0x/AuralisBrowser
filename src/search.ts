@@ -1,5 +1,5 @@
-// URL resolution and search engine logic.
-// Decides whether a user's input is a URL, a domain, or a search query.
+// Resolution d URL et logique du moteur de recherche.
+// Determine si la saisie utilisateur est une URL, un domaine, ou une requete.
 
 import type { SearchEngine } from './storage.js';
 import { isInternalUrl, normalizeInternalUrl } from './internal-pages.js';
@@ -15,7 +15,7 @@ export function buildSearchUrl(query: string, engine: SearchEngine): string {
   return SEARCH_URLS[engine] + encodeURIComponent(query);
 }
 
-/** Returns true if the input looks like a fully-qualified URL. */
+/** Retourne vrai si la saisie ressemble a une URL complete. */
 export function isUrl(input: string): boolean {
   if (input.startsWith('about:')) return true;
   try {
@@ -26,7 +26,7 @@ export function isUrl(input: string): boolean {
   }
 }
 
-/** Returns true if the input looks like a bare domain (e.g. "github.com"). */
+/** Retourne vrai si la saisie ressemble a un domaine nu (ex: "github.com"). */
 export function isDomain(input: string): boolean {
   if (input.includes(' ')) return false;
   if (!input.includes('.')) return false;
@@ -38,7 +38,7 @@ export function isDomain(input: string): boolean {
   }
 }
 
-/** Ensures a URL has a scheme. */
+/** Ajoute un schema si l'URL n'en a pas. */
 export function normalizeUrl(input: string): string {
   if (input.startsWith('about:')) return input;
   if (/^https?:\/\//i.test(input)) return input;

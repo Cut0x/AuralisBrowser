@@ -1,5 +1,5 @@
-/**
- * ui-newtab.ts — Tuiles de favoris sur la page Nouvel Onglet.
+﻿/**
+ * ui-newtab.ts - Tuiles de favoris sur la page Nouvel Onglet.
  * Affiche les 8 premiers favoris (liens ou dossiers) sous forme de tuiles.
  */
 

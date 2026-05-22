@@ -1,8 +1,8 @@
-/* buttons.css — Boutons partagés, champs de saisie, bascule (toggle), touche kbd. */
+﻿/* buttons.css - Boutons partagés, champs de saisie, bascule (toggle), touche kbd. */
 
 /* ─── Boutons principaux ─────────────────────────────────────────────── */
 
-/* Bouton primaire — dégradé rose → violet avec lueur */
+/* Bouton primaire - dégradé rose → violet avec lueur */
 .btn-primary {
   height: 34px; padding: 0 18px; border-radius: var(--r-full);
   font-size: 13px; font-weight: 500; color: #fff;
@@ -13,7 +13,7 @@
 .btn-primary:hover  { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-rose-glow); }
 .btn-primary:active { filter: brightness(0.92); transform: translateY(0); }
 
-/* Bouton secondaire — neutre avec bordure */
+/* Bouton secondaire - neutre avec bordure */
 .btn-secondary {
   height: 34px; padding: 0 18px; border-radius: var(--r-full);
   font-size: 13px; font-weight: 500;
@@ -22,7 +22,7 @@
 }
 .btn-secondary:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
 
-/* Bouton outline compact — utilisé dans les pages de paramètres */
+/* Bouton outline compact - utilisé dans les pages de paramètres */
 .btn-outline {
   height: 30px; padding: 0 12px; border-radius: var(--r-sm);
   font-size: 12px; color: var(--text-secondary);

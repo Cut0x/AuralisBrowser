@@ -1,5 +1,5 @@
 /**
- * ui.ts — Utilitaires d'interface partagés : thème, état de navigation,
+ * ui.ts - Utilitaires d'interface partagés : thème, état de navigation,
  * toasts, favicon, troncature. Aucune dépendance vers les autres modules UI.
  */
 
@@ -63,7 +63,7 @@ export function setStatusUrl(url: string | null): void {
   el.classList.remove('hidden');
 }
 
-/** Show a brief toast notification at the bottom of the screen. */
+/** Affiche une notification courte en bas de l ecran. */
 export function toast(message: string, type: 'info' | 'success' | 'error' = 'info'): void {
   document.querySelector('.auralis-toast')?.remove();
 

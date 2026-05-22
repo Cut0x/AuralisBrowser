@@ -1,12 +1,12 @@
 /**
- * import.ts — Import/export de favoris au format Netscape Bookmark File
+ * import.ts - Import/export de favoris au format Netscape Bookmark File
  * (HTML généré par Chrome, Firefox, Edge, Safari). Préserve l'arborescence
  * de dossiers. Fournit aussi l'ouverture d'un sélecteur de fichier natif.
  */
 
 import type { BookmarkItem, BookmarkLink, BookmarkFolder } from './storage.js';
 
-/** Parse a Netscape HTML bookmark file and return a tree of bookmark items. */
+/** Parse un fichier de favoris HTML Netscape et retourne un arbre de favoris. */
 export function parseNetscapeBookmarks(html: string): BookmarkItem[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
@@ -32,10 +32,10 @@ function parseDL(dl: Element): BookmarkItem[] {
     const node = children[i];
     if (node.tagName !== 'DT') continue;
 
-    // IMPORTANT: Use ':scope > x' to match only DIRECT children of the DT.
-    // The HTML5 parser inserts the folder's <DL> INSIDE the <DT> as a child
+    // Important: ':scope > x' permet de cibler uniquement les enfants directs de DT.
+    // Le parseur HTML5 place le <DL> du dossier a l interieur du <DT> comme enfant
     // (not as a sibling). Without ':scope >', querySelector('a') would recurse
-    // into nested folders and misidentify them as links.
+    // dans les dossiers imbriques et les confondre avec des liens.
     const a  = node.querySelector(':scope > a');
     const h3 = node.querySelector(':scope > h3');
 
@@ -52,7 +52,7 @@ function parseDL(dl: Element): BookmarkItem[] {
         } satisfies BookmarkLink);
       }
     } else if (h3) {
-      // The folder's <DL> is typically a DIRECT CHILD of the <DT> (HTML5 parser
+      // Le <DL> du dossier est en general un ENFANT DIRECT du <DT> (parseur HTML5
       // behaviour). Fallback to sibling search for non-standard parsers.
       const childDL: Element | null =
         node.querySelector(':scope > dl') ??
@@ -77,7 +77,7 @@ function parseDL(dl: Element): BookmarkItem[] {
   return items;
 }
 
-/** Trigger a file-open dialog and return the file content as a string. */
+/** Ouvre une boite de dialogue fichier et retourne le contenu sous forme de texte. */
 export function openFileDialog(accept: string): Promise<string | null> {
   return new Promise(resolve => {
     const input = document.createElement('input');
@@ -95,7 +95,7 @@ export function openFileDialog(accept: string): Promise<string | null> {
   });
 }
 
-/** Export bookmarks tree to a Netscape HTML file and trigger download. */
+/** Exporte l'arbre des favoris en HTML Netscape et declenche le telechargement. */
 export function exportBookmarks(bookmarks: BookmarkItem[]): void {
   const lines: string[] = [
     '<!DOCTYPE NETSCAPE-Bookmark-file-1>',

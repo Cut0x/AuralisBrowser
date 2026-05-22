@@ -1,5 +1,5 @@
-/**
- * ui-settings-misc.ts — Pages Paramètres : Cache & Données, À propos.
+﻿/**
+ * ui-settings-misc.ts - Pages Paramètres : Cache & Données, À propos.
  */
 
 import { invoke }                                   from '@tauri-apps/api/core';
@@ -97,6 +97,10 @@ export function renderPageAPropos(el: HTMLElement): void {
         <div class="ap-about-line">${t('about.stack')}</div>
         <div class="ap-about-line">${t('about.license')}</div>
         <div style="margin-top:12px">
+          <a href="#" id="ap-site-link" class="btn-outline" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;margin-right:8px">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.1"/><path d="M7 2c0 0-1.5 2-1.5 5S7 12 7 12m0-10c0 0 1.5 2 1.5 5S7 12 7 12M2 7h10" stroke="currentColor" stroke-width="1.1"/></svg>
+            Site officiel
+          </a>
           <a href="#" id="ap-github-link" class="btn-outline" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
             GitHub
@@ -108,7 +112,7 @@ export function renderPageAPropos(el: HTMLElement): void {
           </svg>
           <div style="flex:1;min-width:0">
             <p style="font-size:12.5px;font-weight:500;color:var(--text-primary)">Vous aimez Auralis ?</p>
-            <p style="font-size:11.5px;color:var(--text-muted);margin-top:3px">Laissez une ⭐ sur GitHub — c'est gratuit et ça aide beaucoup !</p>
+            <p style="font-size:11.5px;color:var(--text-muted);margin-top:3px">Laissez une ⭐ sur GitHub - c'est gratuit et ça aide beaucoup !</p>
           </div>
           <a href="#" id="ap-star-link" class="btn-outline" style="flex-shrink:0;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;text-decoration:none;font-size:12px">
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5l1.75 3.54 3.9.57-2.82 2.75.66 3.88L8 10.27l-3.49 1.97.66-3.88L2.35 5.6l3.9-.57L8 1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
@@ -116,6 +120,11 @@ export function renderPageAPropos(el: HTMLElement): void {
           </a>
         </div>
       </div>`;
+    el.querySelector('#ap-site-link')!.addEventListener('click', e => {
+      e.preventDefault();
+      import('@tauri-apps/plugin-opener').then(({ openUrl }) =>
+        openUrl('https://auralisbrowser.fr').catch(console.error));
+    });
     el.querySelector('#ap-github-link')!.addEventListener('click', e => {
       e.preventDefault();
       import('@tauri-apps/plugin-opener').then(({ openUrl }) =>

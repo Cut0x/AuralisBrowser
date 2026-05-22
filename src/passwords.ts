@@ -1,5 +1,5 @@
 /**
- * passwords.ts — Gestionnaire de mots de passe chiffrés (AES-GCM 256 bits).
+ * passwords.ts - Gestionnaire de mots de passe chiffrés (AES-GCM 256 bits).
  * La clé maître est générée aléatoirement à l'installation et stockée dans
  * localStorage. Les mots de passe ne sont jamais persistés en clair.
  */
@@ -29,7 +29,7 @@ async function getMasterKey(): Promise<CryptoKey> {
     return _cachedKey;
   }
 
-  // Generate and persist a new device key
+  // Genere et enregistre une nouvelle cle de l appareil
   const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
   const exported = await crypto.subtle.exportKey('raw', key);
   localStorage.setItem(KEY_STORAGE, JSON.stringify(Array.from(new Uint8Array(exported))));
