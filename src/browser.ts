@@ -153,8 +153,8 @@ export class BrowserEngine {
     this._webviewVisible = visible;
     const tabId = this._activeTabId;
     if (!tabId || !this._created.has(tabId)) return;
-    if (!visible) { await invoke<void>('tab_webview_hide', { tabId }).catch(() => {}); return; }
+    if (!visible) { await invoke<void>('tab_webview_hide', { tabId }).catch(e => console.error('[Auralis] hide:', e)); return; }
     const top = chrome.getBoundingClientRect().bottom;
-    await invoke<void>('tab_webview_show', { tabId, top, width: window.innerWidth, height: Math.max(1, window.innerHeight - top) }).catch(() => {});
+    await invoke<void>('tab_webview_show', { tabId, top, width: window.innerWidth, height: Math.max(1, window.innerHeight - top) }).catch(e => console.error('[Auralis] show:', e));
   }
 }

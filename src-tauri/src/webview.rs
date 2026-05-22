@@ -1,6 +1,15 @@
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl};
 use crate::{sentinel, title, tab_label};
 
+/// Recherche un WebView enfant par son tab_id dans la fenêtre principale.
+/// `app.get_webview()` ne trouve PAS les WebViews ajoutés via Window::add_child —
+/// ils sont stockés dans la liste de la fenêtre parente, pas dans le registre global.
+fn find_tab_webview<R: tauri::Runtime>(app: &AppHandle<R>, tab_id: &str) -> Option<tauri::Webview<R>> {
+    let label = tab_label(tab_id);
+    let win = app.get_window("main")?;
+    win.webviews().into_iter().find(|w| w.label() == label.as_str())
+}
+
 #[tauri::command]
 pub fn tab_webview_create(app: AppHandle, tab_id: String, url: String) -> Result<(), String> {
     let label      = tab_label(&tab_id);
@@ -48,13 +57,13 @@ pub fn tab_webview_create(app: AppHandle, tab_id: String, url: String) -> Result
                 }
             }),
         tauri::LogicalPosition::new(-9999.0, -9999.0),
-        tauri::LogicalSize::new(1.0, 1.0),
+        tauri::LogicalSize::new(1280.0, 800.0),
     ).map(|_| ()).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub fn tab_webview_show(app: AppHandle, tab_id: String, top: f64, width: f64, height: f64) -> Result<(), String> {
-    let wv = app.get_webview(&tab_label(&tab_id)).ok_or("webview introuvable")?;
+    let wv = find_tab_webview(&app, &tab_id).ok_or_else(|| format!("webview introuvable: {tab_id}"))?;
     wv.set_bounds(tauri::Rect {
         position: tauri::Position::Logical(tauri::LogicalPosition::new(0.0, top)),
         size:     tauri::Size::Logical(tauri::LogicalSize::new(width, height)),
@@ -63,10 +72,10 @@ pub fn tab_webview_show(app: AppHandle, tab_id: String, top: f64, width: f64, he
 
 #[tauri::command]
 pub fn tab_webview_hide(app: AppHandle, tab_id: String) -> Result<(), String> {
-    if let Some(wv) = app.get_webview(&tab_label(&tab_id)) {
+    if let Some(wv) = find_tab_webview(&app, &tab_id) {
         wv.set_bounds(tauri::Rect {
             position: tauri::Position::Logical(tauri::LogicalPosition::new(-9999.0, -9999.0)),
-            size:     tauri::Size::Logical(tauri::LogicalSize::new(1.0, 1.0)),
+            size:     tauri::Size::Logical(tauri::LogicalSize::new(1280.0, 800.0)),
         }).map_err(|e| e.to_string())?;
     }
     Ok(())
@@ -74,7 +83,7 @@ pub fn tab_webview_hide(app: AppHandle, tab_id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn tab_webview_close(app: AppHandle, tab_id: String) -> Result<(), String> {
-    if let Some(wv) = app.get_webview(&tab_label(&tab_id)) {
+    if let Some(wv) = find_tab_webview(&app, &tab_id) {
         wv.close().map_err(|e| e.to_string())?;
     }
     Ok(())
@@ -82,13 +91,13 @@ pub fn tab_webview_close(app: AppHandle, tab_id: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn tab_webview_navigate(app: AppHandle, tab_id: String, url: String) -> Result<(), String> {
-    let wv = app.get_webview(&tab_label(&tab_id)).ok_or("webview introuvable")?;
+    let wv = find_tab_webview(&app, &tab_id).ok_or_else(|| format!("webview introuvable: {tab_id}"))?;
     wv.navigate(tauri::Url::parse(&url).map_err(|e| e.to_string())?).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub fn tab_webview_eval(app: AppHandle, tab_id: String, js: String) -> Result<(), String> {
-    if let Some(wv) = app.get_webview(&tab_label(&tab_id)) {
+    if let Some(wv) = find_tab_webview(&app, &tab_id) {
         wv.eval(&js).map_err(|e| e.to_string())?;
     }
     Ok(())
@@ -96,7 +105,7 @@ pub fn tab_webview_eval(app: AppHandle, tab_id: String, js: String) -> Result<()
 
 #[tauri::command]
 pub fn tab_webview_reload(app: AppHandle, tab_id: String) -> Result<(), String> {
-    if let Some(wv) = app.get_webview(&tab_label(&tab_id)) {
+    if let Some(wv) = find_tab_webview(&app, &tab_id) {
         wv.eval("window.location.reload()").map_err(|e| e.to_string())?;
     }
     Ok(())
