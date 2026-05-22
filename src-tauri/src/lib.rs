@@ -104,8 +104,8 @@ fn tab_webview_create(app: AppHandle, tab_id: String, url: String) -> Result<(),
     };
 
     let win       = app.get_window("main").ok_or("main window introuvable")?;
-    let h_nav     = app.handle().clone(); // pour on_navigation
-    let h_load    = app.handle().clone(); // pour on_page_load
+    let h_nav     = app.clone(); // pour on_navigation
+    let h_load    = app.clone(); // pour on_page_load
     let tid_load  = tab_id.clone();
 
     win.add_child(
@@ -156,7 +156,7 @@ fn tab_webview_create(app: AppHandle, tab_id: String, url: String) -> Result<(),
             }),
         tauri::LogicalPosition::new(-9999.0, -9999.0),
         tauri::LogicalSize::new(1.0, 1.0),
-    ).map_err(|e| e.to_string())
+    ).map(|_| ()).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
