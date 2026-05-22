@@ -5,6 +5,7 @@ import { isBookmarked } from './bookmarks-store.js';
 import { browser, tabs, settings } from './state.js';
 import { setHideAuralisRef } from './ui-tab-strip.js';
 import { logError } from './logger.js';
+import { internalTitle, isInternalUrl, normalizeInternalUrl, parseInternalRoute, toInternalSettingsUrl } from './internal-pages.js';
 
 let auralisReturnUrl = 'about:newtab';
 
@@ -14,18 +15,38 @@ export function isAuralisPageVisible(): boolean {
 
 export function showAuralisPage(url: string): void {
   try {
+    const normalized = normalizeInternalUrl(url);
+    const route = parseInternalRoute(normalized);
+    if (!route) return;
+
     auralisReturnUrl = browser.currentUrl();
     browser.parkForOverlay();
     document.getElementById('newtab-page')!.classList.remove('active');
     document.getElementById('auralis-page')!.classList.remove('hidden');
-    (document.getElementById('urlbar') as HTMLInputElement).value = url;
+    (document.getElementById('urlbar') as HTMLInputElement).value = normalized;
     setNavState(false, false);
-    const path = url.replace(/^auralis::settings\/?/, '') || 'apparence';
-    updateApNavItems(path);
+
+    const active = tabs.getActive();
+    if (active) {
+      tabs.updateTab(active.id, {
+        url: normalized,
+        title: internalTitle(normalized),
+        isLoading: false,
+      });
+    }
+
     import('./ui-settings.js')
-      .then(({ renderAuralisContent }) => renderAuralisContent(path))
+      .then(({ renderAuralisContent }) => {
+        if (route.kind === 'home') {
+          updateApNavItems('home');
+          renderAuralisContent('home');
+          return;
+        }
+        updateApNavItems(route.section);
+        renderAuralisContent(route.section);
+      })
       .catch(err => {
-        logError('uiNav.showAuralisPage.importSettings', 'Impossible de charger la page de paramètres', { path, err: String(err) });
+        logError('uiNav.showAuralisPage.importSettings', 'Impossible de charger la page interne', { normalized, err: String(err) });
       });
   } catch (err) {
     logError('uiNav.showAuralisPage', 'Erreur inattendue pendant showAuralisPage', { url, err: String(err) });
@@ -54,7 +75,10 @@ export function updateApNavItems(activePath: string): void {
 export function navigate(input: string): void {
   try {
     const url = resolveInput(input, settings.searchEngine);
-    if (url.startsWith('auralis::')) { showAuralisPage(url); return; }
+    if (isInternalUrl(url) || url.startsWith('auralis::')) {
+      showAuralisPage(url);
+      return;
+    }
     hideAuralisPage();
     const active = tabs.getActive();
     if (active) tabs.updateTab(active.id, { url, title: url, isLoading: url !== 'about:newtab' });
@@ -66,12 +90,28 @@ export function navigate(input: string): void {
 
 export function displayTitle(url: string): string {
   if (!url || url === 'about:newtab') return t('tab.new');
-  if (url.startsWith('auralis::settings')) return 'Paramètres';
-  if (url.startsWith('auralis::')) return url.replace('auralis::', '');
+  if (isInternalUrl(url) || url.startsWith('auralis::')) {
+    const normalized = normalizeInternalUrl(url);
+    const route = parseInternalRoute(normalized);
+    if (!route) return 'Auralis';
+    if (route.kind === 'home') return 'Accueil';
+    if (route.section === 'a-propos') return 'À propos';
+    if (route.section === 'securite') return 'Sécurité';
+    if (route.section === 'demarrage') return 'Démarrage';
+    return 'Paramètres';
+  }
   try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
 }
 
 export function getAuralisReturnUrl(): string { return auralisReturnUrl; }
+
+export function openSettings(section?: string): void {
+  if (!section) {
+    showAuralisPage(toInternalSettingsUrl());
+    return;
+  }
+  showAuralisPage(`auralis:settings/${section}`);
+}
 
 export function syncUrlBarToTab(url: string, canBack: boolean, canForward: boolean): void {
   try {
@@ -85,4 +125,3 @@ export function syncUrlBarToTab(url: string, canBack: boolean, canForward: boole
 }
 
 setHideAuralisRef(hideAuralisPage);
-

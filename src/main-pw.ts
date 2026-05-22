@@ -8,7 +8,7 @@ import { showAuralisPage }                from './ui-nav.js';
 import { closePwPanel }                   from './ui-passwords.js';
 
 export function initPasswordHandlers(): void {
-  document.getElementById('btn-passwords')?.addEventListener('click', () => showAuralisPage('auralis::settings/securite'));
+  document.getElementById('btn-passwords')?.addEventListener('click', () => showAuralisPage('auralis:settings/securite'));
   document.getElementById('btn-close-pw')?.addEventListener('click', closePwPanel);
   document.getElementById('pw-backdrop')?.addEventListener('click', closePwPanel);
 
