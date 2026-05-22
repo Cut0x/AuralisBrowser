@@ -1,8 +1,8 @@
 [package]
 name = "auralis"
-version = "0.2.3"
+version = "0.2.4"
 description = "A beautiful, lightweight and fully customizable browser."
-authors = ["Auralis Contributors"]
+authors = ["Loïc V. (Cut0x)"]
 license = "MIT"
 edition = "2021"
 rust-version = "1.77.2"

@@ -1,9 +1,10 @@
 {
   "name": "auralis",
   "private": true,
-  "version": "0.2.3",
+  "version": "0.2.4",
   "type": "module",
   "description": "A beautiful, lightweight and fully customizable browser.",
+  "author": "Loïc V. (Cut0x)",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
