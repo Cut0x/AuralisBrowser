@@ -64,6 +64,9 @@
 }
 .btn-new-tab:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
 
+/* Indicateur de dépôt lors du drag d'onglets */
+.tab.tab-drag-over { outline: 2px solid var(--accent-violet); outline-offset: -2px; }
+
 /* Espaceur flexible entre onglets et contrôles fenêtre */
 .topbar-spacer { flex: 1; min-width: 8px; max-width: 40px; }
 

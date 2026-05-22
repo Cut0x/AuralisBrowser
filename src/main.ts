@@ -76,7 +76,11 @@ const browser = new BrowserEngine(state => {
   }
 });
 
-browser.setNewTabCallback(url => { tabs.createTab(url, true); browser.loadUrl(url); });
+browser.setNewTabCallback(url => {
+  const newTab = tabs.createTab(url, true);
+  browser.setActiveTabId(newTab.id);
+  browser.loadUrl(url);
+});
 
 browser.setPwDetectedCallback((username, password) => {
   (document.getElementById('pw-username-input') as HTMLInputElement).value = username;
@@ -89,7 +93,8 @@ browser.setPwDetectedCallback((username, password) => {
 
 initState(browser, tabs, initialSettings);
 setFavoritesBarVisible(settings.showFavoritesBar);
-tabs.createTab('about:newtab', true);
+const _firstTab = tabs.createTab('about:newtab', true);
+browser.setActiveTabId(_firstTab.id);
 renderFavBar(); renderNewtabFavs();
 
 // ─── Boutons navigation ───────────────────────────────────────────────────────
@@ -98,13 +103,16 @@ document.getElementById('btn-back')?.addEventListener('click', () => {
   if (isAuralisPageVisible()) {
     hideAuralisPage();
     const ret = getAuralisReturnUrl();
-    if (ret && ret !== 'about:newtab') browser.showTabUrl(ret); else browser.showNewtab();
+    if (ret && ret !== 'about:newtab') { const a = tabs.getActive(); if (a) browser.showTabUrl(a.id, ret); } else browser.showNewtab();
   } else browser.goBack();
 });
 document.getElementById('btn-forward')?.addEventListener('click', () => { if (!isAuralisPageVisible()) browser.goForward(); });
 document.getElementById('btn-reload')?.addEventListener('click',  () => { if (!isAuralisPageVisible()) browser.reload(); });
 document.getElementById('btn-new-tab')?.addEventListener('click', () => {
-  hideAuralisPage(); tabs.createTab('about:newtab', true); browser.showNewtab();
+  hideAuralisPage();
+  const newTab = tabs.createTab('about:newtab', true);
+  browser.setActiveTabId(newTab.id);
+  browser.showNewtab();
 });
 
 // ─── Barre d'adresse ──────────────────────────────────────────────────────────
@@ -260,7 +268,7 @@ document.addEventListener('keydown', e => {
     switch (e.key.toLowerCase()) {
       case 'l': e.preventDefault(); urlbar.focus(); urlbar.select(); return;
       case 't': e.preventDefault(); hideAuralisPage(); tabs.createTab('about:newtab', true); browser.showNewtab(); return;
-      case 'w': e.preventDefault(); { const a = tabs.getActive(); if (a) { tabs.closeTab(a.id); hideAuralisPage(); const n = tabs.getActive(); if (n) browser.showTabUrl(n.url); else browser.showNewtab(); } } return;
+      case 'w': e.preventDefault(); { const a = tabs.getActive(); if (a) { tabs.closeTab(a.id); hideAuralisPage(); const n = tabs.getActive(); if (n) browser.showTabUrl(n.id, n.url); else browser.showNewtab(); } } return;
       case 'r': e.preventDefault(); if (!isAuralisPageVisible()) browser.reload(); return;
     }
   }

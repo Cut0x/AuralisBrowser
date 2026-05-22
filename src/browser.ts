@@ -1,10 +1,9 @@
 /**
- * browser.ts — Moteur de navigation via la child webview native Tauri (WebView2).
+ * browser.ts — Moteur de navigation multi-onglets via des WebView2 enfants Tauri.
  *
- * Architecture clé : la webview "content" est un contrôle natif Windows qui se
- * superpose TOUJOURS au-dessus du HTML de la fenêtre principale, quels que soient
- * les z-index CSS. Pour afficher un panneau HTML par-dessus la zone de contenu,
- * appeler parkForOverlay() avant et restoreFromOverlay() après.
+ * Architecture : chaque onglet possède son propre WebView2 enfant (label "tab-{id}").
+ * Changer d'onglet = afficher/masquer des WebViews, SANS recharger les pages.
+ * Le WebView actif est positionné dans la zone de contenu ; les autres sont hors-écran.
  */
 
 import { invoke }  from '@tauri-apps/api/core';
@@ -21,17 +20,26 @@ export interface NavigationState {
 type NavCallback    = (state: NavigationState) => void;
 type NewTabCallback = (url: string) => void;
 
+interface TabHistory { navHistory: string[]; navIdx: number; }
+
 export class BrowserEngine {
-  private newtabPage:        HTMLElement;
-  private urlbar:            HTMLInputElement;
-  private navHistory:        string[] = [];
-  private navIdx             = -1;
-  private isShowingNewtab    = true;
-  private _navPending        = false;   // vrai entre un loadUrl et la réception de content-navigated
-  private _lastUrl           = '';      // dernière URL émise — sert à dédupliquer
-  private _overlayActive     = false;   // vrai quand un panneau masque la webview
-  private _webviewVisible    = false;   // état courant appliqué à content_set_bounds
-  private _contentUrl        = '';      // dernière URL réellement chargée dans la webview
+  private newtabPage:     HTMLElement;
+  private urlbar:         HTMLInputElement;
+
+  // Onglet actif (ID Tauri tab)
+  private _activeTabId:   string | null = null;
+
+  // Historique de navigation par onglet (back/forward JS-side)
+  private _tabHistories   = new Map<string, TabHistory>();
+
+  // Onglets dont le WebView a déjà été créé côté Rust
+  private _createdWebviews = new Set<string>();
+
+  private isShowingNewtab  = true;
+  private _overlayActive   = false;
+  private _webviewVisible  = false;
+  private _navPending      = false;
+  private _lastUrl         = '';
 
   private onNavigate:    NavCallback;
   private onNewTab?:     NewTabCallback;
@@ -47,11 +55,8 @@ export class BrowserEngine {
       if (url && url !== 'about:newtab') openUrl(url).catch(console.error);
     });
 
-    // Redimensionner la webview à chaque redimensionnement de la fenêtre
     window.addEventListener('resize', () => { void this.updateBounds(this._webviewVisible); });
 
-    // ResizeObserver sur le chrome : ajuste automatiquement les bornes si la hauteur
-    // du chrome change (bannière de MAJ, barre prompt MDP, barre des favoris…)
     const chrome = document.getElementById('browser-chrome');
     if (chrome) {
       new ResizeObserver(() => {
@@ -67,50 +72,129 @@ export class BrowserEngine {
   setNewTabCallback(fn: NewTabCallback): void { this.onNewTab = fn; }
   setPwDetectedCallback(fn: (u: string, p: string) => void): void { this.onPwDetected = fn; }
 
+  /** Définit l'onglet actif sans navigation (appelé lors d'un switch d'onglet). */
+  setActiveTabId(tabId: string): void { this._activeTabId = tabId; }
+
+  /** Navigue l'onglet actif vers une URL (crée son WebView si nécessaire). */
   loadUrl(url: string): void {
     if (!url || url === 'about:newtab') { this.showNewtab(); return; }
+    const tabId = this._activeTabId;
+    if (!tabId) return;
+
     this.isShowingNewtab = false;
     this._overlayActive  = false;
     this.newtabPage.classList.remove('active');
     setNavLoading(true);
     this._navPending = true;
     this._lastUrl    = '';
-    if (this.navIdx < this.navHistory.length - 1)
-      this.navHistory = this.navHistory.slice(0, this.navIdx + 1);
-    this.navHistory.push(url);
-    this.navIdx = this.navHistory.length - 1;
     this.urlbar.value = url;
+
+    const hist = this._getOrCreateHistory(tabId);
+    if (hist.navIdx < hist.navHistory.length - 1)
+      hist.navHistory = hist.navHistory.slice(0, hist.navIdx + 1);
+    hist.navHistory.push(url);
+    hist.navIdx = hist.navHistory.length - 1;
+
     void this.updateBounds(true);
-    invoke<void>('content_navigate', { url }).catch(err => {
-      console.error('[Auralis] erreur navigation:', err); setNavLoading(false);
-    });
+
+    if (!this._createdWebviews.has(tabId)) {
+      // Crée le WebView et navigue d'emblée vers l'URL
+      this._createdWebviews.add(tabId);
+      invoke<void>('tab_webview_create', { tabId, url }).catch(err => {
+        console.error('[Auralis] création webview:', err); setNavLoading(false);
+      });
+    } else {
+      invoke<void>('tab_webview_navigate', { tabId, url }).catch(err => {
+        console.error('[Auralis] navigation:', err); setNavLoading(false);
+      });
+    }
   }
 
-  goBack():    void { if (this.navIdx <= 0) return; this.navIdx--; this.loadDirect(this.navHistory[this.navIdx]); }
-  goForward(): void { if (this.navIdx >= this.navHistory.length - 1) return; this.navIdx++; this.loadDirect(this.navHistory[this.navIdx]); }
-
   /**
-   * Affiche l'URL d'un onglet existant sans créer d'entrée d'historique navigateur.
-   * Utilisé lors du switch d'onglet pour éviter un rechargement forcé de logique.
+   * Bascule vers un onglet existant.
+   * Si le WebView de cet onglet est déjà chargé → simple affichage, PAS de rechargement.
+   * Si l'onglet n'a pas encore de WebView (about:newtab) → affiche la page nouvel onglet.
    */
-  showTabUrl(url: string): void {
-    if (!url || url === 'about:newtab') { this.showNewtab(); return; }
-    if (this._contentUrl === url) {
-      this.isShowingNewtab = false;
-      this._overlayActive  = false;
-      this.newtabPage.classList.remove('active');
-      this.urlbar.value = url;
-      void this.updateBounds(true);
+  showTabUrl(tabId: string, url: string): void {
+    // Masque le WebView de l'onglet précédent
+    const prevId = this._activeTabId;
+    if (prevId && prevId !== tabId && this._createdWebviews.has(prevId)) {
+      invoke<void>('tab_webview_hide', { tabId: prevId }).catch(() => {});
+    }
+
+    this._activeTabId = tabId;
+
+    if (!url || url === 'about:newtab') {
+      this.showNewtab();
       return;
     }
-    if (!this.isShowingNewtab && this.currentUrl() === url) return;
-    this.loadDirect(url);
+
+    this.isShowingNewtab = false;
+    this._overlayActive  = false;
+    this.newtabPage.classList.remove('active');
+    this.urlbar.value = url;
+
+    if (this._createdWebviews.has(tabId)) {
+      // WebView déjà créé → juste l'afficher (aucun rechargement)
+      void this.updateBounds(true);
+      const hist = this._getOrCreateHistory(tabId);
+      const canBack    = hist.navIdx > 0;
+      const canForward = hist.navIdx < hist.navHistory.length - 1;
+      setNavState(canBack, canForward);
+    } else {
+      // Premier affichage de cet onglet avec une vraie URL → créer le WebView
+      setNavLoading(true);
+      this._navPending = true;
+      this._lastUrl    = '';
+      const hist = this._getOrCreateHistory(tabId);
+      if (!hist.navHistory.includes(url)) {
+        hist.navHistory.push(url);
+        hist.navIdx = hist.navHistory.length - 1;
+      }
+      void this.updateBounds(true);
+      this._createdWebviews.add(tabId);
+      invoke<void>('tab_webview_create', { tabId, url }).catch(err => {
+        console.error('[Auralis] création webview:', err); setNavLoading(false);
+      });
+    }
+  }
+
+  /** Ferme et détruit le WebView d'un onglet. */
+  closeTabWebview(tabId: string): void {
+    if (this._createdWebviews.has(tabId)) {
+      this._createdWebviews.delete(tabId);
+      this._tabHistories.delete(tabId);
+      invoke<void>('tab_webview_close', { tabId }).catch(() => {});
+    }
+  }
+
+  goBack(): void {
+    const tabId = this._activeTabId; if (!tabId) return;
+    const hist = this._getOrCreateHistory(tabId);
+    if (hist.navIdx <= 0) return;
+    hist.navIdx--;
+    const url = hist.navHistory[hist.navIdx];
+    this.urlbar.value = url;
+    setNavLoading(true); this._navPending = true; this._lastUrl = '';
+    invoke<void>('tab_webview_navigate', { tabId, url }).catch(console.error);
+  }
+
+  goForward(): void {
+    const tabId = this._activeTabId; if (!tabId) return;
+    const hist = this._getOrCreateHistory(tabId);
+    if (hist.navIdx >= hist.navHistory.length - 1) return;
+    hist.navIdx++;
+    const url = hist.navHistory[hist.navIdx];
+    this.urlbar.value = url;
+    setNavLoading(true); this._navPending = true; this._lastUrl = '';
+    invoke<void>('tab_webview_navigate', { tabId, url }).catch(console.error);
   }
 
   reload(): void {
+    const tabId = this._activeTabId; if (!tabId) return;
     if (!this.currentUrl() || this.currentUrl() === 'about:newtab') return;
     setNavLoading(true); this._navPending = true; this._lastUrl = '';
-    invoke<void>('content_reload').catch(console.error);
+    invoke<void>('tab_webview_reload', { tabId }).catch(console.error);
   }
 
   showNewtab(): void {
@@ -118,43 +202,54 @@ export class BrowserEngine {
     this.newtabPage.classList.add('active');
     void this.updateBounds(false);
     this.urlbar.value = '';
-    this.onNavigate({ url: 'about:newtab', title: 'Nouvel onglet', favicon: '',
-      canBack: this.navIdx > 0, canForward: this.navIdx < this.navHistory.length - 1 });
+    const hist = this._activeTabId ? this._getOrCreateHistory(this._activeTabId) : null;
+    this.onNavigate({
+      url: 'about:newtab', title: 'Nouvel onglet', favicon: '',
+      canBack:    (hist?.navIdx ?? 0) > 0,
+      canForward: hist ? hist.navIdx < hist.navHistory.length - 1 : false,
+    });
   }
 
   eval(js: string): void {
-    invoke<void>('content_eval', { js }).catch(() => {});
+    const tabId = this._activeTabId; if (!tabId) return;
+    invoke<void>('tab_webview_eval', { tabId, js }).catch(() => {});
   }
 
-  currentUrl():   string  { return this.navHistory[this.navIdx] ?? 'about:newtab'; }
-  canGoBack():    boolean { return this.navIdx > 0; }
-  canGoForward(): boolean { return this.navIdx < this.navHistory.length - 1; }
+  currentUrl(): string {
+    if (!this._activeTabId) return 'about:newtab';
+    const hist = this._tabHistories.get(this._activeTabId);
+    return hist?.navHistory[hist.navIdx] ?? 'about:newtab';
+  }
 
-  /** True si le WebView est actuellement visible et qu'il faut le décaler pour un popover. */
+  canGoBack():    boolean {
+    if (!this._activeTabId) return false;
+    const h = this._tabHistories.get(this._activeTabId);
+    return (h?.navIdx ?? 0) > 0;
+  }
+  canGoForward(): boolean {
+    if (!this._activeTabId) return false;
+    const h = this._tabHistories.get(this._activeTabId);
+    return h ? h.navIdx < h.navHistory.length - 1 : false;
+  }
+
   get canShiftForOverlay(): boolean {
     return this._webviewVisible && !this.isShowingNewtab;
   }
 
-  /** Masque la webview pour afficher un panneau HTML plein-écran (ex: panneau MDP). */
   parkForOverlay(): void {
     this._overlayActive = true;
     void this.updateBounds(false);
   }
 
-  /**
-   * Pousse le webview sous newTop sans le masquer.
-   * Utilisé par le popover de dossier : la page reste visible sous le popover.
-   * newTop = bas du popover en pixels depuis le haut de la fenêtre.
-   */
   async shiftBoundsTop(newTop: number): Promise<void> {
     this._overlayActive = true;
+    const tabId = this._activeTabId; if (!tabId) return;
     const width  = window.innerWidth;
     const height = Math.max(1, window.innerHeight - newTop);
     this._webviewVisible = true;
-    await invoke<void>('content_set_bounds', { top: newTop, width, height }).catch(() => {});
+    await invoke<void>('tab_webview_show', { tabId, top: newTop, width, height }).catch(() => {});
   }
 
-  /** Restaure la webview après fermeture d'un panneau ou d'un popover. */
   restoreFromOverlay(): void {
     this._overlayActive = false;
     if (!this.isShowingNewtab) void this.updateBounds(true);
@@ -164,53 +259,64 @@ export class BrowserEngine {
     const chrome = document.getElementById('browser-chrome');
     if (!chrome) return;
     this._webviewVisible = visible;
+    const tabId = this._activeTabId;
+    if (!tabId || !this._createdWebviews.has(tabId)) return;
     if (!visible) {
-      await invoke<void>('content_set_bounds', { top: 9999, width: 0, height: 1 }).catch(() => {});
+      await invoke<void>('tab_webview_hide', { tabId }).catch(() => {});
       return;
     }
     const top    = chrome.getBoundingClientRect().bottom;
     const width  = window.innerWidth;
     const height = Math.max(1, window.innerHeight - top);
-    await invoke<void>('content_set_bounds', { top, width, height }).catch(() => {});
+    await invoke<void>('tab_webview_show', { tabId, top, width, height }).catch(() => {});
   }
 
   // ─── Privé ───────────────────────────────────────────────────────────────────
 
-  private loadDirect(url: string): void {
-    this.isShowingNewtab = false; this._overlayActive = false;
-    this.newtabPage.classList.remove('active');
-    setNavLoading(true); this._navPending = true; this._lastUrl = '';
-    this.urlbar.value = url;
-    void this.updateBounds(true);
-    invoke<void>('content_navigate', { url }).catch(console.error);
+  private _getOrCreateHistory(tabId: string): TabHistory {
+    if (!this._tabHistories.has(tabId))
+      this._tabHistories.set(tabId, { navHistory: [], navIdx: -1 });
+    return this._tabHistories.get(tabId)!;
   }
 
   private async init(): Promise<void> {
-    await listen<string>('content-navigated', e => {
-      const url = e.payload;
-      if (!url || url === 'about:blank' || this.isShowingNewtab) return;
-      if (!this._navPending && url === this._lastUrl) return; // déduplique les re-fires WebView2
-      this._navPending = false; this._lastUrl = url; this._contentUrl = url;
+    // content-navigated : payload = { tabId, url }
+    await listen<{ tabId: string; url: string }>('content-navigated', e => {
+      const { tabId, url } = e.payload;
+      if (!url || url === 'about:blank') return;
+      if (tabId !== this._activeTabId) return; // onglet en arrière-plan, ignore
+
+      if (!this._navPending && url === this._lastUrl) return;
+      this._navPending = false; this._lastUrl = url;
+
       setNavLoading(false);
-      const canBack = this.navIdx > 0, canForward = this.navIdx < this.navHistory.length - 1;
+      const hist     = this._getOrCreateHistory(tabId);
+      const canBack  = hist.navIdx > 0;
+      const canForward = hist.navIdx < hist.navHistory.length - 1;
       setNavState(canBack, canForward);
       this.urlbar.value = url;
       this.onNavigate({ url, title: displayHostname(url), favicon: faviconFor(url), canBack, canForward });
-      void invoke<void>('content_eval', { js: NEW_TAB_SCRIPT }).catch(() => {});
-      void invoke<void>('content_eval', { js: FORM_CAPTURE_SCRIPT }).catch(() => {});
+
+      invoke<void>('tab_webview_eval', { tabId, js: NEW_TAB_SCRIPT }).catch(() => {});
+      invoke<void>('tab_webview_eval', { tabId, js: FORM_CAPTURE_SCRIPT }).catch(() => {});
     });
 
-    await listen<{ url: string; title: string }>('content-title', e => {
-      const { url, title } = e.payload;
-      if (this.isShowingNewtab || url !== this.currentUrl()) return;
-      const canBack = this.navIdx > 0, canForward = this.navIdx < this.navHistory.length - 1;
+    // content-title : payload = { tabId, url, title }
+    await listen<{ tabId: string; url: string; title: string }>('content-title', e => {
+      const { tabId, url, title } = e.payload;
+      if (tabId !== this._activeTabId) return;
+      const hist = this._getOrCreateHistory(tabId);
+      const canBack    = hist.navIdx > 0;
+      const canForward = hist.navIdx < hist.navHistory.length - 1;
       this.onNavigate({ url, title, favicon: faviconFor(url), canBack, canForward });
     });
 
+    // content-open-new-tab : payload = url string (intercepté via auralis-open.invalid)
     await listen<string>('content-open-new-tab', e => {
       if (e.payload && this.onNewTab) this.onNewTab(e.payload);
     });
 
+    // content-pw-detected : payload = base64 JSON (intercepté via auralis-pw.invalid)
     await listen<string>('content-pw-detected', e => {
       try {
         const bytes = Uint8Array.from(atob(e.payload), c => c.charCodeAt(0));

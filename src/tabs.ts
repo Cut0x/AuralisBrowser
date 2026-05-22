@@ -60,6 +60,17 @@ export class TabManager {
     this.emit();
   }
 
+  /** Déplace draggedId avant targetId dans la liste des onglets. */
+  reorderTabs(draggedId: string, targetId: string): void {
+    if (draggedId === targetId) return;
+    const from = this.tabs.findIndex(t => t.id === draggedId);
+    const to   = this.tabs.findIndex(t => t.id === targetId);
+    if (from === -1 || to === -1) return;
+    const [tab] = this.tabs.splice(from, 1);
+    this.tabs.splice(to, 0, tab);
+    this.emit();
+  }
+
   getActive():          Tab | null { return this.tabs.find(t => t.id === this.activeId) ?? null; }
   getById(id: string):  Tab | null { return this.tabs.find(t => t.id === id) ?? null; }
   getAll():             Tab[]      { return [...this.tabs]; }
