@@ -1,11 +1,11 @@
-﻿# Auralis Browser 1.0.0
+# Auralis Browser 1.0.0
 
 Auralis est un navigateur desktop construit avec Tauri 2, Rust et TypeScript.
-Cette version inclut la navigation interne `auralis:*`, le demarrage de bienvenue et un moteur WebView stabilise.
+Cette version inclut la navigation interne `auralis:*`, le démarrage de bienvenue et un moteur WebView stabilisé.
 
-## Fonctionnalites principales
+## Fonctionnalités principales
 
-- Routes internes unifiees:
+- Routes internes unifiées :
   - `auralis:home`
   - `auralis:settings`
   - `auralis:settings/apparence`
@@ -17,65 +17,65 @@ Cette version inclut la navigation interne `auralis:*`, le demarrage de bienvenu
   - `auralis:settings/cache`
   - `auralis:settings/a-propos`
 - Page d'accueil interne `auralis:home`.
-- Premiere ouverture redirigee vers `https://auralisbrowser.fr/welcome`.
-- Console Auralis disponible au clic droit via l'entree `Console Auralis`.
-- Fenetre console cachee par defaut au lancement.
+- Première ouverture redirigée vers `https://auralisbrowser.fr/welcome`.
+- Console Auralis disponible au clic droit via l'entrée `Console Auralis`.
+- Fenêtre console cachée par défaut au lancement.
 
 ## Architecture
 
 - `src/`
-  - `main.ts`: bootstrap, evenements UI, menu contextuel
-  - `browser.ts`: orchestration WebView et navigation
-  - `browser-events.ts`: ecoute des evenements Tauri
-  - `internal-pages.ts`: parsing/normalisation des routes `auralis:*`
-  - `ui-settings.ts`: rendu des pages internes
+  - `main.ts` : bootstrap, événements UI, menu contextuel
+  - `browser.ts` : orchestration WebView et navigation
+  - `browser-events.ts` : écoute des événements Tauri
+  - `internal-pages.ts` : parsing et normalisation des routes `auralis:*`
+  - `ui-settings.ts` : rendu des pages internes
 - `src-tauri/`
-  - `src/lib.rs`: initialisation Tauri et commandes Rust
-  - `src/webview.rs`: WebView de contenu unique et events de navigation
-  - `src/console.rs`: buffer de logs applicatifs
-  - `tauri.conf.json`: metadata et bundle Windows
+  - `src/lib.rs` : initialisation Tauri et commandes Rust
+  - `src/webview.rs` : WebView de contenu unique et événements de navigation
+  - `src/console.rs` : buffer de logs applicatifs
+  - `tauri.conf.json` : métadonnées et bundle Windows
 - `public/`
-  - `console.html`: interface de consultation des logs
+  - `console.html` : interface de consultation des logs
 
-## Prerequis
+## Prérequis
 
 - Node.js 20+
 - Rust stable
-- Prerequis Tauri pour votre OS
+- Prérequis Tauri pour votre OS
 
-## Developpement
+## Développement
 
-Installer les dependances:
+Installer les dépendances :
 
 ```bash
 npm install
 ```
 
-Lancer le frontend en dev:
+Lancer le frontend en dev :
 
 ```bash
 npm run dev
 ```
 
-Lancer l'application Tauri en dev:
+Lancer l'application Tauri en dev :
 
 ```bash
 npm run tauri:dev
 ```
 
-Build frontend:
+Build frontend :
 
 ```bash
 npm run build
 ```
 
-Build installateur Windows:
+Build installateur Windows :
 
 ```bash
 npm run tauri:build
 ```
 
-Sortie:
+Sortie :
 
 ```text
 src-tauri\target\release\bundle\nsis\Auralis_1.0.0_x64-setup.exe
@@ -83,22 +83,22 @@ src-tauri\target\release\bundle\nsis\Auralis_1.0.0_x64-setup.exe
 
 ## Installation Windows
 
-Utiliser le `setup.exe` genere.
-L'installateur NSIS gere l'installation de WebView2 en mode `offlineInstaller`.
+Utiliser le `setup.exe` généré.
+L'installateur NSIS gère l'installation de WebView2 en mode `offlineInstaller`.
 
 ## Liens officiels
 
-- Site: `https://auralisbrowser.fr`
-- Welcome: `https://auralisbrowser.fr/welcome`
-- GitHub: `https://github.com/Cut0x/AuralisBrowser`
+- Site : `https://auralisbrowser.fr`
+- Welcome : `https://auralisbrowser.fr/welcome`
+- GitHub : `https://github.com/Cut0x/AuralisBrowser`
 
-## Depannage
+## Dépannage
 
-Si la navigation ne charge pas:
+Si la navigation ne charge pas :
 
 1. Ouvrir le menu clic droit dans l'interface.
 2. Cliquer `Console Auralis`.
-3. Verifier les erreurs de navigation/webview dans la console.
+3. Vérifier les erreurs de navigation WebView dans la console.
 
 ## Licence
 
