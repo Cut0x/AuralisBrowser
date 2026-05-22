@@ -13,7 +13,7 @@ export function isAuralisPageVisible(): boolean {
 
 export function showAuralisPage(url: string): void {
   auralisReturnUrl = browser.currentUrl();
-  void browser.updateBounds(false);
+  browser.parkForOverlay();
   document.getElementById('newtab-page')!.classList.remove('active');
   document.getElementById('auralis-page')!.classList.remove('hidden');
   ;(document.getElementById('urlbar') as HTMLInputElement).value = url;

@@ -49,18 +49,19 @@ export class BrowserEngine {
   loadUrl(url: string): void {
     if (!url || url === 'about:newtab') { this.showNewtab(); return; }
     const tabId = this._activeTabId; if (!tabId) return;
-    this._showingNewtab = false; this._overlayActive = false;
+    this._showingNewtab = false;
     this.newtabPage.classList.remove('active');
     setNavLoading(true); this._navPending = true; this._lastUrl = '';
     this.urlbar.value = url;
     const hist = this.hist.getOrCreate(tabId);
     if (hist.navIdx < hist.navHistory.length - 1) hist.navHistory = hist.navHistory.slice(0, hist.navIdx + 1);
     hist.navHistory.push(url); hist.navIdx = hist.navHistory.length - 1;
-    void this.updateBounds(true);
     if (!this._created.has(tabId)) {
       this._created.add(tabId);
-      invoke<void>('tab_webview_create', { tabId, url }).catch(err => { console.error('[Auralis]', err); setNavLoading(false); });
+      // Le WebView est créé hors-écran ; updateBounds sera appelé depuis content-navigated
+      invoke<void>('tab_webview_create', { tabId, url }).catch(err => { console.error('[Auralis]', err); setNavLoading(false); this._created.delete(tabId); });
     } else {
+      void this.updateBounds(true);
       invoke<void>('tab_webview_navigate', { tabId, url }).catch(err => { console.error('[Auralis]', err); setNavLoading(false); });
     }
   }
@@ -71,7 +72,7 @@ export class BrowserEngine {
       invoke<void>('tab_webview_hide', { tabId: prevId }).catch(() => {});
     this._activeTabId = tabId;
     if (!url || url === 'about:newtab') { this.showNewtab(); return; }
-    this._showingNewtab = false; this._overlayActive = false;
+    this._showingNewtab = false;
     this.newtabPage.classList.remove('active'); this.urlbar.value = url;
     if (this._created.has(tabId)) {
       void this.updateBounds(true);
@@ -81,8 +82,9 @@ export class BrowserEngine {
       setNavLoading(true); this._navPending = true; this._lastUrl = '';
       const hist = this.hist.getOrCreate(tabId);
       if (!hist.navHistory.includes(url)) { hist.navHistory.push(url); hist.navIdx = hist.navHistory.length - 1; }
-      void this.updateBounds(true); this._created.add(tabId);
-      invoke<void>('tab_webview_create', { tabId, url }).catch(err => { console.error('[Auralis]', err); setNavLoading(false); });
+      this._created.add(tabId);
+      // Le WebView est créé hors-écran ; updateBounds sera appelé depuis content-navigated
+      invoke<void>('tab_webview_create', { tabId, url }).catch(err => { console.error('[Auralis]', err); setNavLoading(false); this._created.delete(tabId); });
     }
   }
 
