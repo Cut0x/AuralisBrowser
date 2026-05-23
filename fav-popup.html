@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Auralis Fav Popup</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1020;
+      --border: rgba(255,255,255,.14);
+      --text: #d8dbef;
+      --muted: #9aa0bb;
+      --hover: rgba(255,255,255,.08);
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      user-select: none;
+    }
+    #root {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      box-shadow: 0 12px 32px rgba(0,0,0,.35);
+      overflow: auto;
+      padding: 4px 0;
+      box-sizing: border-box;
+    }
+    .sep {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 6px 14px 2px;
+      border-top: 1px solid var(--border);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      box-sizing: border-box;
+      font-size: 12px;
+    }
+    .item:hover { background: var(--hover); }
+    .item img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .item span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root" role="menu" aria-label="Favoris"></div>
+  <script type="module" src="/src/fav-popup.ts"></script>
+</body>
+</html>
+

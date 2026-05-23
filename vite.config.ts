@@ -25,6 +25,10 @@ export default defineConfig({
     minify: process.env.TAURI_ENV_DEBUG ? false : "oxc",
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        favPopup: 'fav-popup.html',
+      },
       output: {
         manualChunks: undefined,
       },
