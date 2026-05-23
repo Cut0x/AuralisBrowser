@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Default Auralis browser capabilities",
-  "windows": ["main", "console", "fav-popup"],
+  "windows": ["main", "console", "fav-popup", "urlbar-popup"],
   "permissions": [
     "core:default",
     "core:window:allow-close",

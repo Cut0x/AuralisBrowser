@@ -158,6 +158,10 @@ document.getElementById('btn-reload')?.addEventListener('click', () => {
   try { if (!isAuralisPageVisible()) browser.reload(); }
   catch (err) { logError('main.btnReload', 'Erreur pendant action recharger', { err: String(err) }); }
 });
+document.getElementById('btn-home')?.addEventListener('click', () => {
+  try { openUrlInActiveTab('auralis:home'); }
+  catch (err) { logError('main.btnHome', 'Erreur pendant action accueil', { err: String(err) }); }
+});
 
 document.getElementById('btn-new-tab')?.addEventListener('click', () => {
   try {
@@ -171,13 +175,114 @@ document.getElementById('btn-new-tab')?.addEventListener('click', () => {
 });
 
 const urlbar = document.getElementById('urlbar') as HTMLInputElement;
+type UrlbarSuggestion = { title: string; url: string; haystack: string };
+let suggestions: UrlbarSuggestion[] = [];
+let activeSuggestIdx = -1;
+let suggestPopupOpen = false;
+let suppressNextFocusSuggest = false;
+
+function extractSearchTerm(url: string): string {
+  try {
+    const u = new URL(url);
+    const q = u.searchParams.get('q') ?? u.searchParams.get('query') ?? '';
+    return decodeURIComponent(q).trim();
+  } catch {
+    return '';
+  }
+}
+
+async function hideSuggestions(): Promise<void> {
+  activeSuggestIdx = -1;
+  if (!suggestPopupOpen) return;
+  suggestPopupOpen = false;
+  await invoke('urlbar_popup_hide');
+}
+
+function applySuggestion(idx: number): void {
+  const s = suggestions[idx];
+  if (!s) return;
+  urlbar.value = s.url;
+  suppressNextFocusSuggest = true;
+  void hideSuggestions();
+  navigate(s.url);
+}
+
+async function renderSuggestions(items: UrlbarSuggestion[]): Promise<void> {
+  suggestions = items;
+  activeSuggestIdx = -1;
+  if (!items.length) { await hideSuggestions(); return; }
+  const wrap = document.querySelector<HTMLElement>('.urlbar-wrapper');
+  if (!wrap) { await hideSuggestions(); return; }
+  const rect = wrap.getBoundingClientRect();
+  const height = Math.max(56, Math.min(320, items.length * 46 + 12));
+  const winPos = await appWindow.innerPosition();
+  const scale = await appWindow.scaleFactor();
+  const payload = JSON.stringify(items.map((s, i) => ({ title: s.title, url: s.url, selected: i === activeSuggestIdx })));
+  await invoke('urlbar_popup_show', {
+    physicalLeft: winPos.x + Math.round(rect.left * scale),
+    physicalTop: winPos.y + Math.round((rect.bottom + 4) * scale),
+    width: rect.width,
+    height,
+    payload,
+  });
+  suggestPopupOpen = true;
+}
+
+function collectUrlbarSuggestions(query: string): UrlbarSuggestion[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const seen = new Set<string>();
+  const out: UrlbarSuggestion[] = [];
+  for (const h of settings.history) {
+    const queryTerm = extractSearchTerm(h.url);
+    const title = queryTerm ? `Recherche: ${queryTerm}` : (h.title || h.url);
+    const haystack = `${title} ${h.url} ${queryTerm}`.toLowerCase();
+    if (!haystack.includes(q)) continue;
+    if (seen.has(h.url)) continue;
+    seen.add(h.url);
+    out.push({ title, url: h.url, haystack });
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+
+function updateSuggestionsFromInput(): void {
+  if (document.activeElement !== urlbar) {
+    void hideSuggestions();
+    return;
+  }
+  void renderSuggestions(collectUrlbarSuggestions(urlbar.value));
+}
+
 urlbar.addEventListener('keydown', e => {
   try {
-    if (e.key === 'Enter') { navigate(urlbar.value); urlbar.blur(); }
-    else if (e.key === 'Escape') {
+    if (e.key === 'ArrowDown' && suggestions.length) {
+      e.preventDefault();
+      activeSuggestIdx = Math.min(suggestions.length - 1, activeSuggestIdx + 1);
+      void renderSuggestions(suggestions);
+      return;
+    }
+    if (e.key === 'ArrowUp' && suggestions.length) {
+      e.preventDefault();
+      activeSuggestIdx = Math.max(0, activeSuggestIdx - 1);
+      void renderSuggestions(suggestions);
+      return;
+    }
+    if (e.key === 'Enter') {
+      if (activeSuggestIdx >= 0 && suggestions[activeSuggestIdx]) {
+        e.preventDefault();
+        applySuggestion(activeSuggestIdx);
+      } else {
+        navigate(urlbar.value);
+        urlbar.blur();
+      }
+      return;
+    } else if (e.key === 'Escape') {
       const a = tabs.getActive();
       urlbar.value = (a && a.url !== 'about:newtab') ? a.url : '';
+      void hideSuggestions();
       urlbar.blur();
+      return;
     }
   } catch (err) {
     logError('main.urlbar.keydown', 'Erreur pendant traitement clavier URL bar', {
@@ -188,7 +293,32 @@ urlbar.addEventListener('keydown', e => {
   }
 });
 
-urlbar.addEventListener('focus', () => urlbar.select());
+urlbar.addEventListener('focus', () => {
+  urlbar.select();
+  if (suppressNextFocusSuggest) {
+    suppressNextFocusSuggest = false;
+    return;
+  }
+  updateSuggestionsFromInput();
+});
+urlbar.addEventListener('input', () => updateSuggestionsFromInput());
+urlbar.addEventListener('blur', () => { setTimeout(() => { void hideSuggestions(); }, 80); });
+window.addEventListener('resize', () => updateSuggestionsFromInput());
+window.addEventListener('scroll', () => updateSuggestionsFromInput(), true);
+document.addEventListener('pointerdown', ev => {
+  const t = ev.target as HTMLElement | null;
+  if (!t) return;
+  if (t === urlbar || t.closest('.urlbar-wrapper')) return;
+  void hideSuggestions();
+});
+void listen<string>('urlbar-popup-select', event => {
+  const idx = Number.parseInt(event.payload || '-1', 10);
+  if (idx >= 0) applySuggestion(idx);
+});
+void listen('urlbar-popup-hidden', () => {
+  suggestPopupOpen = false;
+  activeSuggestIdx = -1;
+});
 document.getElementById('newtab-searchbar')?.addEventListener('keydown', (e: Event) => {
   try {
     const ev = e as KeyboardEvent;

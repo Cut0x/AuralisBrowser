@@ -28,6 +28,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         favPopup: 'fav-popup.html',
+        urlbarPopup: 'urlbar-popup.html',
       },
       output: {
         manualChunks: undefined,

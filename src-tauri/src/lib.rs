@@ -44,6 +44,39 @@ fn ensure_fav_popup_window(
         .inner_size(280.0, 200.0)
         .resizable(false)
         .decorations(false)
+        .focused(false)
+        .focusable(false)
+        .transparent(true)
+        .visible(false)
+        .skip_taskbar(true)
+        .build()
+        .map_err(|e| e.to_string())
+}
+
+fn ensure_urlbar_popup_window(
+    app: &tauri::AppHandle,
+    parent: Option<&tauri::WebviewWindow>,
+) -> Result<tauri::WebviewWindow, String> {
+    if let Some(win) = app.get_webview_window("urlbar-popup") {
+        return Ok(win);
+    }
+
+    let mut builder = tauri::WebviewWindowBuilder::new(
+        app,
+        "urlbar-popup",
+        tauri::WebviewUrl::App("urlbar-popup.html".into()),
+    );
+    if let Some(p) = parent {
+        builder = builder.parent(p).map_err(|e| e.to_string())?;
+    }
+
+    builder
+        .title("Auralis URL Suggestions")
+        .inner_size(640.0, 220.0)
+        .resizable(false)
+        .decorations(false)
+        .focused(false)
+        .focusable(false)
         .transparent(true)
         .visible(false)
         .skip_taskbar(true)
@@ -93,7 +126,6 @@ fn fav_popup_show(
     win.set_size(tauri::Size::Logical(tauri::LogicalSize::new(width, height)))
         .map_err(|e| e.to_string())?;
     win.show().map_err(|e| e.to_string())?;
-    win.set_focus().map_err(|e| e.to_string())?;
     win.emit("fav-popup-data", payload).map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -101,6 +133,37 @@ fn fav_popup_show(
 #[tauri::command]
 fn fav_popup_hide(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(win) = app.get_webview_window("fav-popup") {
+        win.hide().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn urlbar_popup_show(
+    app: tauri::AppHandle,
+    physical_left: i32,
+    physical_top: i32,
+    width: f64,
+    height: f64,
+    payload: String,
+) -> Result<(), String> {
+    let parent = app.get_webview_window("main");
+    let win = ensure_urlbar_popup_window(&app, parent.as_ref())?;
+    win.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(
+        physical_left,
+        physical_top,
+    )))
+    .map_err(|e| e.to_string())?;
+    win.set_size(tauri::Size::Logical(tauri::LogicalSize::new(width, height)))
+        .map_err(|e| e.to_string())?;
+    win.show().map_err(|e| e.to_string())?;
+    win.emit("urlbar-popup-data", payload).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn urlbar_popup_hide(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(win) = app.get_webview_window("urlbar-popup") {
         win.hide().map_err(|e| e.to_string())?;
     }
     Ok(())
@@ -144,6 +207,8 @@ pub fn run() {
             console_show,
             fav_popup_show,
             fav_popup_hide,
+            urlbar_popup_show,
+            urlbar_popup_hide,
             resolve_deal_url,
             console::console_log,
             console::console_get_logs,
@@ -161,6 +226,7 @@ pub fn run() {
 
             let _ = ensure_console_window(&app.handle())?;
             let _ = ensure_fav_popup_window(&app.handle(), Some(&window))?;
+            let _ = ensure_urlbar_popup_window(&app.handle(), Some(&window))?;
             console::push_app_log(
                 &app.handle(),
                 "info",
