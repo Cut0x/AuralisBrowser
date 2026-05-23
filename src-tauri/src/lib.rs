@@ -227,19 +227,18 @@ pub fn run() {
             window.set_decorations(false)?;
             webview::init_content_webview(&app.handle()).map_err(|e| e.to_string())?;
 
-            let _ = ensure_console_window(&app.handle())?;
-            let _ = ensure_fav_popup_window(&app.handle(), Some(&window))?;
-            let _ = ensure_urlbar_popup_window(&app.handle(), Some(&window))?;
             console::push_app_log(
                 &app.handle(),
                 "info",
                 "app.setup",
-                "Console Auralis initialisee en arriere-plan",
+                "WebViews auxiliaires en mode lazy (creation a la demande)",
                 None,
             );
 
             #[cfg(debug_assertions)]
-            window.open_devtools();
+            if std::env::var("AURALIS_OPEN_DEVTOOLS").ok().as_deref() == Some("1") {
+                window.open_devtools();
+            }
             Ok(())
         })
         .run(tauri::generate_context!())
