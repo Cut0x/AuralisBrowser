@@ -3,7 +3,7 @@ mod sentinel;
 mod title;
 pub mod webview;
 
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 fn ensure_console_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWindow, String> {
     if let Some(win) = app.get_webview_window("console") {
@@ -17,6 +17,36 @@ fn ensure_console_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWindow,
         .decorations(true)
         .resizable(true)
         .visible(false)
+        .build()
+        .map_err(|e| e.to_string())
+}
+
+fn ensure_fav_popup_window(
+    app: &tauri::AppHandle,
+    parent: Option<&tauri::WebviewWindow>,
+) -> Result<tauri::WebviewWindow, String> {
+    if let Some(win) = app.get_webview_window("fav-popup") {
+        return Ok(win);
+    }
+
+    let mut builder = tauri::WebviewWindowBuilder::new(
+        app,
+        "fav-popup",
+        tauri::WebviewUrl::App("fav-popup.html".into()),
+    );
+
+    if let Some(p) = parent {
+        builder = builder.parent(p).map_err(|e| e.to_string())?;
+    }
+
+    builder
+        .title("Auralis Fav Popup")
+        .inner_size(280.0, 200.0)
+        .resizable(false)
+        .decorations(false)
+        .transparent(true)
+        .visible(false)
+        .skip_taskbar(true)
         .build()
         .map_err(|e| e.to_string())
 }
@@ -44,6 +74,38 @@ fn console_show(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn fav_popup_show(
+    app: tauri::AppHandle,
+    physical_left: i32,
+    physical_top: i32,
+    width: f64,
+    height: f64,
+    payload: String,
+) -> Result<(), String> {
+    let parent = app.get_webview_window("main");
+    let win = ensure_fav_popup_window(&app, parent.as_ref())?;
+    win.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(
+        physical_left,
+        physical_top,
+    )))
+        .map_err(|e| e.to_string())?;
+    win.set_size(tauri::Size::Logical(tauri::LogicalSize::new(width, height)))
+        .map_err(|e| e.to_string())?;
+    win.show().map_err(|e| e.to_string())?;
+    win.set_focus().map_err(|e| e.to_string())?;
+    win.emit("fav-popup-data", payload).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn fav_popup_hide(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(win) = app.get_webview_window("fav-popup") {
+        win.hide().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -53,6 +115,8 @@ pub fn run() {
             fetch_page_title,
             open_external,
             console_show,
+            fav_popup_show,
+            fav_popup_hide,
             console::console_log,
             console::console_get_logs,
             webview::content_navigate,
@@ -68,6 +132,7 @@ pub fn run() {
             webview::init_content_webview(&app.handle()).map_err(|e| e.to_string())?;
 
             let _ = ensure_console_window(&app.handle())?;
+            let _ = ensure_fav_popup_window(&app.handle(), Some(&window))?;
             console::push_app_log(
                 &app.handle(),
                 "info",

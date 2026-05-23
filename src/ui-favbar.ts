@@ -1,5 +1,7 @@
 import { truncate, faviconFor, setStatusUrl } from './ui.js';
-import { browser, settings }                 from './state.js';
+import { browser, settings }                from './state.js';
+import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { navigate }                          from './ui-nav.js';
 import { showCtxMenu }                       from './ui-ctx-menu.js';
 import { attachFavbarDrag, attachPopoverDrag } from './ui-favbar-drag.js';
@@ -7,17 +9,29 @@ import type { BookmarkItem, BookmarkFolder } from './storage.js';
 
 let currentPopover: HTMLElement | null = null;
 let currentAnchor:  HTMLElement | null = null;
-let didShiftWebview = false;
+let nativePopupOpen = false;
+let lastClosedFolderId: string | null = null;
+let lastClosedAt = 0;
+const REOPEN_GUARD_MS = 900;
+
+type PopupRow =
+  | { kind: 'folder'; name: string; depth: number }
+  | { kind: 'link'; title: string; url: string; depth: number };
 
 function onGlobalPointerDown(e: PointerEvent): void {
-  if (!currentPopover) return;
   const t = e.target as Node | null;
+  if (nativePopupOpen) {
+    if (t && currentAnchor && currentAnchor.contains(t)) return;
+    closeFolderPopover();
+    return;
+  }
+  if (!currentPopover) return;
   if (t && (currentPopover.contains(t) || (currentAnchor && currentAnchor.contains(t)))) return;
   closeFolderPopover();
 }
 
 function onGlobalKeyDown(e: KeyboardEvent): void {
-  if (e.key === 'Escape' && currentPopover) closeFolderPopover();
+  if (e.key === 'Escape' && (currentPopover || nativePopupOpen)) closeFolderPopover();
 }
 
 export function renderFavBar(): void {
@@ -50,31 +64,67 @@ export function renderFavBar(): void {
 }
 
 export function showFolderPopover(folder: BookmarkFolder, anchor: HTMLElement): void {
-  if (currentPopover && currentAnchor === anchor) { closeFolderPopover(); return; }
+  const folderId = anchor.dataset.bmId ?? folder.id;
+  if (lastClosedFolderId === folderId && Date.now() - lastClosedAt < REOPEN_GUARD_MS) return;
+
+  if ((currentPopover && currentAnchor === anchor) || (nativePopupOpen && currentAnchor === anchor)) {
+    closeFolderPopover();
+    return;
+  }
   closeFolderPopover();
+  currentAnchor = anchor;
+
+  if (browser.canShiftForOverlay) {
+    void showNativeFolderPopup(folder, anchor);
+    document.addEventListener('pointerdown', onGlobalPointerDown, true);
+    document.addEventListener('keydown', onGlobalKeyDown, true);
+    return;
+  }
+
   const pop = document.createElement('div');
   pop.className = 'favbar-popover';
   pop.style.left = '0px'; pop.style.top = '0px';
   renderFolderItems(folder.children, pop, 0, folder.id);
   document.body.appendChild(pop);
-  currentPopover = pop; currentAnchor = anchor;
+  currentPopover = pop;
   const rect = anchor.getBoundingClientRect();
   const pr   = pop.getBoundingClientRect();
-  const pad  = 8, top = rect.bottom + 2;
+  const pad  = 8;
+  const top  = rect.bottom + 2;
   let left = rect.left;
   if (left + pr.width > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - pr.width - pad);
   if (left < pad) left = pad;
   const available = Math.max(80, window.innerHeight - top - pad);
-  pop.style.left = `${left}px`; pop.style.top = `${top}px`; pop.style.maxHeight = `${available}px`;
-  didShiftWebview = false;
-  if (browser.canShiftForOverlay) {
-    const popRect = pop.getBoundingClientRect();
-    const popBottom = Math.min(window.innerHeight - 1, Math.max(top, popRect.bottom));
-    didShiftWebview = true;
-    void browser.shiftBoundsTop(popBottom + 4);
-  }
+  const boundedMax = Math.min(320, available);
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+  pop.style.maxHeight = `${boundedMax}px`;
   document.addEventListener('pointerdown', onGlobalPointerDown, true);
   document.addEventListener('keydown', onGlobalKeyDown, true);
+}
+
+async function showNativeFolderPopup(folder: BookmarkFolder, anchor: HTMLElement): Promise<void> {
+  const rect = anchor.getBoundingClientRect();
+  const pad = 8;
+  const width = 300;
+  let left = rect.left;
+  if (left + width > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - width - pad);
+  if (left < pad) left = pad;
+  const top = rect.bottom + 2;
+  const height = Math.max(90, Math.min(320, window.innerHeight - top - pad));
+  const rows = flattenFolderRows(folder.children, 0);
+  const win = getCurrentWindow();
+  const [innerPos, scale] = await Promise.all([win.innerPosition(), win.scaleFactor()]);
+  const physicalLeft = innerPos.x + Math.round(left * scale);
+  const physicalTop = innerPos.y + Math.round(top * scale);
+  await invoke('fav_popup_show', {
+    physicalLeft,
+    physicalTop,
+    width,
+    height,
+    payload: JSON.stringify(rows),
+  });
+  nativePopupOpen = true;
 }
 
 function renderFolderItems(items: BookmarkItem[], container: HTMLElement, depth: number, topFolderId: string): void {
@@ -103,12 +153,35 @@ function renderFolderItems(items: BookmarkItem[], container: HTMLElement, depth:
 }
 
 export function closeFolderPopover(): void {
-  currentPopover?.remove(); currentPopover = null; currentAnchor = null;
+  const closedId = currentAnchor?.dataset.bmId ?? null;
+  currentPopover?.remove();
+  currentPopover = null;
+  if (nativePopupOpen) {
+    nativePopupOpen = false;
+    void invoke('fav_popup_hide');
+  }
+  if (closedId) {
+    lastClosedFolderId = closedId;
+    lastClosedAt = Date.now();
+  }
+  currentAnchor = null;
   document.removeEventListener('pointerdown', onGlobalPointerDown, true);
   document.removeEventListener('keydown', onGlobalKeyDown, true);
-  if (didShiftWebview) { didShiftWebview = false; browser.restoreFromOverlay(); }
 }
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function flattenFolderRows(items: BookmarkItem[], depth: number): PopupRow[] {
+  const rows: PopupRow[] = [];
+  for (const item of items) {
+    if (item.type === 'folder') {
+      rows.push({ kind: 'folder', name: item.name, depth });
+      rows.push(...flattenFolderRows(item.children, depth + 1));
+    } else {
+      rows.push({ kind: 'link', title: truncate(item.title, 60), url: item.url, depth });
+    }
+  }
+  return rows;
 }

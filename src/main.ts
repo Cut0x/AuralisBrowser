@@ -1,5 +1,6 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
+import { listen, TauriEvent } from '@tauri-apps/api/event';
 import { TabManager } from './tabs.js';
 import { BrowserEngine } from './browser.js';
 import { setLang, applyAll } from './i18n.js';
@@ -108,6 +109,14 @@ renderNewtabFavs();
 initBookmarkHandlers();
 initPasswordHandlers();
 initAppContextMenu();
+
+void listen<string>('fav-popup-open-url', event => {
+  closeFolderPopover();
+  navigate(event.payload);
+});
+void listen('fav-popup-hidden', () => { closeFolderPopover(); });
+void appWindow.listen(TauriEvent.WINDOW_BLUR, () => { closeFolderPopover(); });
+void appWindow.listen(TauriEvent.WINDOW_FOCUS, () => { closeFolderPopover(); });
 
 void browser.ensureEventsReady()
   .then(() => {
@@ -277,6 +286,8 @@ document.addEventListener('keydown', e => {
     }
   }
 });
+
+window.addEventListener('blur', () => { closeFolderPopover(); });
 
 async function checkForUpdates(): Promise<void> {
   try {
