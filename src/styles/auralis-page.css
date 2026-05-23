@@ -80,7 +80,7 @@
 }
 
 .ap-content--home {
-  padding: 20px 28px 36px;
+  padding: 0;
 }
 
 .ap-page-title {
@@ -181,462 +181,583 @@
   margin-bottom: 3px;
 }
 
-.ah-home { max-width: 980px; }
-
-.ah-hero {
-  background: linear-gradient(135deg, rgba(236, 96, 147, 0.14) 0%, rgba(120, 112, 255, 0.14) 100%);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r-lg);
-  padding: 26px;
-  margin-bottom: 18px;
-}
-
-.ah-badge {
-  display: inline-flex;
-  font-size: 11px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  border: 1px solid var(--glass-border);
-  border-radius: 999px;
-  padding: 4px 10px;
-  margin-bottom: 14px;
-}
-
-.ah-title { margin-bottom: 10px; }
-
-.ah-subtitle {
-  margin: 0;
-  color: var(--text-secondary);
-  line-height: 1.55;
-}
-
-.ah-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.ah-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-}
-
-.ah-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r-md);
-  padding: 14px;
-}
-
-.ah-card h3 {
-  margin: 0 0 6px;
-  font-size: 14px;
-  color: var(--text-primary);
-}
-
-.ah-card p {
-  margin: 0;
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
+/* ══════════════════════════════════════════════════════════
+   HOME GX — Nouveau design inspiré Opera GX
+   ══════════════════════════════════════════════════════════ */
 
 .ahx-home {
-  max-width: 1280px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
-.ahx-home-gx {
-  --ahx-cyan: #4dd7ff;
-  --ahx-red: #ff516f;
-}
-
+/* ── Hero ── */
 .ahx-hero {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(120deg, rgba(255, 81, 111, 0.14) 0%, rgba(77, 215, 255, 0.14) 65%),
-    radial-gradient(900px 300px at -5% -35%, rgba(255, 81, 111, 0.16), transparent 70%),
-    radial-gradient(850px 260px at 105% -45%, rgba(77, 215, 255, 0.15), transparent 72%),
-    var(--glass-bg);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
-  padding: 24px;
+  padding: 28px 28px 24px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.ahx-hero-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-base);
+}
+
+.ahx-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.ahx-glow-1 {
+  width: 55%;
+  height: 220%;
+  top: -60%;
+  left: -8%;
+  background: radial-gradient(ellipse, rgba(155, 111, 224, 0.2) 0%, transparent 70%);
+  animation: ahx-drift 22s ease-in-out infinite alternate;
+}
+
+.ahx-glow-2 {
+  width: 45%;
+  height: 200%;
+  top: -50%;
+  right: -5%;
+  background: radial-gradient(ellipse, rgba(232, 88, 122, 0.18) 0%, transparent 70%);
+  animation: ahx-drift 18s ease-in-out infinite alternate-reverse;
+}
+
+.ahx-glow-3 {
+  width: 35%;
+  height: 130%;
+  bottom: -40%;
+  left: 35%;
+  background: radial-gradient(ellipse, rgba(240, 192, 96, 0.09) 0%, transparent 70%);
+  animation: ahx-drift 26s ease-in-out infinite alternate;
+  animation-delay: -8s;
+}
+
+@keyframes ahx-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(18px, -12px) scale(1.06); }
+}
+
+.ahx-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(255, 255, 255, 0.016) 3px,
+    rgba(255, 255, 255, 0.016) 4px
+  );
+}
+
+.ahx-dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.14;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.18) 1px, transparent 0);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.ahx-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+}
+
+.ahx-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 18px;
 }
 
-.ahx-hero-noise {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: .12;
-  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, .22) 1px, transparent 0);
-  background-size: 4px 4px;
-}
-
-.ahx-hero-grid {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: .08;
-  background:
-    linear-gradient(rgba(255, 255, 255, .16) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, .16) 1px, transparent 1px);
-  background-size: 36px 36px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .9), rgba(0, 0, 0, .3));
-}
-
-.ahx-brand {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.ahx-logo {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+.ahx-emblem {
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: linear-gradient(145deg, rgba(16, 20, 30, .5), rgba(16, 20, 30, .22));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), 0 10px 25px rgba(0, 0, 0, .18);
+  background: linear-gradient(145deg, rgba(155, 111, 224, 0.18), rgba(232, 88, 122, 0.12));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  flex-shrink: 0;
 }
 
-.ahx-brand-text {
+.ahx-brand-kicker {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ── Search bar ── */
+.ahx-search-bar {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  background: rgba(8, 12, 22, 0.55);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--r-full);
+  padding: 0 6px 0 18px;
+  gap: 10px;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: border-color var(--t-normal) var(--ease), box-shadow var(--t-normal) var(--ease);
+}
+
+.ahx-search-bar:focus-within {
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 3px var(--accent-rose-glow), 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.ahx-search-ico {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color var(--t-fast) var(--ease);
+}
+
+.ahx-search-bar:focus-within .ahx-search-ico {
+  color: var(--accent-rose);
+}
+
+.ahx-search-field {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--text-primary);
+  caret-color: var(--accent-rose);
+}
+
+.ahx-search-field::placeholder {
+  color: var(--text-muted);
+}
+
+.ahx-search-go {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-full);
+  border: none;
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-violet));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+
+.ahx-search-go:hover  { opacity: 0.88; transform: scale(1.05); }
+.ahx-search-go:active { transform: scale(0.97); }
+
+/* ── Panel (deals section) ── */
+.ahx-panel {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
+  padding: 18px 28px 28px;
 }
 
-.ahx-kicker {
-  margin: 0;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: .15em;
-  color: rgba(255, 255, 255, .7);
-}
-
-.ahx-title {
-  margin: 0;
-  font-size: 34px;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-}
-
-.ahx-subtitle {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.ahx-search {
-  position: relative;
-  z-index: 1;
+/* Toolbar */
+.ahx-toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.ahx-search-input {
-  flex: 1;
-  height: 48px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(8, 12, 20, 0.55);
-  color: var(--text-primary);
-  padding: 0 16px;
-  font-size: 14px;
-}
-
-.ahx-search-input:focus {
-  border-color: rgba(255, 81, 111, 0.6);
-  box-shadow: 0 0 0 3px rgba(255, 81, 111, 0.16);
-}
-
-.ahx-search-btn {
-  height: 48px;
-  border-radius: 999px;
-  padding: 0 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #f7f9fc;
-  background: linear-gradient(130deg, rgba(255, 81, 111, 0.55), rgba(77, 215, 255, 0.42));
-  transition: filter var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
-}
-
-.ahx-search-btn:hover {
-  filter: brightness(1.07);
-  transform: translateY(-1px);
-}
-
-.ahx-stats-row {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.ahx-stat-card {
-  border: 1px solid rgba(255, 255, 255, .14);
-  border-radius: 12px;
-  background: rgba(10, 13, 22, .46);
-  padding: 10px 12px;
-}
-
-.ahx-stat-card p {
-  margin: 0 0 4px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.ahx-stat-card strong {
-  margin: 0;
-  font-size: 18px;
-  color: #f7f9ff;
-}
-
-.ahx-deals-wrap {
-  background: linear-gradient(180deg, rgba(14, 17, 28, .76), rgba(10, 13, 24, .78));
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, .16);
-}
-
-.ahx-deals-head {
-  display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.ahx-deals-head-text {
-  min-width: 240px;
-}
-
-.ahx-deals-title {
-  margin: 0;
-  font-size: 22px;
-  color: var(--text-primary);
-}
-
-.ahx-deals-note {
-  margin: 4px 0 0;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-.ahx-deals-filters {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.ahx-filter-input {
-  width: 240px;
-  max-width: 100%;
-  height: 34px;
-  border-radius: var(--r-sm);
+.ahx-toolbar-l {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ahx-toolbar-r {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ahx-panel-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.ahx-accent-pip {
+  display: inline-block;
+  width: 3px;
+  height: 17px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, var(--accent-rose), var(--accent-violet));
+  flex-shrink: 0;
+}
+
+/* Stats chips */
+.ahx-stats-row {
+  display: flex;
+  gap: 5px;
+}
+
+.ahx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 8px;
+  background: var(--btn-bg);
   border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
+}
+
+.ahx-chip-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ahx-chip-val {
+  font-size: 11.5px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Filter controls */
+.ahx-filter-input {
+  height: 32px;
+  width: 160px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-sm);
   background: var(--input-bg);
   color: var(--text-primary);
   padding: 0 10px;
+  font-size: 12.5px;
+  transition: border-color var(--t-fast) var(--ease);
 }
 
-.ahx-sort {
-  min-width: 170px;
+.ahx-filter-input:focus {
+  border-color: var(--input-border-focus);
+  outline: none;
 }
 
-.ahx-store {
-  min-width: 170px;
-}
-
-.ahx-quick-pills {
+/* Select stylisé avec label intégré */
+.ahx-select-wrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.ahx-pill {
-  height: 30px;
-  border-radius: 999px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(20, 24, 36, .7);
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.ahx-pill:hover {
-  color: #fff;
-  border-color: rgba(255, 81, 111, .45);
-  background: rgba(255, 81, 111, .12);
-}
-
-.ahx-deals-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 10px;
-}
-
-.ahx-loading {
-  margin: 6px 0;
-  color: var(--text-secondary);
-  font-size: 13px;
-}
-
-.ahx-deal-card {
-  display: grid;
-  grid-template-rows: 124px auto;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: linear-gradient(180deg, rgba(21, 25, 37, .94), rgba(14, 18, 28, .96));
-}
-
-.ahx-deal-thumb {
-  width: 100%;
-  height: 124px;
-  object-fit: cover;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.ahx-deal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-}
-
-.ahx-deal-title {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 13px;
-  line-height: 1.35;
-  min-height: 35px;
-}
-
-.ahx-deal-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.ahx-deal-prices {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.ahx-deal-prices strong {
-  color: var(--text-primary);
-  font-size: 17px;
-}
-
-.ahx-deal-prices span {
-  color: var(--text-muted);
-  text-decoration: line-through;
-  font-size: 12px;
-}
-
-.ahx-deal-prices em {
-  margin-left: auto;
-  color: #58d68d;
-  font-style: normal;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.ahx-deal-btn {
-  width: 100%;
-  height: 34px;
+  align-items: stretch;
+  height: 32px;
+  border: 1px solid var(--glass-border);
   border-radius: var(--r-sm);
-  border: 1px solid rgba(255, 255, 255, .14);
-  color: #edf1ff;
-  background: linear-gradient(140deg, rgba(255, 81, 111, .19), rgba(77, 215, 255, .14));
+  overflow: hidden;
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
 
-.ahx-deal-btn:hover {
-  filter: brightness(1.06);
+.ahx-select-wrap:focus-within {
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 2px var(--accent-rose-glow);
 }
 
-.ahx-deals-footer {
-  margin-top: 14px;
+.ahx-select-label {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.ahx-deals-status {
-  margin: 0;
+  padding: 0 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
+  background: var(--btn-bg);
+  border-right: 1px solid var(--glass-border);
+  white-space: nowrap;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.ahx-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 100%;
+  padding: 0 26px 0 9px;
+  background-color: var(--input-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='rgba(255%2C255%2C255%2C0.3)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+  background-size: 10px;
+  border: none;
+  color: var(--text-primary);
   font-size: 12px;
+  cursor: pointer;
+  outline: none;
 }
 
-.ahx-load-more {
-  height: 34px;
+.ahx-select option {
+  background: var(--bg-2);
+  color: var(--text-primary);
+}
+
+.ahx-icon-btn {
+  width: 32px;
+  height: 32px;
   border-radius: var(--r-sm);
-  padding: 0 14px;
-  border: 1px solid rgba(255, 255, 255, .16);
-  background: rgba(20, 24, 36, .85);
-  color: #f2f6ff;
+  border: 1px solid var(--glass-border);
+  background: var(--btn-bg);
+  color: var(--text-secondary);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 
-.ahx-load-more:disabled {
-  opacity: .65;
+.ahx-icon-btn:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
+
+/* Deals grid */
+.ahx-deals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
 }
 
+.ahx-loading-msg {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 12px 0;
+  margin: 0;
+}
+
+/* Deal card */
+.ahx-card {
+  border-radius: var(--r-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  contain: layout paint;
+  cursor: default;
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+
+.ahx-card:hover {
+  border-color: rgba(232, 88, 122, 0.3);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(232, 88, 122, 0.12);
+  transform: translateY(-2px);
+}
+
+.ahx-card-img-wrap {
+  position: relative;
+  height: 130px;
+  overflow: hidden;
+  background: var(--bg-2);
+  flex-shrink: 0;
+}
+
+.ahx-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--t-slow) var(--ease);
+}
+
+.ahx-card:hover .ahx-card-img { transform: scale(1.05); }
+
+.ahx-card-no-img {
+  background: linear-gradient(135deg, var(--bg-2), var(--bg-3));
+}
+
+/* Badges */
+.ahx-badge-discount,
+.ahx-badge-free {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0.03em;
+}
+
+.ahx-badge-discount {
+  background: rgba(22, 163, 74, 0.18);
+  border: 1px solid rgba(74, 222, 128, 0.38);
+  color: #4ade80;
+}
+
+.ahx-badge-free {
+  background: rgba(14, 165, 233, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+/* Card body */
+.ahx-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px 12px 12px;
+  flex: 1;
+}
+
+.ahx-card-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 34px;
+}
+
+.ahx-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.ahx-meta-deal { color: var(--accent-gold); }
+
+.ahx-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-top: auto;
+}
+
+.ahx-price-now {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ahx-price-was {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+  font-variant-numeric: tabular-nums;
+}
+
+.ahx-card-btn {
+  width: 100%;
+  height: 30px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(232, 88, 122, 0.28);
+  background: linear-gradient(135deg, rgba(232, 88, 122, 0.13), rgba(155, 111, 224, 0.09));
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.ahx-card-btn:hover {
+  background: linear-gradient(135deg, rgba(232, 88, 122, 0.24), rgba(155, 111, 224, 0.16));
+  border-color: rgba(232, 88, 122, 0.5);
+}
+
+/* Panel footer */
+.ahx-panel-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.ahx-status {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.ahx-more-btn {
+  width: 100%;
+  max-width: 380px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(232, 88, 122, 0.28);
+  background: linear-gradient(135deg, rgba(232, 88, 122, 0.08), rgba(155, 111, 224, 0.06));
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    background var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease);
+}
+
+.ahx-more-btn:hover:not(:disabled) {
+  border-color: rgba(232, 88, 122, 0.55);
+  background: linear-gradient(135deg, rgba(232, 88, 122, 0.16), rgba(155, 111, 224, 0.11));
+  color: var(--text-primary);
+  box-shadow: 0 0 20px rgba(232, 88, 122, 0.14);
+}
+
+.ahx-more-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Responsive ── */
 @media (max-width: 860px) {
-  .ap-content {
-    padding: 22px 18px 30px;
-  }
+  .ap-content { padding: 22px 18px 30px; }
 
-  .ap-content--home {
-    padding: 14px 12px 24px;
-  }
+  .ahx-hero { padding: 18px 16px 16px; }
 
-  .ahx-deals-head {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  .ahx-panel { padding: 14px 16px 22px; }
 
-  .ahx-deals-filters {
-    width: 100%;
-  }
+  .ahx-toolbar { flex-direction: column; align-items: stretch; }
 
-  .ahx-filter-input {
-    width: 100%;
-  }
+  .ahx-toolbar-r { flex-wrap: wrap; }
 
-  .ahx-stats-row {
-    grid-template-columns: 1fr;
-  }
+  .ahx-filter-input { width: 100%; }
 
-  .ahx-title {
-    font-size: 30px;
-  }
-
-  .ahx-search {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .ahx-deals-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  .ahx-panel-foot { flex-direction: column; align-items: stretch; }
 }
