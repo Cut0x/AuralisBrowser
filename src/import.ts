@@ -6,6 +6,19 @@
 
 import type { BookmarkItem, BookmarkLink, BookmarkFolder } from './storage.js';
 
+const ROOT_TOOLBAR_FOLDER_NAMES = new Set([
+  'barre de favoris',
+  'barre personnelle',
+  'bookmarks bar',
+  'bookmarks toolbar',
+  'favorites bar',
+  'toolbar bookmarks',
+  'barra de favoritos',
+  'barra dos favoritos',
+  'barra dei preferiti',
+  'favoritenleiste',
+]);
+
 /** Parse un fichier de favoris HTML Netscape et retourne un arbre de favoris. */
 export function parseNetscapeBookmarks(html: string): BookmarkItem[] {
   const parser = new DOMParser();
@@ -21,7 +34,7 @@ export function parseNetscapeBookmarks(html: string): BookmarkItem[] {
     });
     return items;
   }
-  return parseDL(rootDL);
+  return normalizeImportedRoot(parseDL(rootDL));
 }
 
 function parseDL(dl: Element): BookmarkItem[] {
@@ -132,4 +145,19 @@ function renderDL(items: BookmarkItem[], lines: string[], depth: number): void {
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function normalizeImportedRoot(items: BookmarkItem[]): BookmarkItem[] {
+  let current = items;
+  // Certains exports (Chrome/Edge/Firefox) encapsulent tout dans une racine
+  // "Barre de favoris". On la déplie pour éviter un gros dossier unique.
+  while (current.length === 1 && current[0].type === 'folder' && isToolbarRootFolder(current[0])) {
+    current = current[0].children;
+  }
+  return current;
+}
+
+function isToolbarRootFolder(folder: BookmarkFolder): boolean {
+  const normalized = folder.name.trim().toLowerCase();
+  return ROOT_TOOLBAR_FOLDER_NAMES.has(normalized);
 }

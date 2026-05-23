@@ -66,9 +66,11 @@ export function showFolderPopover(folder: BookmarkFolder, anchor: HTMLElement): 
   if (left < pad) left = pad;
   const available = Math.max(80, window.innerHeight - top - pad);
   pop.style.left = `${left}px`; pop.style.top = `${top}px`; pop.style.maxHeight = `${available}px`;
-  didShiftWebview = browser.canShiftForOverlay;
-  if (didShiftWebview) {
-    const popBottom = top + Math.min(pr.height, available);
+  didShiftWebview = false;
+  if (browser.canShiftForOverlay) {
+    const popRect = pop.getBoundingClientRect();
+    const popBottom = Math.min(window.innerHeight - 1, Math.max(top, popRect.bottom));
+    didShiftWebview = true;
     void browser.shiftBoundsTop(popBottom + 4);
   }
   document.addEventListener('pointerdown', onGlobalPointerDown, true);

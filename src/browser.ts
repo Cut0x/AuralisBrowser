@@ -237,12 +237,15 @@ export class BrowserEngine {
     try {
       this._overlayActive = true;
       this._webviewVisible = true;
+      const safeTop = Math.max(0, Math.min(Math.round(newTop), Math.max(0, Math.round(window.innerHeight) - 1)));
+      const safeWidth = Math.max(1, Math.round(window.innerWidth));
+      const safeHeight = Math.max(1, Math.round(window.innerHeight - safeTop));
       await invoke<void>('content_set_bounds', {
-        top: newTop,
-        width: window.innerWidth,
-        height: Math.max(1, window.innerHeight - newTop),
+        top: safeTop,
+        width: safeWidth,
+        height: safeHeight,
       }).catch(err => {
-        logError('browser.shiftBoundsTop', 'Impossible de decaler la zone WebView', { top: newTop, err: String(err) });
+        logError('browser.shiftBoundsTop', 'Impossible de decaler la zone WebView', { top: safeTop, err: String(err) });
       });
     } catch (err) {
       logError('browser.shiftBoundsTop', 'Erreur inattendue pendant shiftBoundsTop', { top: newTop, err: String(err) });
@@ -259,11 +262,13 @@ export class BrowserEngine {
         });
         return;
       }
-      const top = chrome.getBoundingClientRect().bottom;
+      const top = Math.max(0, Math.round(chrome.getBoundingClientRect().bottom));
+      const width = Math.max(1, Math.round(window.innerWidth));
+      const height = Math.max(1, Math.round(window.innerHeight - top));
       await invoke<void>('content_set_bounds', {
         top,
-        width: window.innerWidth,
-        height: Math.max(1, window.innerHeight - top),
+        width,
+        height,
       }).catch(err => {
         logError('browser.updateBounds.show', 'Impossible d afficher la WebView', { top, err: String(err) });
       });
