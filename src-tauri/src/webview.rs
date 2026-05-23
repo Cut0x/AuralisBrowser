@@ -1,10 +1,43 @@
 use crate::{console, sentinel, title};
+use std::sync::{Mutex, OnceLock};
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl};
 
-const CONTENT_LABEL: &str = "content";
+const CONTENT_PREFIX: &str = "content-tab-";
 
-fn find_content_webview<R: tauri::Runtime>(app: &AppHandle<R>) -> Option<tauri::Webview<R>> {
-    app.get_webview(CONTENT_LABEL)
+static ACTIVE_WEBVIEW_LABEL: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+
+fn active_webview_label_store() -> &'static Mutex<Option<String>> {
+    ACTIVE_WEBVIEW_LABEL.get_or_init(|| Mutex::new(None))
+}
+
+fn sanitize_tab_id(tab_id: &str) -> String {
+    tab_id
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | ':' | '/') {
+                c
+            } else {
+                '-'
+            }
+        })
+        .collect()
+}
+
+fn tab_label(tab_id: &str) -> String {
+    format!("{CONTENT_PREFIX}{}", sanitize_tab_id(tab_id))
+}
+
+fn set_active_label(label: Option<String>) {
+    if let Ok(mut guard) = active_webview_label_store().lock() {
+        *guard = label;
+    }
+}
+
+fn get_active_label() -> Option<String> {
+    active_webview_label_store()
+        .lock()
+        .ok()
+        .and_then(|g| g.clone())
 }
 
 fn log_err<R: tauri::Runtime>(
@@ -16,33 +49,50 @@ fn log_err<R: tauri::Runtime>(
     console::push_app_log(app, "error", source, err, details);
 }
 
-pub fn init_content_webview(app: &AppHandle) -> Result<(), String> {
-    if find_content_webview(app).is_some() {
-        return Ok(());
+fn emit_content_url(app: &AppHandle, event: &str, tab_id: &str, url: &str) {
+    let _ = app.emit(
+        event,
+        serde_json::json!({
+            "tabId": tab_id,
+            "url": url,
+        }),
+    );
+}
+
+fn ensure_tab_webview(app: &AppHandle, tab_id: &str) -> Result<tauri::Webview, String> {
+    let label = tab_label(tab_id);
+    if let Some(wv) = app.get_webview(&label) {
+        return Ok(wv);
     }
 
     let main_window = app.get_window("main").ok_or_else(|| {
         let msg = "main window introuvable".to_string();
-        log_err(app, "rust.webview.init.main_window", &msg, None);
+        log_err(app, "rust.webview.ensure.main_window", &msg, None);
         msg
     })?;
 
     let h_nav = app.clone();
     let h_load = app.clone();
+    let tab_for_nav = tab_id.to_string();
+    let tab_for_load = tab_id.to_string();
+    let label_for_log = label.clone();
 
-    main_window
+    let webview = main_window
         .add_child(
             tauri::webview::WebviewBuilder::new(
-                CONTENT_LABEL,
-                WebviewUrl::External(tauri::Url::parse("about:blank").unwrap()),
+                label.as_str(),
+                WebviewUrl::External(
+                    tauri::Url::parse("about:blank")
+                        .map_err(|e| format!("impossible de parser about:blank: {e}"))?,
+                ),
             )
             .on_navigation(move |nav_url| {
                 let s = nav_url.to_string();
-                if sentinel::handle_sentinel(&s, &h_nav) {
+                if sentinel::handle_sentinel(&s, &h_nav, Some(&tab_for_nav)) {
                     return false;
                 }
                 if !s.is_empty() && s != "about:blank" {
-                    let _ = h_nav.emit("content-navigated", s);
+                    emit_content_url(&h_nav, "content-navigated", &tab_for_nav, &s);
                 }
                 true
             })
@@ -51,7 +101,7 @@ pub fn init_content_webview(app: &AppHandle) -> Result<(), String> {
                 let url_str = payload.url().to_string();
 
                 if sentinel::is_sentinel(&url_str) {
-                    sentinel::handle_sentinel(&url_str, &h_load);
+                    sentinel::handle_sentinel(&url_str, &h_load, Some(&tab_for_load));
                     return;
                 }
 
@@ -61,11 +111,13 @@ pub fn init_content_webview(app: &AppHandle) -> Result<(), String> {
 
                 match payload.event() {
                     PageLoadEvent::Started => {
-                        let _ = h_load.emit("content-navigated", url_str.clone());
+                        emit_content_url(&h_load, "content-loaded-started", &tab_for_load, &url_str);
+                        emit_content_url(&h_load, "content-navigated", &tab_for_load, &url_str);
                     }
                     PageLoadEvent::Finished => {
-                        let _ = h_load.emit("content-loaded", url_str.clone());
+                        emit_content_url(&h_load, "content-loaded", &tab_for_load, &url_str);
                         let h2 = h_load.clone();
+                        let tab2 = tab_for_load.clone();
                         let u2 = url_str;
                         tauri::async_runtime::spawn(async move {
                             let t = title::fetch_title_inner(&u2).await;
@@ -73,7 +125,9 @@ pub fn init_content_webview(app: &AppHandle) -> Result<(), String> {
                                 let _ = h2.emit(
                                     "content-title",
                                     serde_json::json!({
-                                        "url": u2, "title": t,
+                                        "tabId": tab2,
+                                        "url": u2,
+                                        "title": t,
                                     }),
                                 );
                             } else {
@@ -89,62 +143,200 @@ pub fn init_content_webview(app: &AppHandle) -> Result<(), String> {
                     }
                 }
             }),
-            tauri::LogicalPosition::new(0.0, 82.0),
-            tauri::LogicalSize::new(1280.0, 738.0),
+            tauri::LogicalPosition::new(0.0, 9999.0),
+            tauri::LogicalSize::new(1.0, 1.0),
         )
-        .map(|_| ())
         .map_err(|e| {
             let msg = e.to_string();
             log_err(
                 app,
-                "rust.webview.init.add_child",
+                "rust.webview.ensure.add_child",
                 &msg,
-                Some("label=content".to_string()),
+                Some(format!("label={label_for_log}")),
+            );
+            msg
+        })?;
+
+    webview.hide().map_err(|e| {
+        let msg = e.to_string();
+        log_err(
+            app,
+            "rust.webview.ensure.hide",
+            &msg,
+            Some(format!("label={label_for_log}")),
+        );
+        msg
+    })?;
+
+    Ok(webview)
+}
+
+fn set_webview_bounds(
+    app: &AppHandle,
+    webview: &tauri::Webview,
+    top: f64,
+    width: f64,
+    height: f64,
+) -> Result<(), String> {
+    webview
+        .set_bounds(tauri::Rect {
+            position: tauri::Position::Logical(tauri::LogicalPosition::new(0.0, top)),
+            size: tauri::Size::Logical(tauri::LogicalSize::new(width, height)),
+        })
+        .map_err(|e| {
+            let msg = e.to_string();
+            log_err(
+                app,
+                "rust.webview.set_bounds",
+                &msg,
+                Some(format!(
+                    "label={} top={top} width={width} height={height}",
+                    webview.label()
+                )),
             );
             msg
         })
 }
 
+pub fn init_content_webview(_app: &AppHandle) -> Result<(), String> {
+    Ok(())
+}
+
 #[tauri::command]
-pub fn content_navigate(app: AppHandle, url: String) -> Result<(), String> {
-    let wv = find_content_webview(&app).ok_or_else(|| {
-        let msg = "webview content introuvable".to_string();
+pub async fn content_tab_ensure(app: AppHandle, tab_id: String) -> Result<(), String> {
+    if tab_id.trim().is_empty() {
+        return Err("tab_id vide".to_string());
+    }
+    let _ = ensure_tab_webview(&app, tab_id.trim())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn content_tab_activate(
+    app: AppHandle,
+    tab_id: String,
+    top: f64,
+    width: f64,
+    height: f64,
+) -> Result<(), String> {
+    let trimmed = tab_id.trim();
+    if trimmed.is_empty() {
+        return Err("tab_id vide".to_string());
+    }
+
+    let next_label = tab_label(trimmed);
+    if let Some(prev_label) = get_active_label() {
+        if prev_label != next_label {
+            if let Some(prev) = app.get_webview(&prev_label) {
+                let _ = prev.hide();
+                let _ = set_webview_bounds(&app, &prev, 9999.0, 1.0, 1.0);
+            }
+        }
+    }
+
+    let current = ensure_tab_webview(&app, trimmed)?;
+    set_webview_bounds(&app, &current, top, width, height)?;
+    current.show().map_err(|e| {
+        let msg = e.to_string();
         log_err(
             &app,
-            "rust.webview.content_navigate.find",
+            "rust.webview.content_tab_activate.show",
             &msg,
-            Some(url.clone()),
+            Some(format!("label={next_label}")),
         );
         msg
     })?;
+    set_active_label(Some(next_label));
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn content_tab_close(app: AppHandle, tab_id: String) -> Result<(), String> {
+    let trimmed = tab_id.trim();
+    if trimmed.is_empty() {
+        return Ok(());
+    }
+    let label = tab_label(trimmed);
+    if let Some(wv) = app.get_webview(&label) {
+        wv.close().map_err(|e| {
+            let msg = e.to_string();
+            log_err(
+                &app,
+                "rust.webview.content_tab_close.close",
+                &msg,
+                Some(format!("label={label}")),
+            );
+            msg
+        })?;
+    }
+    if get_active_label().as_deref() == Some(label.as_str()) {
+        set_active_label(None);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn content_navigate(app: AppHandle, tab_id: String, url: String) -> Result<(), String> {
+    let trimmed = tab_id.trim();
+    if trimmed.is_empty() {
+        return Err("tab_id vide".to_string());
+    }
+    let wv = ensure_tab_webview(&app, trimmed)?;
     let src = if url.is_empty() { "about:blank" } else { &url };
-    let parsed = tauri::Url::parse(src).map_err(|e| {
+    tauri::Url::parse(src).map_err(|e| {
         let msg = format!("url invalide: {e}");
         log_err(
             &app,
             "rust.webview.content_navigate.parse_url",
             &msg,
-            Some(url.clone()),
+            Some(format!("tab_id={trimmed} url={url}")),
         );
         msg
     })?;
-    wv.navigate(parsed).map_err(|e| {
+
+    let js_url = serde_json::to_string(src).map_err(|e| {
+        let msg = format!("serialisation url impossible: {e}");
+        log_err(
+            &app,
+            "rust.webview.content_navigate.serialize_url",
+            &msg,
+            Some(format!("tab_id={trimmed} url={url}")),
+        );
+        msg
+    })?;
+    let nav_js = format!("window.location.href = {js_url};");
+    wv.eval(&nav_js).map_err(|e| {
         let msg = e.to_string();
         log_err(
             &app,
-            "rust.webview.content_navigate.navigate",
+            "rust.webview.content_navigate.eval",
             &msg,
-            Some(url),
+            Some(format!("tab_id={trimmed} url={url}")),
         );
         msg
-    })
+    })?;
+
+    if !src.is_empty() && src != "about:blank" {
+        emit_content_url(&app, "content-navigated", trimmed, src);
+    }
+    Ok(())
 }
 
 #[tauri::command]
-pub fn content_eval(app: AppHandle, js: String) -> Result<(), String> {
-    let wv = find_content_webview(&app).ok_or_else(|| {
+pub async fn content_eval(app: AppHandle, tab_id: String, js: String) -> Result<(), String> {
+    let trimmed = tab_id.trim();
+    if trimmed.is_empty() {
+        return Err("tab_id vide".to_string());
+    }
+    let label = tab_label(trimmed);
+    let wv = app.get_webview(&label).ok_or_else(|| {
         let msg = "webview content introuvable".to_string();
-        log_err(&app, "rust.webview.content_eval.find", &msg, None);
+        log_err(
+            &app,
+            "rust.webview.content_eval.find",
+            &msg,
+            Some(format!("tab_id={trimmed} label={label}")),
+        );
         msg
     })?;
     wv.eval(&js).map_err(|e| {
@@ -153,36 +345,49 @@ pub fn content_eval(app: AppHandle, js: String) -> Result<(), String> {
             &app,
             "rust.webview.content_eval.eval",
             &msg,
-            Some(format!("js_len={}", js.len())),
+            Some(format!("tab_id={trimmed} js_len={}", js.len())),
         );
         msg
     })
 }
 
 #[tauri::command]
-pub fn content_reload(app: AppHandle) -> Result<(), String> {
-    content_eval(app, "window.location.reload()".to_string())
-}
-
-#[tauri::command]
-pub fn content_set_bounds(app: AppHandle, top: f64, width: f64, height: f64) -> Result<(), String> {
-    let wv = find_content_webview(&app).ok_or_else(|| {
+pub async fn content_reload(app: AppHandle, tab_id: String) -> Result<(), String> {
+    let trimmed = tab_id.trim();
+    if trimmed.is_empty() {
+        return Err("tab_id vide".to_string());
+    }
+    let label = tab_label(trimmed);
+    let wv = app.get_webview(&label).ok_or_else(|| {
         let msg = "webview content introuvable".to_string();
-        log_err(&app, "rust.webview.content_set_bounds.find", &msg, None);
+        log_err(
+            &app,
+            "rust.webview.content_reload.find",
+            &msg,
+            Some(format!("tab_id={trimmed} label={label}")),
+        );
         msg
     })?;
-    wv.set_bounds(tauri::Rect {
-        position: tauri::Position::Logical(tauri::LogicalPosition::new(0.0, top)),
-        size: tauri::Size::Logical(tauri::LogicalSize::new(width, height)),
-    })
-    .map_err(|e| {
+    wv.reload().map_err(|e| {
         let msg = e.to_string();
         log_err(
             &app,
-            "rust.webview.content_set_bounds.set_bounds",
+            "rust.webview.content_reload.reload",
             &msg,
-            Some(format!("top={top} width={width} height={height}")),
+            Some(format!("tab_id={trimmed}")),
         );
         msg
     })
+}
+
+#[tauri::command]
+pub async fn content_set_bounds(app: AppHandle, top: f64, width: f64, height: f64) -> Result<(), String> {
+    let Some(active_label) = get_active_label() else {
+        return Ok(());
+    };
+    let Some(wv) = app.get_webview(&active_label) else {
+        set_active_label(None);
+        return Ok(());
+    };
+    set_webview_bounds(&app, &wv, top, width, height)
 }
