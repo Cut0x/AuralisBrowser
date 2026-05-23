@@ -1,7 +1,7 @@
 # Auralis Browser 1.0.0
 
 Auralis est un navigateur desktop construit avec Tauri 2, Rust et TypeScript.
-Cette version inclut la navigation interne `auralis:*`, le démarrage de bienvenue et un moteur WebView stabilisé.
+Cette version inclut la navigation interne `auralis:*`, la page d'accueil `auralis:home` et un moteur WebView stabilisé.
 
 ## Fonctionnalités principales
 
@@ -10,16 +10,26 @@ Cette version inclut la navigation interne `auralis:*`, le démarrage de bienven
   - `auralis:settings`
   - `auralis:settings/apparence`
   - `auralis:settings/moteur`
-  - `auralis:settings/demarrage`
+  - `auralis:settings/démarrage`
   - `auralis:settings/favoris`
   - `auralis:settings/historique`
-  - `auralis:settings/securite`
+  - `auralis:settings/sécurité`
   - `auralis:settings/cache`
-  - `auralis:settings/a-propos`
-- Page d'accueil interne `auralis:home`.
+  - `auralis:settings/à-propos`
+- Page `auralis:home` orientée "internet" :
+  - logo + marque Auralis
+  - barre de recherche
+  - deals jeux vidéo intégrés en direct
 - Première ouverture redirigée vers `https://auralisbrowser.fr/welcome`.
 - Console Auralis disponible au clic droit via l'entrée `Console Auralis`.
 - Fenêtre console cachée par défaut au lancement.
+
+## API externe utilisée
+
+- CheapShark API :
+  - endpoint deals : `https://www.cheapshark.com/api/1.0/deals`
+  - utilisée pour alimenter les deals affichés sur `auralis:home`
+- Au clic sur un deal, Auralis résout l'URL finale marchand côté Rust avant navigation, afin d'ouvrir directement la destination finale (Steam ou autre store) quand possible.
 
 ## Architecture
 
@@ -28,7 +38,7 @@ Cette version inclut la navigation interne `auralis:*`, le démarrage de bienven
   - `browser.ts` : orchestration WebView et navigation
   - `browser-events.ts` : écoute des événements Tauri
   - `internal-pages.ts` : parsing et normalisation des routes `auralis:*`
-  - `ui-settings.ts` : rendu des pages internes
+  - `ui-settings.ts` : rendu des pages internes (`auralis:home`, `auralis:settings/*`)
 - `src-tauri/`
   - `src/lib.rs` : initialisation Tauri et commandes Rust
   - `src/webview.rs` : WebView de contenu unique et événements de navigation
@@ -103,3 +113,4 @@ Si la navigation ne charge pas :
 ## Licence
 
 MIT
+
