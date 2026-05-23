@@ -1,4 +1,4 @@
-# Auralis Browser 1.1.0
+# Auralis Browser 1.2.0-beta
 
 Auralis est un navigateur desktop construit avec Tauri 2, Rust et TypeScript.
 Cette version inclut la navigation interne `auralis:*`, la page d'accueil `auralis:home` et un moteur WebView stabilisé.
@@ -88,7 +88,7 @@ npm run tauri:build
 Sortie :
 
 ```text
-src-tauri\target\release\bundle\nsis\Auralis_1.1.0_x64-setup.exe
+src-tauri\target\release\bundle\nsis\Auralis_1.2.0-beta_x64-setup.exe
 ```
 
 ## Installation Windows

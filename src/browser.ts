@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { setNavLoading, setNavState, toast } from './ui.js';
+import { setNavLoading, setNavState, toast, displayHostname, faviconFor } from './ui.js';
 import { HistManager } from './browser-history.js';
 import { initBrowserEvents } from './browser-events.js';
 import { logError } from './logger.js';
@@ -23,7 +23,9 @@ export class BrowserEngine {
   _webviewVisible = false;
   _navPending = false;
   _lastUrl = '';
-  _contentUrl = '';
+  _activeContentTabId: string | null = null;
+  _contentUrlByTab = new Map<string, string>();
+  _knownWebviews = new Set<string>();
   _loadGuardTimer: number | null = null;
   _onNavigate!: NavCallback;
   _onNewTab?: NewTabCallback;
@@ -100,21 +102,30 @@ export class BrowserEngine {
       }
 
       const hist = this.hist.getOrCreate(tabId);
-      if (this._contentUrl === url) {
-        this._showingNewtab = false;
-        this._overlayActive = false;
-        this.newtabPage.classList.remove('active');
-        this.urlbar.value = url;
-        this.clearLoadingGuard();
-        this._navPending = false;
-        this._lastUrl = url;
-        setNavLoading(false);
-        setNavState(hist.navIdx > 0, hist.navIdx < hist.navHistory.length - 1);
-        void this.updateBounds(true);
-        return;
-      }
+      setNavState(hist.navIdx > 0, hist.navIdx < hist.navHistory.length - 1);
+      this.urlbar.value = url;
+      this._showingNewtab = false;
+      this._overlayActive = false;
+      this.newtabPage.classList.remove('active');
+      this.clearLoadingGuard();
+      this._navPending = false;
+      this._lastUrl = url;
+      setNavLoading(false);
 
-      this.navigateToExternal(url, false);
+      const top = Math.max(0, Math.round(document.getElementById('browser-chrome')!.getBoundingClientRect().bottom));
+      const width = Math.max(1, Math.round(window.innerWidth));
+      const height = Math.max(1, Math.round(window.innerHeight - top));
+      invoke<void>('content_tab_activate', { tabId, top, width, height }).then(() => {
+        this._activeContentTabId = tabId;
+        this._knownWebviews.add(tabId);
+        void this.updateBounds(true);
+      }).catch(err => {
+        logError('browser.showTabUrl.activate', 'Activation de la WebView onglet impossible', { tabId, err: String(err) });
+      });
+
+      if (this._contentUrlByTab.get(tabId) !== url) {
+        this.navigateToExternal(url, false);
+      }
     } catch (err) {
       setNavLoading(false);
       logError('browser.showTabUrl', 'Erreur inattendue pendant showTabUrl', { tabId, url, err: String(err) });
@@ -124,9 +135,12 @@ export class BrowserEngine {
   closeTabWebview(tabId: string): void {
     try {
       this.hist.delete(tabId);
-      if (this._activeTabId === tabId) {
-        this._contentUrl = '';
-      }
+      this._contentUrlByTab.delete(tabId);
+      this._knownWebviews.delete(tabId);
+      if (this._activeContentTabId === tabId) this._activeContentTabId = null;
+      invoke<void>('content_tab_close', { tabId }).catch(err => {
+        logError('browser.closeTabWebview.close', 'Fermeture WebView onglet impossible', { tabId, err: String(err) });
+      });
     } catch (err) {
       logError('browser.closeTabWebview', 'Erreur inattendue pendant closeTabWebview', { tabId, err: String(err) });
     }
@@ -158,13 +172,15 @@ export class BrowserEngine {
 
   reload(): void {
     try {
+      const tabId = this._activeTabId;
+      if (!tabId) return;
       const url = this.currentUrl();
       if (!url || url === 'about:newtab' || isInternalUrl(url)) return;
       setNavLoading(true);
       this._navPending = true;
       this._lastUrl = '';
       this.startLoadingGuard(url);
-      invoke<void>('content_reload').catch(err => {
+      invoke<void>('content_reload', { tabId }).catch(err => {
         this.reportWebviewFailure('browser.reload', 'Rechargement impossible', url, err);
       });
     } catch (err) {
@@ -195,7 +211,9 @@ export class BrowserEngine {
 
   eval(js: string): void {
     try {
-      invoke<void>('content_eval', { js }).catch(err => {
+      const tabId = this._activeTabId;
+      if (!tabId) return;
+      invoke<void>('content_eval', { tabId, js }).catch(err => {
         logError('browser.eval', 'Injection JS impossible', { jsLength: js.length, err: String(err) });
       });
     } catch (err) {
@@ -228,6 +246,22 @@ export class BrowserEngine {
       setNavLoading(false);
       logError('browser.loadingGuard.timeout', 'Aucun event de navigation recu dans le delai', { url });
     }, 12000);
+  }
+
+  private markNavigationObserved(tabId: string, url: string): void {
+    this._contentUrlByTab.set(tabId, url);
+    this._navPending = false;
+    this._lastUrl = url;
+    this.clearLoadingGuard();
+    setNavLoading(false);
+
+    if (this._activeTabId !== tabId || this._showingNewtab) return;
+    const hist = this.hist.getOrCreate(tabId);
+    const canBack = hist.navIdx > 0;
+    const canForward = hist.navIdx < hist.navHistory.length - 1;
+    setNavState(canBack, canForward);
+    this.urlbar.value = url;
+    this._onNavigate({ url, title: displayHostname(url), favicon: faviconFor(url), canBack, canForward });
   }
 
   parkForOverlay(): void { this._overlayActive = true; void this.updateBounds(false); }
@@ -299,13 +333,26 @@ export class BrowserEngine {
       hist.navIdx = hist.navHistory.length - 1;
     }
 
+    const top = Math.max(0, Math.round(document.getElementById('browser-chrome')!.getBoundingClientRect().bottom));
+    const width = Math.max(1, Math.round(window.innerWidth));
+    const height = Math.max(1, Math.round(window.innerHeight - top));
     void this.updateBounds(true);
-    invoke<void>('content_navigate', { url }).catch(err => {
-      this.reportWebviewFailure('browser.navigateToExternal', 'Navigation WebView impossible', url, err);
-    });
+    invoke<void>('content_tab_activate', { tabId, top, width, height })
+      .then(() => {
+        this._activeContentTabId = tabId;
+        this._knownWebviews.add(tabId);
+        void this.updateBounds(true);
+        this.markNavigationObserved(tabId, url);
+        return invoke<void>('content_navigate', { tabId, url });
+      })
+      .catch(err => {
+        this.reportWebviewFailure('browser.navigateToExternal', 'Navigation WebView impossible', url, err);
+      });
   }
 
   private reportWebviewFailure(source: string, message: string, url: string, err: unknown): void {
+    this._navPending = false;
+    this.clearLoadingGuard();
     setNavLoading(false);
     const errorText = String(err);
     logError(source, message, { tabId: this._activeTabId, url, err: errorText });
