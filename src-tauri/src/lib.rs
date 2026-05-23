@@ -106,6 +106,33 @@ fn fav_popup_hide(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn resolve_deal_url(deal_id: String) -> Result<String, String> {
+    let trimmed = deal_id.trim();
+    if trimmed.is_empty() {
+        return Ok(String::new());
+    }
+
+    let redirect_url = format!("https://www.cheapshark.com/redirect?dealID={trimmed}");
+    let client = reqwest::Client::builder()
+        .user_agent(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
+             (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        )
+        .timeout(std::time::Duration::from_secs(10))
+        .redirect(reqwest::redirect::Policy::limited(10))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let response = client
+        .get(&redirect_url)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(response.url().to_string())
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -117,6 +144,7 @@ pub fn run() {
             console_show,
             fav_popup_show,
             fav_popup_hide,
+            resolve_deal_url,
             console::console_log,
             console::console_get_logs,
             webview::content_navigate,
