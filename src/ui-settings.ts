@@ -82,7 +82,7 @@ type DealSort = 'DealRating' | 'Savings' | 'Price' | 'Recent';
 
 
 
-const HOME_DEALS_PAGE_SIZE = 36;
+const HOME_DEALS_PAGE_SIZE = 24;
 
 
 
@@ -973,22 +973,31 @@ function renderPageMoteur(el: HTMLElement): void {
 function renderPageDemarrage(el: HTMLElement): void {
 
   const hp = settings.homepage === 'about:newtab' ? '' : settings.homepage;
+  const maxLiveTabs = Number.isFinite(settings.maxLiveTabs) ? settings.maxLiveTabs : 3;
 
-  el.innerHTML = `<h2 class="ap-page-title">${t('settings.demarrage')}</h2><div class="ap-group"><div class="ap-group-title">${t('settings.homepage_url')}</div><div class="ap-row ap-row--col"><label class="ap-label" for="ap-homepage">${t('settings.homepage_url')}</label><input type="text" id="ap-homepage" class="setting-input" value="${hp.replace(/"/g, '&quot;')}" placeholder="auralis:home"/></div></div>`;
+  el.innerHTML = `<h2 class="ap-page-title">${t('settings.demarrage')}</h2><div class="ap-group"><div class="ap-group-title">${t('settings.homepage_url')}</div><div class="ap-row ap-row--col"><label class="ap-label" for="ap-homepage">${t('settings.homepage_url')}</label><input type="text" id="ap-homepage" class="setting-input" value="${hp.replace(/"/g, '&quot;')}" placeholder="auralis:home"/></div><div class="ap-row ap-row--col"><label class="ap-label" for="ap-max-live-tabs">Onglets gardes en memoire (1-12)</label><input type="number" id="ap-max-live-tabs" class="setting-input" min="1" max="12" step="1" value="${maxLiveTabs}"/></div></div>`;
 
   const hpEl = el.querySelector<HTMLInputElement>('#ap-homepage')!;
+  const maxLiveTabsEl = el.querySelector<HTMLInputElement>('#ap-max-live-tabs')!;
 
   const save = () => {
+    const parsed = Number.parseInt(maxLiveTabsEl.value || '', 10);
+    const safeMaxLiveTabs = Number.isFinite(parsed) ? Math.max(1, Math.min(12, parsed)) : 3;
+    maxLiveTabsEl.value = String(safeMaxLiveTabs);
 
     updateSettings({ ...settings, homepage: hpEl.value.trim() || 'auralis:home' });
+    updateSettings({ ...settings, maxLiveTabs: safeMaxLiveTabs });
 
     saveSettings(settings);
+    browser.setMaxLiveTabs(safeMaxLiveTabs);
 
   };
 
   hpEl.addEventListener('blur', save);
 
   hpEl.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
+  maxLiveTabsEl.addEventListener('blur', save);
+  maxLiveTabsEl.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
 
 }
 

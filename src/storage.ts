@@ -30,6 +30,7 @@ export interface BrowserSettings {
   theme:            ThemeName;
   searchEngine:     SearchEngine;
   homepage:         string;
+  maxLiveTabs:      number;
   language:         Lang;
   showFavoritesBar: boolean;
   bookmarks:        BookmarkItem[];
@@ -41,9 +42,16 @@ const KEY = 'auralis_v2';
 
 const DEFAULTS: BrowserSettings = {
   theme: 'dark', searchEngine: 'duckduckgo', homepage: 'auralis:home',
+  maxLiveTabs: 3,
   language: 'fr', showFavoritesBar: true,
   bookmarks: [], history: [], passwords: [],
 };
+
+function normalizeMaxLiveTabs(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return DEFAULTS.maxLiveTabs;
+  return Math.max(1, Math.min(12, Math.round(n)));
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateBookmarks(raw: any[]): BookmarkItem[] {
@@ -73,6 +81,7 @@ export function loadSettings(): BrowserSettings {
       : homepage;
     return { ...DEFAULTS, ...p,
       homepage: normalizedHomepage,
+      maxLiveTabs: normalizeMaxLiveTabs(p.maxLiveTabs),
       bookmarks: migrateBookmarks(Array.isArray(p.bookmarks) ? p.bookmarks : []),
       history:   Array.isArray(p.history)   ? p.history   : [],
       passwords: Array.isArray(p.passwords) ? p.passwords : [],

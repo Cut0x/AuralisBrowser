@@ -32,6 +32,10 @@ const FIRST_RUN_WELCOME_URL = 'https://auralisbrowser.fr/welcome';
 
 const appWindow = getCurrentWindow();
 const initialSettings = loadSettings();
+if (initialSettings.maxLiveTabs !== 3) {
+  initialSettings.maxLiveTabs = 3;
+  saveSettings(initialSettings);
+}
 applyTheme(initialSettings.theme);
 setLang(initialSettings.language);
 applyAll();
@@ -87,7 +91,7 @@ const browser = new BrowserEngine(state => {
     checkPasswordIndicator(state.url);
     void tryAutofillPassword(state.url);
   }
-});
+}, { maxLiveTabs: initialSettings.maxLiveTabs });
 
 browser.setNewTabCallback(url => {
   const t = tabs.createTab(url, true);
@@ -531,3 +535,4 @@ function initAppContextMenu(): void {
 }
 
 setTimeout(() => void checkForUpdates(), 4000);
+

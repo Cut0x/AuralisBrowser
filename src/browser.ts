@@ -12,6 +12,7 @@ export interface NavigationState {
 }
 type NavCallback = (state: NavigationState) => void;
 type NewTabCallback = (url: string) => void;
+type BrowserEngineOptions = { maxLiveTabs?: number };
 
 export class BrowserEngine {
   readonly hist = new HistManager();
@@ -26,16 +27,19 @@ export class BrowserEngine {
   _activeContentTabId: string | null = null;
   _contentUrlByTab = new Map<string, string>();
   _knownWebviews = new Set<string>();
+  _webviewLastUsedAt = new Map<string, number>();
+  _maxLiveTabs = 3;
   _loadGuardTimer: number | null = null;
   _onNavigate!: NavCallback;
   _onNewTab?: NewTabCallback;
   _onPwDetected?: (u: string, p: string) => void;
   private readonly _eventsReady: Promise<void>;
 
-  constructor(onNavigate: NavCallback) {
+  constructor(onNavigate: NavCallback, options?: BrowserEngineOptions) {
     this.newtabPage = document.getElementById('newtab-page')!;
     this.urlbar = document.getElementById('urlbar') as HTMLInputElement;
     this._onNavigate = onNavigate;
+    this._maxLiveTabs = this.normalizeMaxLiveTabs(options?.maxLiveTabs);
 
     document.getElementById('btn-open-external')?.addEventListener('click', () => {
       try {
@@ -77,6 +81,10 @@ export class BrowserEngine {
   setNewTabCallback(fn: NewTabCallback): void { this._onNewTab = fn; }
   setPwDetectedCallback(fn: (u: string, p: string) => void): void { this._onPwDetected = fn; }
   setActiveTabId(id: string): void { this._activeTabId = id; }
+  setMaxLiveTabs(value: number): void {
+    this._maxLiveTabs = this.normalizeMaxLiveTabs(value);
+    this.enforceWebviewPoolLimit();
+  }
   async ensureEventsReady(): Promise<void> { await this._eventsReady; }
 
   loadUrl(url: string): void {
@@ -118,6 +126,8 @@ export class BrowserEngine {
       invoke<void>('content_tab_activate', { tabId, top, width, height }).then(() => {
         this._activeContentTabId = tabId;
         this._knownWebviews.add(tabId);
+        this.touchWebview(tabId);
+        this.enforceWebviewPoolLimit();
         void this.updateBounds(true);
       }).catch(err => {
         logError('browser.showTabUrl.activate', 'Activation de la WebView onglet impossible', { tabId, err: String(err) });
@@ -137,6 +147,7 @@ export class BrowserEngine {
       this.hist.delete(tabId);
       this._contentUrlByTab.delete(tabId);
       this._knownWebviews.delete(tabId);
+      this._webviewLastUsedAt.delete(tabId);
       if (this._activeContentTabId === tabId) this._activeContentTabId = null;
       invoke<void>('content_tab_close', { tabId }).catch(err => {
         logError('browser.closeTabWebview.close', 'Fermeture WebView onglet impossible', { tabId, err: String(err) });
@@ -250,6 +261,7 @@ export class BrowserEngine {
 
   private markNavigationObserved(tabId: string, url: string): void {
     this._contentUrlByTab.set(tabId, url);
+    this.touchWebview(tabId);
     this._navPending = false;
     this._lastUrl = url;
     this.clearLoadingGuard();
@@ -341,6 +353,8 @@ export class BrowserEngine {
       .then(() => {
         this._activeContentTabId = tabId;
         this._knownWebviews.add(tabId);
+        this.touchWebview(tabId);
+        this.enforceWebviewPoolLimit();
         void this.updateBounds(true);
         this.markNavigationObserved(tabId, url);
         return invoke<void>('content_navigate', { tabId, url });
@@ -365,5 +379,36 @@ export class BrowserEngine {
       return;
     }
     toast('Navigation impossible. Verifie la console Auralis pour le detail.', 'error');
+  }
+
+  private normalizeMaxLiveTabs(value: number | undefined): number {
+    const n = Math.round(Number(value ?? 3));
+    if (!Number.isFinite(n)) return 3;
+    return Math.max(1, Math.min(12, n));
+  }
+
+  private touchWebview(tabId: string): void {
+    this._webviewLastUsedAt.set(tabId, Date.now());
+  }
+
+  private enforceWebviewPoolLimit(): void {
+    if (this._knownWebviews.size <= this._maxLiveTabs) return;
+
+    const protectedId = this._activeTabId;
+    const evictable = [...this._knownWebviews]
+      .filter(id => id !== protectedId)
+      .sort((a, b) => (this._webviewLastUsedAt.get(a) ?? 0) - (this._webviewLastUsedAt.get(b) ?? 0));
+
+    while (this._knownWebviews.size > this._maxLiveTabs && evictable.length) {
+      const victim = evictable.shift();
+      if (!victim) break;
+      this._knownWebviews.delete(victim);
+      this._webviewLastUsedAt.delete(victim);
+      this._contentUrlByTab.delete(victim);
+      if (this._activeContentTabId === victim) this._activeContentTabId = null;
+      invoke<void>('content_tab_close', { tabId: victim }).catch(err => {
+        logError('browser.enforceWebviewPoolLimit.close', 'Eviction WebView onglet impossible', { tabId: victim, err: String(err) });
+      });
+    }
   }
 }

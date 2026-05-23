@@ -1,6 +1,5 @@
-﻿mod console;
+mod console;
 mod sentinel;
-mod title;
 pub mod webview;
 
 use tauri::{Emitter, Manager};
@@ -89,10 +88,6 @@ fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-#[tauri::command]
-async fn fetch_page_title(url: String) -> String {
-    title::fetch_title_inner(&url).await
-}
 
 #[tauri::command]
 async fn open_external(url: String) -> Result<(), String> {
@@ -202,7 +197,6 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             get_version,
-            fetch_page_title,
             open_external,
             console_show,
             fav_popup_show,
@@ -244,3 +238,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("Echec du demarrage d'Auralis");
 }
+
