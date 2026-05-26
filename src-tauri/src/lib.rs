@@ -226,19 +226,16 @@ pub fn run() {
                 .expect("main window introuvable");
             window.set_decorations(false)?;
             webview::init_content_webview(&app.handle()).map_err(|e| e.to_string())?;
-
             console::push_app_log(
                 &app.handle(),
                 "info",
                 "app.setup",
-                "WebViews auxiliaires en mode lazy (creation a la demande)",
+                "Popups et console en creation a la demande",
                 None,
             );
 
             #[cfg(debug_assertions)]
-            if std::env::var("AURALIS_OPEN_DEVTOOLS").ok().as_deref() == Some("1") {
-                window.open_devtools();
-            }
+            window.open_devtools();
             Ok(())
         })
         .run(tauri::generate_context!())

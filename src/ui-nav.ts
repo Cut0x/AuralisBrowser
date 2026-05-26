@@ -80,7 +80,12 @@ export function navigate(input: string): void {
       return;
     }
     hideAuralisPage();
-    const active = tabs.getActive();
+    let active = tabs.getActive();
+    if (!active) {
+      active = tabs.createTab('about:newtab', true);
+      browser.setActiveTabId(active.id);
+      logError('uiNav.navigate.noActiveTab', 'Aucun onglet actif: creation d un nouvel onglet avant navigation', { input, url });
+    }
     if (active) tabs.updateTab(active.id, { url, title: url, isLoading: url !== 'about:newtab' });
     browser.loadUrl(url);
   } catch (err) {

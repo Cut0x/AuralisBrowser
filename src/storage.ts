@@ -9,6 +9,7 @@ import type { Lang }          from './i18n.js';
 
 export type ThemeName    = 'dark' | 'light' | 'midnight';
 export type SearchEngine = 'google' | 'duckduckgo' | 'brave' | 'startpage';
+export type RamMode = 'off' | 'balanced' | 'aggressive';
 
 export interface BookmarkLink {
   id: string; type: 'link';
@@ -29,6 +30,7 @@ export interface HistoryEntry {
 export interface BrowserSettings {
   theme:            ThemeName;
   searchEngine:     SearchEngine;
+  ramMode:          RamMode;
   homepage:         string;
   language:         Lang;
   showFavoritesBar: boolean;
@@ -41,6 +43,7 @@ const KEY = 'auralis_v2';
 
 const DEFAULTS: BrowserSettings = {
   theme: 'dark', searchEngine: 'duckduckgo', homepage: 'auralis:home',
+  ramMode: 'aggressive',
   language: 'fr', showFavoritesBar: true,
   bookmarks: [], history: [], passwords: [],
 };
@@ -71,8 +74,12 @@ export function loadSettings(): BrowserSettings {
     const normalizedHomepage = homepage.startsWith('auralis::')
       ? homepage.replace(/^auralis::/, 'auralis:')
       : homepage;
+    const rawRamMode = p.ramMode;
+    const normalizedRamMode: RamMode =
+      rawRamMode === 'off' || rawRamMode === 'balanced' ? rawRamMode : 'aggressive';
     return { ...DEFAULTS, ...p,
       homepage: normalizedHomepage,
+      ramMode: normalizedRamMode,
       bookmarks: migrateBookmarks(Array.isArray(p.bookmarks) ? p.bookmarks : []),
       history:   Array.isArray(p.history)   ? p.history   : [],
       passwords: Array.isArray(p.passwords) ? p.passwords : [],

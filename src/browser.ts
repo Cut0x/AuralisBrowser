@@ -5,6 +5,7 @@ import { HistManager } from './browser-history.js';
 import { initBrowserEvents } from './browser-events.js';
 import { logError } from './logger.js';
 import { isInternalUrl } from './internal-pages.js';
+import type { RamMode } from './storage.js';
 
 export interface NavigationState {
   url: string; title: string; favicon: string;
@@ -26,7 +27,12 @@ export class BrowserEngine {
   _activeContentTabId: string | null = null;
   _contentUrlByTab = new Map<string, string>();
   _knownWebviews = new Set<string>();
+  _tabLastActiveAt = new Map<string, number>();
   _loadGuardTimer: number | null = null;
+  _memorySaverMode: RamMode = 'aggressive';
+  _memoryTrimTimer: number | null = null;
+  _memoryIdleSweepTimer: number | null = null;
+  _memoryTrimInFlight = false;
   _onNavigate!: NavCallback;
   _onNewTab?: NewTabCallback;
   _onPwDetected?: (u: string, p: string) => void;
@@ -57,6 +63,12 @@ export class BrowserEngine {
         logError('browser.resize', 'Mise a jour des bounds impossible', { err: String(err) });
       }
     });
+    window.addEventListener('blur', () => {
+      this.scheduleMemoryTrim('window-blur');
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) this.scheduleMemoryTrim('window-hidden');
+    });
 
     const chrome = document.getElementById('browser-chrome');
     if (chrome) {
@@ -76,13 +88,32 @@ export class BrowserEngine {
 
   setNewTabCallback(fn: NewTabCallback): void { this._onNewTab = fn; }
   setPwDetectedCallback(fn: (u: string, p: string) => void): void { this._onPwDetected = fn; }
-  setActiveTabId(id: string): void { this._activeTabId = id; }
+  setActiveTabId(id: string): void {
+    this._activeTabId = id;
+    this.markTabActive(id);
+    this.scheduleMemoryTrim('set-active-tab');
+  }
   async ensureEventsReady(): Promise<void> { await this._eventsReady; }
+  getMemorySaverMode(): RamMode { return this._memorySaverMode; }
+  setMemorySaverMode(mode: RamMode): void {
+    this._memorySaverMode = mode === 'off' || mode === 'balanced' ? mode : 'aggressive';
+    this.configureMemorySweep();
+    this.scheduleMemoryTrim('memory-mode-changed');
+  }
+  async freeBackgroundMemory(): Promise<number> {
+    return this.trimBackgroundWebviews(0);
+  }
 
   loadUrl(url: string): void {
     try {
       if (!url || url === 'about:newtab') { this.showNewtab(); return; }
       if (isInternalUrl(url)) return;
+      if (!this._activeTabId) {
+        setNavLoading(false);
+        logError('browser.loadUrl.noActiveTab', 'Aucun onglet actif pour naviguer', { url });
+        toast('Aucun onglet actif. Ouvre un onglet et reessaie.', 'error');
+        return;
+      }
       this.navigateToExternal(url, true);
     } catch (err) {
       setNavLoading(false);
@@ -93,6 +124,7 @@ export class BrowserEngine {
   showTabUrl(tabId: string, url: string): void {
     try {
       this._activeTabId = tabId;
+      this.markTabActive(tabId);
       if (!url || url === 'about:newtab') { this.showNewtab(); return; }
       if (isInternalUrl(url)) {
         this.clearLoadingGuard();
@@ -115,15 +147,17 @@ export class BrowserEngine {
       const top = Math.max(0, Math.round(document.getElementById('browser-chrome')!.getBoundingClientRect().bottom));
       const width = Math.max(1, Math.round(window.innerWidth));
       const height = Math.max(1, Math.round(window.innerHeight - top));
-      invoke<void>('content_tab_activate', { tabId, top, width, height }).then(() => {
-        this._activeContentTabId = tabId;
-        this._knownWebviews.add(tabId);
-        void this.updateBounds(true);
-      }).catch(err => {
-        logError('browser.showTabUrl.activate', 'Activation de la WebView onglet impossible', { tabId, err: String(err) });
-      });
-
-      if (this._contentUrlByTab.get(tabId) !== url) {
+      if (this._contentUrlByTab.get(tabId) === url && this._knownWebviews.has(tabId)) {
+        invoke<void>('content_tab_activate', { tabId, top, width, height }).then(() => {
+          this._activeContentTabId = tabId;
+          this._knownWebviews.add(tabId);
+          void this.updateBounds(true);
+          this.scheduleMemoryTrim('tab-activated');
+        }).catch(err => {
+          logError('browser.showTabUrl.activate', 'Activation de la WebView onglet impossible', { tabId, err: String(err) });
+          this.navigateToExternal(url, false);
+        });
+      } else {
         this.navigateToExternal(url, false);
       }
     } catch (err) {
@@ -137,6 +171,7 @@ export class BrowserEngine {
       this.hist.delete(tabId);
       this._contentUrlByTab.delete(tabId);
       this._knownWebviews.delete(tabId);
+      this._tabLastActiveAt.delete(tabId);
       if (this._activeContentTabId === tabId) this._activeContentTabId = null;
       invoke<void>('content_tab_close', { tabId }).catch(err => {
         logError('browser.closeTabWebview.close', 'Fermeture WebView onglet impossible', { tabId, err: String(err) });
@@ -250,6 +285,7 @@ export class BrowserEngine {
 
   private markNavigationObserved(tabId: string, url: string): void {
     this._contentUrlByTab.set(tabId, url);
+    this.markTabActive(tabId);
     this._navPending = false;
     this._lastUrl = url;
     this.clearLoadingGuard();
@@ -262,6 +298,7 @@ export class BrowserEngine {
     setNavState(canBack, canForward);
     this.urlbar.value = url;
     this._onNavigate({ url, title: displayHostname(url), favicon: faviconFor(url), canBack, canForward });
+    this.scheduleMemoryTrim('navigation-observed');
   }
 
   parkForOverlay(): void { this._overlayActive = true; void this.updateBounds(false); }
@@ -314,6 +351,7 @@ export class BrowserEngine {
   private navigateToExternal(url: string, pushHistory: boolean): void {
     const tabId = this._activeTabId;
     if (!tabId) return;
+    this.markTabActive(tabId);
 
     this._showingNewtab = false;
     this._overlayActive = false;
@@ -336,14 +374,34 @@ export class BrowserEngine {
     const top = Math.max(0, Math.round(document.getElementById('browser-chrome')!.getBoundingClientRect().bottom));
     const width = Math.max(1, Math.round(window.innerWidth));
     const height = Math.max(1, Math.round(window.innerHeight - top));
+    const canNavigateInPlace =
+      this._activeContentTabId === tabId &&
+      this._knownWebviews.has(tabId) &&
+      this._webviewVisible &&
+      !this._showingNewtab &&
+      !this._overlayActive;
+
+    if (canNavigateInPlace) {
+      invoke<void>('content_navigate', { tabId, url })
+        .then(() => {
+          this.markNavigationObserved(tabId, url);
+        })
+        .catch(err => {
+          this.reportWebviewFailure('browser.navigateToExternal', 'Navigation WebView impossible', url, err);
+        });
+      return;
+    }
+
     void this.updateBounds(true);
     invoke<void>('content_tab_activate', { tabId, top, width, height })
       .then(() => {
         this._activeContentTabId = tabId;
         this._knownWebviews.add(tabId);
         void this.updateBounds(true);
-        this.markNavigationObserved(tabId, url);
         return invoke<void>('content_navigate', { tabId, url });
+      })
+      .then(() => {
+        this.markNavigationObserved(tabId, url);
       })
       .catch(err => {
         this.reportWebviewFailure('browser.navigateToExternal', 'Navigation WebView impossible', url, err);
@@ -365,5 +423,83 @@ export class BrowserEngine {
       return;
     }
     toast('Navigation impossible. Verifie la console Auralis pour le detail.', 'error');
+  }
+
+  private markTabActive(tabId: string): void {
+    if (!tabId) return;
+    this._tabLastActiveAt.set(tabId, Date.now());
+  }
+
+  private scheduleMemoryTrim(_reason: string): void {
+    const policy = this.getMemoryPolicy();
+    if (!policy) return;
+    if (this._memoryTrimTimer != null) window.clearTimeout(this._memoryTrimTimer);
+    this._memoryTrimTimer = window.setTimeout(() => {
+      this._memoryTrimTimer = null;
+      void this.trimBackgroundWebviews(policy.maxBackgroundWebviews, policy.idleThresholdMs);
+    }, 300);
+  }
+
+  private getMemoryPolicy(): { maxBackgroundWebviews: number; idleThresholdMs: number } | null {
+    if (this._memorySaverMode === 'off') return null;
+    if (this._memorySaverMode === 'balanced') {
+      return { maxBackgroundWebviews: 1, idleThresholdMs: 120000 };
+    }
+    return { maxBackgroundWebviews: 0, idleThresholdMs: 15000 };
+  }
+
+  private configureMemorySweep(): void {
+    if (this._memoryIdleSweepTimer != null) {
+      window.clearInterval(this._memoryIdleSweepTimer);
+      this._memoryIdleSweepTimer = null;
+    }
+    const policy = this.getMemoryPolicy();
+    if (!policy) return;
+    this._memoryIdleSweepTimer = window.setInterval(() => {
+      void this.trimBackgroundWebviews(policy.maxBackgroundWebviews, policy.idleThresholdMs);
+    }, 5000);
+  }
+
+  private async trimBackgroundWebviews(maxBackgroundWebviews: number, idleThresholdMs?: number): Promise<number> {
+    if (this._memoryTrimInFlight) return 0;
+    const activeTabId = this._activeTabId;
+    if (!activeTabId) return 0;
+
+    const background = [...this._knownWebviews].filter(tabId => tabId !== activeTabId);
+    const now = Date.now();
+    const idleCandidates = typeof idleThresholdMs === 'number'
+      ? background.filter(tabId => now - (this._tabLastActiveAt.get(tabId) ?? 0) >= idleThresholdMs)
+      : [];
+    const byAge = background.sort(
+      (a, b) => (this._tabLastActiveAt.get(a) ?? 0) - (this._tabLastActiveAt.get(b) ?? 0),
+    );
+    const overflowCandidates = background.length > maxBackgroundWebviews
+      ? byAge.slice(0, background.length - maxBackgroundWebviews)
+      : [];
+    const toClose = [...new Set([...idleCandidates, ...overflowCandidates])];
+    if (!toClose.length) return 0;
+
+    let closed = 0;
+
+    this._memoryTrimInFlight = true;
+    try {
+      for (const tabId of toClose) {
+        try {
+          await invoke<void>('content_tab_close', { tabId });
+          this._knownWebviews.delete(tabId);
+          if (this._activeContentTabId === tabId) this._activeContentTabId = null;
+          closed += 1;
+        } catch (err) {
+          logError('browser.memory.trim.close', 'Impossible de decharger une WebView en arriere-plan', {
+            tabId,
+            err: String(err),
+          });
+        }
+      }
+    } finally {
+      this._memoryTrimInFlight = false;
+    }
+
+    return closed;
   }
 }

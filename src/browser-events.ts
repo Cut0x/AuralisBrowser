@@ -21,6 +21,7 @@ export async function initBrowserEvents(e: BrowserEngine): Promise<void> {
 
   const applyNavigationState = (tabId: string, url: string): void => {
     if (!url || url === 'about:blank') return;
+    if (tabId && !e._navPending && e._contentUrlByTab.get(tabId) === url) return;
     if (tabId) e._contentUrlByTab.set(tabId, url);
     if (!e._activeTabId || tabId !== e._activeTabId || e._showingNewtab) return;
     if (!e._navPending && url === e._lastUrl) return;
@@ -55,15 +56,6 @@ export async function initBrowserEvents(e: BrowserEngine): Promise<void> {
       applyNavigationState(tabId, url);
     } catch (err) {
       logError('browser.events.contentNavigated', 'Erreur inattendue sur content-navigated', { err: String(err) });
-    }
-  });
-
-  await listen('content-loaded-started', ev => {
-    try {
-      const { tabId, url } = parseNavPayload(ev.payload);
-      applyNavigationState(tabId, url);
-    } catch (err) {
-      logError('browser.events.contentLoadedStarted', 'Erreur inattendue sur content-loaded-started', { err: String(err) });
     }
   });
 

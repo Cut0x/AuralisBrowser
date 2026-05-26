@@ -103,6 +103,7 @@ browser.setPwDetectedCallback((username, password) => {
 });
 
 initState(browser, tabs, initialSettings);
+browser.setMemorySaverMode(settings.ramMode);
 setFavoritesBarVisible(settings.showFavoritesBar);
 renderFavBar();
 renderNewtabFavs();
@@ -388,6 +389,7 @@ document.addEventListener('keydown', e => {
         {
           const a = tabs.getActive();
           if (a) {
+            browser.closeTabWebview(a.id);
             tabs.closeTab(a.id);
             hideAuralisPage();
             const n = tabs.getActive();

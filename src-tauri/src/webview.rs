@@ -112,7 +112,6 @@ fn ensure_tab_webview(app: &AppHandle, tab_id: &str) -> Result<tauri::Webview, S
                 match payload.event() {
                     PageLoadEvent::Started => {
                         emit_content_url(&h_load, "content-loaded-started", &tab_for_load, &url_str);
-                        emit_content_url(&h_load, "content-navigated", &tab_for_load, &url_str);
                     }
                     PageLoadEvent::Finished => {
                         emit_content_url(&h_load, "content-loaded", &tab_for_load, &url_str);
@@ -316,9 +315,6 @@ pub async fn content_navigate(app: AppHandle, tab_id: String, url: String) -> Re
         msg
     })?;
 
-    if !src.is_empty() && src != "about:blank" {
-        emit_content_url(&app, "content-navigated", trimmed, src);
-    }
     Ok(())
 }
 
