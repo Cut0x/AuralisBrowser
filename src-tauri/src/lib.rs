@@ -45,7 +45,7 @@ fn ensure_fav_popup_window(
         .resizable(false)
         .decorations(false)
         .focused(false)
-        .focusable(false)
+        .focusable(true)
         .transparent(true)
         .visible(false)
         .skip_taskbar(true)

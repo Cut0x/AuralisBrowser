@@ -18,11 +18,15 @@ export function showAuralisPage(url: string): void {
     const normalized = normalizeInternalUrl(url);
     const route = parseInternalRoute(normalized);
     if (!route) return;
+    const pageEl = document.getElementById('auralis-page');
+    const alreadyVisible = pageEl ? !pageEl.classList.contains('hidden') : false;
 
-    auralisReturnUrl = browser.currentUrl();
-    browser.parkForOverlay();
+    if (!alreadyVisible) {
+      auralisReturnUrl = browser.currentUrl();
+      browser.parkForOverlay();
+    }
     document.getElementById('newtab-page')!.classList.remove('active');
-    document.getElementById('auralis-page')!.classList.remove('hidden');
+    pageEl?.classList.remove('hidden');
     (document.getElementById('urlbar') as HTMLInputElement).value = normalized;
     setNavState(false, false);
 
@@ -55,8 +59,10 @@ export function showAuralisPage(url: string): void {
 
 export function hideAuralisPage(): void {
   try {
-    document.getElementById('auralis-page')?.classList.add('hidden');
-    browser.restoreFromOverlay();
+    const pageEl = document.getElementById('auralis-page');
+    const wasVisible = pageEl ? !pageEl.classList.contains('hidden') : false;
+    pageEl?.classList.add('hidden');
+    if (wasVisible) browser.restoreFromOverlay();
   } catch (err) {
     logError('uiNav.hideAuralisPage', 'Erreur inattendue pendant hideAuralisPage', { err: String(err) });
   }

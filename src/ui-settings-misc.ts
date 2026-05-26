@@ -79,24 +79,17 @@ export function renderPageCache(el: HTMLElement): void {
   const ramHintEl = el.querySelector<HTMLElement>('#ap-ram-hint')!;
   const ramPurgeEl = el.querySelector<HTMLButtonElement>('#ap-ram-purge')!;
 
-  const ramHint = (mode: string): string => {
-    if (mode === 'off') return 'Aucune fermeture automatique des WebViews en arriere-plan.';
-    if (mode === 'balanced') return 'Garde l onglet actif + 1 WebView recente en fond. Bon compromis RAM/stabilite.';
-    return 'Mode Opera GX: un seul onglet garde sa WebView. Les autres sont hibernes automatiquement.';
-  };
-
   ramModeEl.value = settings.ramMode;
-  ramHintEl.textContent = ramHint(settings.ramMode);
+  ramModeEl.value = 'off';
+  ramModeEl.disabled = true;
+  ramHintEl.textContent = 'Mode RAM desactive temporairement pour prioriser la stabilite (hotfix 2.0.1).';
 
   ramModeEl.addEventListener('change', () => {
-    const nextMode = (ramModeEl.value === 'off' || ramModeEl.value === 'balanced')
-      ? ramModeEl.value
-      : 'aggressive';
-    updateSettings({ ...settings, ramMode: nextMode });
+    updateSettings({ ...settings, ramMode: 'off' });
     saveSettings(settings);
-    browser.setMemorySaverMode(settings.ramMode);
-    ramHintEl.textContent = ramHint(settings.ramMode);
-    toast(`Mode RAM: ${settings.ramMode}`);
+    browser.setMemorySaverMode('off');
+    ramHintEl.textContent = 'Mode RAM desactive temporairement pour prioriser la stabilite (hotfix 2.0.1).';
+    toast('Mode RAM temporairement desactive pour stabilite.');
   });
 
   ramPurgeEl.addEventListener('click', async () => {

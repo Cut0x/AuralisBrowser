@@ -1,6 +1,6 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
-import { listen, TauriEvent } from '@tauri-apps/api/event';
+import { listen } from '@tauri-apps/api/event';
 import { TabManager } from './tabs.js';
 import { BrowserEngine } from './browser.js';
 import { setLang, applyAll } from './i18n.js';
@@ -103,7 +103,7 @@ browser.setPwDetectedCallback((username, password) => {
 });
 
 initState(browser, tabs, initialSettings);
-browser.setMemorySaverMode(settings.ramMode);
+browser.setMemorySaverMode('off');
 setFavoritesBarVisible(settings.showFavoritesBar);
 renderFavBar();
 renderNewtabFavs();
@@ -111,13 +111,35 @@ initBookmarkHandlers();
 initPasswordHandlers();
 initAppContextMenu();
 
+let favPopupNavigateInFlight = false;
 void listen<string>('fav-popup-open-url', event => {
-  closeFolderPopover();
-  navigate(event.payload);
+  try {
+    closeFolderPopover();
+    const target = (event.payload || '').trim();
+    if (!target || favPopupNavigateInFlight) return;
+    favPopupNavigateInFlight = true;
+    window.setTimeout(() => {
+      try {
+        navigate(target);
+      } catch (err) {
+        logError('main.favPopupOpenUrl.navigate', 'Navigation depuis popup favoris impossible', {
+          target,
+          err: String(err),
+        });
+      } finally {
+        window.setTimeout(() => { favPopupNavigateInFlight = false; }, 120);
+      }
+    }, 0);
+  } catch (err) {
+    logError('main.favPopupOpenUrl', 'Erreur pendant ouverture URL depuis popup favoris', {
+      err: String(err),
+    });
+  }
 });
-void listen('fav-popup-hidden', () => { closeFolderPopover(); });
-void appWindow.listen(TauriEvent.WINDOW_BLUR, () => { closeFolderPopover(); });
-void appWindow.listen(TauriEvent.WINDOW_FOCUS, () => { closeFolderPopover(); });
+void listen('fav-popup-hidden', () => {
+  try { closeFolderPopover(); }
+  catch (err) { logError('main.favPopupHidden', 'Erreur pendant fermeture popup favoris', { err: String(err) }); }
+});
 
 void browser.ensureEventsReady()
   .then(() => {
@@ -181,6 +203,31 @@ let suggestions: UrlbarSuggestion[] = [];
 let activeSuggestIdx = -1;
 let suggestPopupOpen = false;
 let suppressNextFocusSuggest = false;
+const SAFE_DISABLE_NATIVE_URLBAR_POPUP = true;
+const URLBAR_DATALIST_ID = 'urlbar-history-suggestions';
+const urlbarDataList = ensureUrlbarDataList();
+
+function ensureUrlbarDataList(): HTMLDataListElement {
+  let list = document.getElementById(URLBAR_DATALIST_ID) as HTMLDataListElement | null;
+  if (!list) {
+    list = document.createElement('datalist');
+    list.id = URLBAR_DATALIST_ID;
+    document.body.appendChild(list);
+  }
+  urlbar.setAttribute('list', URLBAR_DATALIST_ID);
+  urlbar.setAttribute('autocomplete', 'off');
+  return list;
+}
+
+function renderLocalSuggestions(items: UrlbarSuggestion[]): void {
+  urlbarDataList.innerHTML = '';
+  for (const item of items) {
+    const option = document.createElement('option');
+    option.value = item.url;
+    option.label = item.title;
+    urlbarDataList.appendChild(option);
+  }
+}
 
 function extractSearchTerm(url: string): string {
   try {
@@ -194,9 +241,11 @@ function extractSearchTerm(url: string): string {
 
 async function hideSuggestions(): Promise<void> {
   activeSuggestIdx = -1;
-  if (!suggestPopupOpen) return;
+  if (SAFE_DISABLE_NATIVE_URLBAR_POPUP || !suggestPopupOpen) return;
   suggestPopupOpen = false;
-  await invoke('urlbar_popup_hide');
+  await invoke('urlbar_popup_hide').catch(err => {
+    logError('main.urlbar.hideSuggestions', 'Fermeture popup suggestions impossible', { err: String(err) });
+  });
 }
 
 function applySuggestion(idx: number): void {
@@ -211,6 +260,11 @@ function applySuggestion(idx: number): void {
 async function renderSuggestions(items: UrlbarSuggestion[]): Promise<void> {
   suggestions = items;
   activeSuggestIdx = -1;
+  renderLocalSuggestions(items);
+  if (SAFE_DISABLE_NATIVE_URLBAR_POPUP) {
+    suggestPopupOpen = false;
+    return;
+  }
   if (!items.length) { await hideSuggestions(); return; }
   const wrap = document.querySelector<HTMLElement>('.urlbar-wrapper');
   if (!wrap) { await hideSuggestions(); return; }
@@ -225,8 +279,12 @@ async function renderSuggestions(items: UrlbarSuggestion[]): Promise<void> {
     width: rect.width,
     height,
     payload,
+  }).then(() => {
+    suggestPopupOpen = true;
+  }).catch(err => {
+    suggestPopupOpen = false;
+    logError('main.urlbar.renderSuggestions', 'Affichage popup suggestions impossible', { err: String(err) });
   });
-  suggestPopupOpen = true;
 }
 
 function collectUrlbarSuggestions(query: string): UrlbarSuggestion[] {
@@ -257,20 +315,20 @@ function updateSuggestionsFromInput(): void {
 
 urlbar.addEventListener('keydown', e => {
   try {
-    if (e.key === 'ArrowDown' && suggestions.length) {
+    if (!SAFE_DISABLE_NATIVE_URLBAR_POPUP && e.key === 'ArrowDown' && suggestions.length) {
       e.preventDefault();
       activeSuggestIdx = Math.min(suggestions.length - 1, activeSuggestIdx + 1);
       void renderSuggestions(suggestions);
       return;
     }
-    if (e.key === 'ArrowUp' && suggestions.length) {
+    if (!SAFE_DISABLE_NATIVE_URLBAR_POPUP && e.key === 'ArrowUp' && suggestions.length) {
       e.preventDefault();
       activeSuggestIdx = Math.max(0, activeSuggestIdx - 1);
       void renderSuggestions(suggestions);
       return;
     }
     if (e.key === 'Enter') {
-      if (activeSuggestIdx >= 0 && suggestions[activeSuggestIdx]) {
+      if (!SAFE_DISABLE_NATIVE_URLBAR_POPUP && activeSuggestIdx >= 0 && suggestions[activeSuggestIdx]) {
         e.preventDefault();
         applySuggestion(activeSuggestIdx);
       } else {
@@ -418,8 +476,6 @@ document.addEventListener('keydown', e => {
     }
   }
 });
-
-window.addEventListener('blur', () => { closeFolderPopover(); });
 
 async function checkForUpdates(): Promise<void> {
   try {

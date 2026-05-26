@@ -282,7 +282,7 @@ pub async fn content_navigate(app: AppHandle, tab_id: String, url: String) -> Re
     }
     let wv = ensure_tab_webview(&app, trimmed)?;
     let src = if url.is_empty() { "about:blank" } else { &url };
-    tauri::Url::parse(src).map_err(|e| {
+    let parsed_url = tauri::Url::parse(src).map_err(|e| {
         let msg = format!("url invalide: {e}");
         log_err(
             &app,
@@ -293,27 +293,18 @@ pub async fn content_navigate(app: AppHandle, tab_id: String, url: String) -> Re
         msg
     })?;
 
-    let js_url = serde_json::to_string(src).map_err(|e| {
-        let msg = format!("serialisation url impossible: {e}");
-        log_err(
-            &app,
-            "rust.webview.content_navigate.serialize_url",
-            &msg,
-            Some(format!("tab_id={trimmed} url={url}")),
-        );
-        msg
-    })?;
-    let nav_js = format!("window.location.href = {js_url};");
-    wv.eval(&nav_js).map_err(|e| {
+    wv.navigate(parsed_url.clone()).map_err(|e| {
         let msg = e.to_string();
         log_err(
             &app,
-            "rust.webview.content_navigate.eval",
+            "rust.webview.content_navigate.navigate",
             &msg,
             Some(format!("tab_id={trimmed} url={url}")),
         );
         msg
     })?;
+
+    emit_content_url(&app, "content-navigated", trimmed, parsed_url.as_str());
 
     Ok(())
 }
