@@ -7,7 +7,7 @@ import { t }                                        from './i18n.js';
 import { toast }                                    from './ui.js';
 import { saveSettings, getLocalStorageSize }        from './storage.js';
 import { countBookmarkLinks }                       from './bookmarks-store.js';
-import { settings, updateSettings }                 from './state.js';
+import { browser, settings, updateSettings }        from './state.js';
 import { renderFavBar }                             from './ui-favbar.js';
 import { renderNewtabFavs }                         from './ui-newtab.js';
 
@@ -22,6 +22,21 @@ export function renderPageCache(el: HTMLElement): void {
 
   el.innerHTML = `
     <h2 class="ap-page-title">${t('settings.cache')}</h2>
+    <div class="ap-group" style="max-width:560px">
+      <div class="ap-group-title">Memoire (mode GX)</div>
+      <div class="ap-row">
+        <label class="ap-label" for="ap-ram-mode">Gestion des onglets inactifs</label>
+        <select id="ap-ram-mode" class="setting-select">
+          <option value="aggressive">GX Ultra (RAM minimale)</option>
+          <option value="balanced">GX Balanced</option>
+          <option value="off">Off (compatibilite max)</option>
+        </select>
+      </div>
+      <p id="ap-ram-hint" style="font-size:12px;color:var(--text-muted);margin-top:8px"></p>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-outline" id="ap-ram-purge">Liberer la RAM maintenant</button>
+      </div>
+    </div>
     <div class="ap-group" style="max-width:560px">
       <div class="ap-group-title">Stockage local</div>
       <div class="storage-bar-wrap">
@@ -60,6 +75,42 @@ export function renderPageCache(el: HTMLElement): void {
   const chkHist = el.querySelector<HTMLInputElement>('#chk-hist')!;
   const chkBm   = el.querySelector<HTMLInputElement>('#chk-bookmarks')!;
   const chkPw   = el.querySelector<HTMLInputElement>('#chk-passwords')!;
+  const ramModeEl = el.querySelector<HTMLSelectElement>('#ap-ram-mode')!;
+  const ramHintEl = el.querySelector<HTMLElement>('#ap-ram-hint')!;
+  const ramPurgeEl = el.querySelector<HTMLButtonElement>('#ap-ram-purge')!;
+
+  const ramHint = (mode: string): string => {
+    if (mode === 'off') return 'Aucune fermeture automatique des WebViews en arriere-plan.';
+    if (mode === 'balanced') return 'Garde l onglet actif + 1 WebView recente en fond. Bon compromis RAM/stabilite.';
+    return 'Mode Opera GX: un seul onglet garde sa WebView. Les autres sont hibernes automatiquement.';
+  };
+
+  ramModeEl.value = settings.ramMode;
+  ramHintEl.textContent = ramHint(settings.ramMode);
+
+  ramModeEl.addEventListener('change', () => {
+    const nextMode = (ramModeEl.value === 'off' || ramModeEl.value === 'balanced')
+      ? ramModeEl.value
+      : 'aggressive';
+    updateSettings({ ...settings, ramMode: nextMode });
+    saveSettings(settings);
+    browser.setMemorySaverMode(settings.ramMode);
+    ramHintEl.textContent = ramHint(settings.ramMode);
+    toast(`Mode RAM: ${settings.ramMode}`);
+  });
+
+  ramPurgeEl.addEventListener('click', async () => {
+    ramPurgeEl.disabled = true;
+    try {
+      const closed = await browser.freeBackgroundMemory();
+      toast(`Memoire liberee: ${closed} WebView(s) dechargee(s).`, 'success');
+    } catch (err) {
+      toast('Echec de la liberation memoire. Voir console Auralis.', 'error');
+      console.error(err);
+    } finally {
+      ramPurgeEl.disabled = false;
+    }
+  });
 
   const doClear = (hist: boolean, bm: boolean, pw: boolean) => {
     const parts = [hist && 'historique', bm && 'favoris', pw && 'mots de passe'].filter(Boolean);

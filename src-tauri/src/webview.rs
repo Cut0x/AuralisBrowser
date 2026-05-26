@@ -1,4 +1,4 @@
-use crate::{console, sentinel};
+use crate::{console, sentinel, title};
 use std::sync::{Mutex, OnceLock};
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl};
 
@@ -112,10 +112,33 @@ fn ensure_tab_webview(app: &AppHandle, tab_id: &str) -> Result<tauri::Webview, S
                 match payload.event() {
                     PageLoadEvent::Started => {
                         emit_content_url(&h_load, "content-loaded-started", &tab_for_load, &url_str);
-                        emit_content_url(&h_load, "content-navigated", &tab_for_load, &url_str);
                     }
                     PageLoadEvent::Finished => {
                         emit_content_url(&h_load, "content-loaded", &tab_for_load, &url_str);
+                        let h2 = h_load.clone();
+                        let tab2 = tab_for_load.clone();
+                        let u2 = url_str;
+                        tauri::async_runtime::spawn(async move {
+                            let t = title::fetch_title_inner(&u2).await;
+                            if !t.is_empty() {
+                                let _ = h2.emit(
+                                    "content-title",
+                                    serde_json::json!({
+                                        "tabId": tab2,
+                                        "url": u2,
+                                        "title": t,
+                                    }),
+                                );
+                            } else {
+                                console::push_app_log(
+                                    &h2,
+                                    "warn",
+                                    "rust.webview.title.fetch",
+                                    "Titre vide recupere",
+                                    Some(u2),
+                                );
+                            }
+                        });
                     }
                 }
             }),
@@ -292,9 +315,6 @@ pub async fn content_navigate(app: AppHandle, tab_id: String, url: String) -> Re
         msg
     })?;
 
-    if !src.is_empty() && src != "about:blank" {
-        emit_content_url(&app, "content-navigated", trimmed, src);
-    }
     Ok(())
 }
 

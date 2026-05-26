@@ -1,5 +1,6 @@
-mod console;
+﻿mod console;
 mod sentinel;
+mod title;
 pub mod webview;
 
 use tauri::{Emitter, Manager};
@@ -88,6 +89,10 @@ fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
+#[tauri::command]
+async fn fetch_page_title(url: String) -> String {
+    title::fetch_title_inner(&url).await
+}
 
 #[tauri::command]
 async fn open_external(url: String) -> Result<(), String> {
@@ -197,6 +202,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             get_version,
+            fetch_page_title,
             open_external,
             console_show,
             fav_popup_show,
@@ -220,22 +226,18 @@ pub fn run() {
                 .expect("main window introuvable");
             window.set_decorations(false)?;
             webview::init_content_webview(&app.handle()).map_err(|e| e.to_string())?;
-
             console::push_app_log(
                 &app.handle(),
                 "info",
                 "app.setup",
-                "WebViews auxiliaires en mode lazy (creation a la demande)",
+                "Popups et console en creation a la demande",
                 None,
             );
 
             #[cfg(debug_assertions)]
-            if std::env::var("AURALIS_OPEN_DEVTOOLS").ok().as_deref() == Some("1") {
-                window.open_devtools();
-            }
+            window.open_devtools();
             Ok(())
         })
         .run(tauri::generate_context!())
         .expect("Echec du demarrage d'Auralis");
 }
-
