@@ -41,6 +41,74 @@
 .favbar-folder:hover      { background: var(--btn-bg-hover); color: var(--text-primary); }
 .favbar-folder-chevron    { opacity: .5; }
 
+/* Panneau dossier inline dans le chrome (stable: pas de fenetre popup native). */
+.favbar-folder-panel {
+  border-top: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  padding: 8px;
+  animation: favbarFolderPanelIn var(--t-normal) var(--ease);
+}
+.favbar-folder-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px 8px;
+}
+.favbar-folder-panel-headline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.favbar-folder-panel-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  color: var(--accent-violet);
+  background: var(--accent-violet-glow);
+  border: 1px solid var(--glass-border);
+  flex: 0 0 auto;
+}
+.favbar-folder-panel-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.favbar-folder-panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.favbar-folder-panel-meta {
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.favbar-folder-panel-close {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-full);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  flex: 0 0 auto;
+}
+.favbar-folder-panel-close:hover {
+  background: var(--btn-bg-hover);
+  color: var(--text-primary);
+}
+
 /* Popover de dossier - positionné via JS au-dessus du chrome (z-index 5000).
    La webview est poussée sous le popover (shiftBoundsTop) pour garder la page visible. */
 .favbar-popover {
@@ -51,19 +119,78 @@
   min-width: 180px; max-width: 300px;
   padding: 4px 0; max-height: 60vh; overflow-y: auto;
 }
-.favbar-popover-item {
-  display: flex; align-items: center; gap: 8px;
-  width: 100%; padding: 6px 14px;
-  color: var(--text-secondary); font-size: 12px; text-align: left;
-  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+.favbar-popover-inline {
+  position: static;
+  z-index: auto;
+  background: var(--bg-1);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  min-width: 0;
+  max-width: none;
+  max-height: 290px;
+  padding: 6px;
 }
-.favbar-popover-item:hover { background: var(--btn-bg-hover); color: var(--text-primary); }
-.favbar-popover-item img   { flex-shrink: 0; width: 14px; height: 14px; object-fit: contain; }
-.favbar-popover-item span  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.favbar-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: left;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  transition:
+    background var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease);
+}
+.favbar-popover-item:hover {
+  background: var(--btn-bg-hover);
+  border-color: var(--glass-border-strong);
+  color: var(--text-primary);
+  transform: translateX(1px);
+}
+.favbar-popover-item img {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+.favbar-popover-item-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.favbar-popover-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.favbar-popover-item-host {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--text-muted);
+}
 .favbar-popover-separator  {
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .07em; color: var(--text-muted);
-  padding: 6px 14px 2px; border-top: 1px solid var(--glass-border); margin-top: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  padding: 7px 10px 3px;
+  border-top: 1px solid var(--glass-border);
+  margin: 4px 0 2px;
+  display: flex;
+  align-items: center;
 }
 
 /* Indicateur de survol lors du glisser-déposer dans la barre des favoris */
@@ -71,3 +198,14 @@
 
 /* Tuile dossier sur la page nouvel onglet - fond violet translucide */
 .fav-tile-folder .fav-icon { background: var(--accent-violet-glow); }
+
+@keyframes favbarFolderPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { setNavLoading, setNavState, toast, displayHostname, faviconFor } from './ui.js';
+import { setNavLoading, setNavState, toast } from './ui.js';
 import { HistManager } from './browser-history.js';
 import { initBrowserEvents } from './browser-events.js';
 import { logError } from './logger.js';
@@ -283,24 +283,6 @@ export class BrowserEngine {
     }, 12000);
   }
 
-  private markNavigationObserved(tabId: string, url: string): void {
-    this._contentUrlByTab.set(tabId, url);
-    this.markTabActive(tabId);
-    this._navPending = false;
-    this._lastUrl = url;
-    this.clearLoadingGuard();
-    setNavLoading(false);
-
-    if (this._activeTabId !== tabId || this._showingNewtab) return;
-    const hist = this.hist.getOrCreate(tabId);
-    const canBack = hist.navIdx > 0;
-    const canForward = hist.navIdx < hist.navHistory.length - 1;
-    setNavState(canBack, canForward);
-    this.urlbar.value = url;
-    this._onNavigate({ url, title: displayHostname(url), favicon: faviconFor(url), canBack, canForward });
-    this.scheduleMemoryTrim('navigation-observed');
-  }
-
   parkForOverlay(): void {
     if (this._overlayActive) return;
     this._overlayActive = true;
@@ -393,7 +375,8 @@ export class BrowserEngine {
     if (canNavigateInPlace) {
       invoke<void>('content_navigate', { tabId, url })
         .then(() => {
-          this.markNavigationObserved(tabId, url);
+          this._contentUrlByTab.set(tabId, url);
+          this.markTabActive(tabId);
         })
         .catch(err => {
           this.reportWebviewFailure('browser.navigateToExternal', 'Navigation WebView impossible', url, err);
@@ -410,7 +393,8 @@ export class BrowserEngine {
         return invoke<void>('content_navigate', { tabId, url });
       })
       .then(() => {
-        this.markNavigationObserved(tabId, url);
+        this._contentUrlByTab.set(tabId, url);
+        this.markTabActive(tabId);
       })
       .catch(err => {
         this.reportWebviewFailure('browser.navigateToExternal', 'Navigation WebView impossible', url, err);
