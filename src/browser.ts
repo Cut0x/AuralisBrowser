@@ -301,8 +301,16 @@ export class BrowserEngine {
     this.scheduleMemoryTrim('navigation-observed');
   }
 
-  parkForOverlay(): void { this._overlayActive = true; void this.updateBounds(false); }
-  restoreFromOverlay(): void { this._overlayActive = false; if (!this._showingNewtab) void this.updateBounds(true); }
+  parkForOverlay(): void {
+    if (this._overlayActive) return;
+    this._overlayActive = true;
+    if (!this._showingNewtab) void this.updateBounds(false);
+  }
+  restoreFromOverlay(): void {
+    if (!this._overlayActive) return;
+    this._overlayActive = false;
+    if (!this._showingNewtab) void this.updateBounds(true);
+  }
 
   async shiftBoundsTop(newTop: number): Promise<void> {
     try {
@@ -327,6 +335,7 @@ export class BrowserEngine {
     try {
       const chrome = document.getElementById('browser-chrome'); if (!chrome) return;
       this._webviewVisible = visible;
+      if (!this._activeContentTabId) return;
       if (!visible) {
         await invoke<void>('content_set_bounds', { top: 9999, width: 0, height: 1 }).catch(err => {
           logError('browser.updateBounds.hide', 'Impossible de masquer la WebView', { err: String(err) });

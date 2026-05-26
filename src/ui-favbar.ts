@@ -6,13 +6,16 @@ import { navigate }                          from './ui-nav.js';
 import { showCtxMenu }                       from './ui-ctx-menu.js';
 import { attachFavbarDrag, attachPopoverDrag } from './ui-favbar-drag.js';
 import type { BookmarkItem, BookmarkFolder } from './storage.js';
+import { logError } from './logger.js';
 
 let currentPopover: HTMLElement | null = null;
 let currentAnchor:  HTMLElement | null = null;
 let nativePopupOpen = false;
+let overlayParkedByPopover = false;
 let lastClosedFolderId: string | null = null;
 let lastClosedAt = 0;
 const REOPEN_GUARD_MS = 900;
+const SAFE_DISABLE_NATIVE_FOLDER_POPUP = true;
 
 type PopupRow =
   | { kind: 'folder'; name: string; depth: number }
@@ -74,11 +77,16 @@ export function showFolderPopover(folder: BookmarkFolder, anchor: HTMLElement): 
   closeFolderPopover();
   currentAnchor = anchor;
 
-  if (browser.canShiftForOverlay) {
+  if (!SAFE_DISABLE_NATIVE_FOLDER_POPUP && browser.canShiftForOverlay) {
     void showNativeFolderPopup(folder, anchor);
     document.addEventListener('pointerdown', onGlobalPointerDown, true);
     document.addEventListener('keydown', onGlobalKeyDown, true);
     return;
+  }
+
+  if (browser.canShiftForOverlay && !overlayParkedByPopover) {
+    overlayParkedByPopover = true;
+    browser.parkForOverlay();
   }
 
   const pop = document.createElement('div');
@@ -104,27 +112,34 @@ export function showFolderPopover(folder: BookmarkFolder, anchor: HTMLElement): 
 }
 
 async function showNativeFolderPopup(folder: BookmarkFolder, anchor: HTMLElement): Promise<void> {
-  const rect = anchor.getBoundingClientRect();
-  const pad = 8;
-  const width = 300;
-  let left = rect.left;
-  if (left + width > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - width - pad);
-  if (left < pad) left = pad;
-  const top = rect.bottom + 2;
-  const height = Math.max(90, Math.min(320, window.innerHeight - top - pad));
-  const rows = flattenFolderRows(folder.children, 0);
-  const win = getCurrentWindow();
-  const [innerPos, scale] = await Promise.all([win.innerPosition(), win.scaleFactor()]);
-  const physicalLeft = innerPos.x + Math.round(left * scale);
-  const physicalTop = innerPos.y + Math.round(top * scale);
-  await invoke('fav_popup_show', {
-    physicalLeft,
-    physicalTop,
-    width,
-    height,
-    payload: JSON.stringify(rows),
-  });
-  nativePopupOpen = true;
+  try {
+    const rect = anchor.getBoundingClientRect();
+    const pad = 8;
+    const width = 300;
+    let left = rect.left;
+    if (left + width > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - width - pad);
+    if (left < pad) left = pad;
+    const top = rect.bottom + 2;
+    const height = Math.max(90, Math.min(320, window.innerHeight - top - pad));
+    const rows = flattenFolderRows(folder.children, 0);
+    const win = getCurrentWindow();
+    const [innerPos, scale] = await Promise.all([win.innerPosition(), win.scaleFactor()]);
+    const physicalLeft = innerPos.x + Math.round(left * scale);
+    const physicalTop = innerPos.y + Math.round(top * scale);
+    await invoke('fav_popup_show', {
+      physicalLeft,
+      physicalTop,
+      width,
+      height,
+      payload: JSON.stringify(rows),
+    });
+    nativePopupOpen = true;
+  } catch (err) {
+    nativePopupOpen = false;
+    logError('favbar.showNativeFolderPopup', 'Impossible d afficher le popup natif favoris', {
+      err: String(err),
+    });
+  }
 }
 
 function renderFolderItems(items: BookmarkItem[], container: HTMLElement, depth: number, topFolderId: string): void {
@@ -158,7 +173,15 @@ export function closeFolderPopover(): void {
   currentPopover = null;
   if (nativePopupOpen) {
     nativePopupOpen = false;
-    void invoke('fav_popup_hide');
+    invoke('fav_popup_hide').catch(err => {
+      logError('favbar.closeFolderPopover.hideNative', 'Echec fermeture popup natif favoris', {
+        err: String(err),
+      });
+    });
+  }
+  if (overlayParkedByPopover) {
+    overlayParkedByPopover = false;
+    browser.restoreFromOverlay();
   }
   if (closedId) {
     lastClosedFolderId = closedId;

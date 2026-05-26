@@ -8,10 +8,17 @@ type PopupRow =
 
 const root = document.getElementById('root') as HTMLElement;
 const popupWindow = getCurrentWindow();
+let hideInFlight = false;
 
 async function requestHide(): Promise<void> {
-  await emitTo('main', 'fav-popup-hidden');
-  await invoke('fav_popup_hide');
+  if (hideInFlight) return;
+  hideInFlight = true;
+  try {
+    await emitTo('main', 'fav-popup-hidden');
+    await invoke('fav_popup_hide');
+  } finally {
+    window.setTimeout(() => { hideInFlight = false; }, 80);
+  }
 }
 
 function faviconFor(url: string): string {
@@ -46,7 +53,7 @@ function render(rows: PopupRow[]): void {
     btn.innerHTML = `<img src="${faviconFor(row.url)}" alt="" loading="lazy" onerror="this.style.display='none'"><span>${esc(row.title)}</span>`;
     btn.addEventListener('click', async () => {
       await emitTo('main', 'fav-popup-open-url', row.url);
-      await requestHide();
+      void requestHide();
     });
     root.appendChild(btn);
   }

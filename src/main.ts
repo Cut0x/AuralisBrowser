@@ -103,7 +103,7 @@ browser.setPwDetectedCallback((username, password) => {
 });
 
 initState(browser, tabs, initialSettings);
-browser.setMemorySaverMode(settings.ramMode);
+browser.setMemorySaverMode('off');
 setFavoritesBarVisible(settings.showFavoritesBar);
 renderFavBar();
 renderNewtabFavs();
@@ -111,11 +111,35 @@ initBookmarkHandlers();
 initPasswordHandlers();
 initAppContextMenu();
 
+let favPopupNavigateInFlight = false;
 void listen<string>('fav-popup-open-url', event => {
-  closeFolderPopover();
-  navigate(event.payload);
+  try {
+    closeFolderPopover();
+    const target = (event.payload || '').trim();
+    if (!target || favPopupNavigateInFlight) return;
+    favPopupNavigateInFlight = true;
+    window.setTimeout(() => {
+      try {
+        navigate(target);
+      } catch (err) {
+        logError('main.favPopupOpenUrl.navigate', 'Navigation depuis popup favoris impossible', {
+          target,
+          err: String(err),
+        });
+      } finally {
+        window.setTimeout(() => { favPopupNavigateInFlight = false; }, 120);
+      }
+    }, 0);
+  } catch (err) {
+    logError('main.favPopupOpenUrl', 'Erreur pendant ouverture URL depuis popup favoris', {
+      err: String(err),
+    });
+  }
 });
-void listen('fav-popup-hidden', () => { closeFolderPopover(); });
+void listen('fav-popup-hidden', () => {
+  try { closeFolderPopover(); }
+  catch (err) { logError('main.favPopupHidden', 'Erreur pendant fermeture popup favoris', { err: String(err) }); }
+});
 void appWindow.listen(TauriEvent.WINDOW_BLUR, () => { closeFolderPopover(); });
 void appWindow.listen(TauriEvent.WINDOW_FOCUS, () => { closeFolderPopover(); });
 
