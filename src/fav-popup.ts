@@ -1,5 +1,4 @@
 import { listen, emitTo, TauriEvent } from '@tauri-apps/api/event';
-import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 type PopupRow =
@@ -11,7 +10,6 @@ const popupWindow = getCurrentWindow();
 
 async function requestHide(): Promise<void> {
   await emitTo('main', 'fav-popup-hidden');
-  await invoke('fav_popup_hide');
 }
 
 function faviconFor(url: string): string {

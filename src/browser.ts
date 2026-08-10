@@ -230,6 +230,7 @@ export class BrowserEngine {
       this.clearLoadingGuard();
       this.newtabPage.classList.add('active');
       void this.updateBounds(false);
+      void this.hibernateActiveWebview('show-newtab', true);
       this.urlbar.value = '';
       const hist = this._activeTabId ? this.hist.getOrCreate(this._activeTabId) : null;
       this._onNavigate({
@@ -303,6 +304,26 @@ export class BrowserEngine {
 
   parkForOverlay(): void { this._overlayActive = true; void this.updateBounds(false); }
   restoreFromOverlay(): void { this._overlayActive = false; if (!this._showingNewtab) void this.updateBounds(true); }
+
+  async hibernateActiveWebview(reason: string, clearKnownUrl = false): Promise<boolean> {
+    if (this._memorySaverMode === 'off') return false;
+    const tabId = this._activeTabId;
+    if (!tabId || !this._knownWebviews.has(tabId)) return false;
+    try {
+      await invoke<void>('content_tab_close', { tabId });
+      this._knownWebviews.delete(tabId);
+      if (clearKnownUrl) this._contentUrlByTab.delete(tabId);
+      if (this._activeContentTabId === tabId) this._activeContentTabId = null;
+      return true;
+    } catch (err) {
+      logError('browser.memory.hibernateActive', 'Impossible de decharger la WebView active', {
+        tabId,
+        reason,
+        err: String(err),
+      });
+      return false;
+    }
+  }
 
   async shiftBoundsTop(newTop: number): Promise<void> {
     try {
@@ -434,10 +455,11 @@ export class BrowserEngine {
     const policy = this.getMemoryPolicy();
     if (!policy) return;
     if (this._memoryTrimTimer != null) window.clearTimeout(this._memoryTrimTimer);
+    const delay = this._memorySaverMode === 'aggressive' ? 0 : 300;
     this._memoryTrimTimer = window.setTimeout(() => {
       this._memoryTrimTimer = null;
       void this.trimBackgroundWebviews(policy.maxBackgroundWebviews, policy.idleThresholdMs);
-    }, 300);
+    }, delay);
   }
 
   private getMemoryPolicy(): { maxBackgroundWebviews: number; idleThresholdMs: number } | null {
@@ -445,7 +467,7 @@ export class BrowserEngine {
     if (this._memorySaverMode === 'balanced') {
       return { maxBackgroundWebviews: 1, idleThresholdMs: 120000 };
     }
-    return { maxBackgroundWebviews: 0, idleThresholdMs: 15000 };
+    return { maxBackgroundWebviews: 0, idleThresholdMs: 0 };
   }
 
   private configureMemorySweep(): void {
@@ -455,9 +477,10 @@ export class BrowserEngine {
     }
     const policy = this.getMemoryPolicy();
     if (!policy) return;
+    const interval = this._memorySaverMode === 'aggressive' ? 2500 : 5000;
     this._memoryIdleSweepTimer = window.setInterval(() => {
       void this.trimBackgroundWebviews(policy.maxBackgroundWebviews, policy.idleThresholdMs);
-    }, 5000);
+    }, interval);
   }
 
   private async trimBackgroundWebviews(maxBackgroundWebviews: number, idleThresholdMs?: number): Promise<number> {

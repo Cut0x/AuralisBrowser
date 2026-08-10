@@ -21,6 +21,7 @@ export function showAuralisPage(url: string): void {
 
     auralisReturnUrl = browser.currentUrl();
     browser.parkForOverlay();
+    void browser.hibernateActiveWebview('show-auralis-page');
     document.getElementById('newtab-page')!.classList.remove('active');
     document.getElementById('auralis-page')!.classList.remove('hidden');
     (document.getElementById('urlbar') as HTMLInputElement).value = normalized;

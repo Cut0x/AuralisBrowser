@@ -46,6 +46,7 @@ fn ensure_fav_popup_window(
         .decorations(false)
         .focused(false)
         .focusable(false)
+        .always_on_top(true)
         .transparent(true)
         .visible(false)
         .skip_taskbar(true)
@@ -133,7 +134,7 @@ fn fav_popup_show(
 #[tauri::command]
 fn fav_popup_hide(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(win) = app.get_webview_window("fav-popup") {
-        win.hide().map_err(|e| e.to_string())?;
+        win.close().map_err(|e| e.to_string())?;
     }
     Ok(())
 }
