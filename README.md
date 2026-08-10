@@ -1,4 +1,4 @@
-# Auralis Browser 1.2.0
+# Auralis Browser 2.0.2
 
 Auralis est un navigateur desktop construit avec Tauri 2, Rust et TypeScript.
 Cette version inclut la navigation interne `auralis:*`, la page d'accueil `auralis:home` et un moteur WebView stabilisé.
@@ -43,7 +43,7 @@ Cette version inclut la navigation interne `auralis:*`, la page d'accueil `aural
   - `src/lib.rs` : initialisation Tauri et commandes Rust
   - `src/webview.rs` : WebView de contenu unique et événements de navigation
   - `src/console.rs` : buffer de logs applicatifs
-  - `tauri.conf.json` : métadonnées et bundle Windows
+  - `tauri.conf.json` : métadonnées et bundles Windows/Debian
 - `public/`
   - `console.html` : interface de consultation des logs
 
@@ -79,22 +79,42 @@ Build frontend :
 npm run build
 ```
 
-Build installateur Windows :
+Build installateur Windows `.exe` :
 
 ```bash
-npm run tauri:build
+npm run tauri:build:windows
 ```
 
 Sortie :
 
 ```text
-src-tauri\target\release\bundle\nsis\Auralis_1.2.0-beta_x64-setup.exe
+src-tauri\target\release\bundle\nsis\Auralis_2.0.2_x64-setup.exe
+```
+
+Build paquet Debian `.deb` depuis Linux, WSL ou une CI Linux :
+
+```bash
+npm run tauri:build:deb
+```
+
+Sortie :
+
+```text
+src-tauri/target/release/bundle/deb/Auralis_2.0.2_amd64.deb
 ```
 
 ## Installation Windows
 
 Utiliser le `setup.exe` généré.
 L'installateur NSIS gère l'installation de WebView2 en mode `offlineInstaller`.
+
+## Installation Debian/Ubuntu
+
+Utiliser le paquet `.deb` généré :
+
+```bash
+sudo apt install ./src-tauri/target/release/bundle/deb/Auralis_2.0.2_amd64.deb
+```
 
 ## Liens officiels
 

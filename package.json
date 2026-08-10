@@ -1,7 +1,7 @@
 {
   "name": "auralis",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.0.2",
   "type": "module",
   "description": "A beautiful, lightweight and fully customizable browser.",
   "author": "Loïc V. (Cut0x)",
@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "npm run tauri -- dev",
-    "tauri:build": "npm run tauri -- build"
+    "tauri:build": "npm run tauri -- build",
+    "tauri:build:windows": "npm run tauri -- build --bundles nsis",
+    "tauri:build:deb": "npm run tauri -- build --bundles deb"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.1.1",
